@@ -1,0 +1,867 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model keys {
+  id             Int     @id @default(autoincrement())
+  user_id        Int
+  key            String  @db.VarChar(40)
+  level          Int
+  ignore_limits  Boolean @default(false)
+  is_private_key Boolean @default(false)
+  ip_addresses   String? @db.Text
+  date_created   Int
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model m_kabupaten {
+  id             Int
+  prov_id        Int
+  nama_kabupaten String @db.VarChar(255)
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model m_provinsi {
+  id            Int
+  nama_provinsi String @db.VarChar(255)
+
+  @@ignore
+}
+
+model t_bank {
+  id_bank   Int              @id @default(autoincrement())
+  bank      String           @db.VarChar(75)
+  rekening  String           @db.VarChar(25)
+  pemilik   String           @db.VarChar(75)
+  is_active t_bank_is_active
+  id_user   Int
+
+  user t_user @relation(fields: [id_user], references: [id_user])
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_bank_va_xendit {
+  id_bank_va_xendit Int                        @id @default(autoincrement())
+  id_user           Int
+  bank_code         String                     @db.VarChar(75)
+  is_active         t_bank_va_xendit_is_active @default(dbgenerated("1"))
+
+  user t_user @relation(fields: [id_user], references: [id_user])
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_callback_log {
+  id_callback_log Int     @id @default(autoincrement())
+  xendit_user_id  String? @db.VarChar(255)
+  aksi            String? @db.VarChar(50)
+  id_payment      String? @db.VarChar(255)
+  payload         String  @db.Text
+
+  @@index([id_payment], map: "id_payment")
+}
+
+model t_countdown {
+  id_countdown   Int    @id @default(autoincrement())
+  teks_countdown String @db.VarChar(255)
+  id_produk      String @db.Text
+  id_user        Int
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_custom_field {
+  id_custom_field Int                      @id @default(autoincrement())
+  id_user         Int
+  id_produk       String                   @db.Text
+  field           t_custom_field_field
+  type            t_custom_field_type?
+  required        t_custom_field_required
+  label           String                   @db.VarChar(255)
+  placeholder     String                   @db.VarChar(255)
+  is_option       t_custom_field_is_option
+  idx             Int
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_data_custom_field {
+  id_data_custom_field Int    @id @default(autoincrement())
+  id_custom_field      Int
+  id_user              Int
+  id_produk            Int
+  value                String @db.Text
+  order_id             String @db.VarChar(128)
+}
+
+model t_expedisi {
+  id_expedisi   Int    @id @default(autoincrement())
+  nama_expedisi String @db.VarChar(128)
+  expedisi      String @db.VarChar(50)
+  status        Int
+  id_user       Int
+}
+
+model t_fittur {
+  id_fittur Int    @id @default(autoincrement())
+  fittur    String @db.VarChar(255)
+  harga     Int
+}
+
+model t_kategori_bisnis {
+  id_kategori_bisnis Int    @id @default(autoincrement())
+  kategori_bisnis    String @db.VarChar(155)
+}
+
+model t_kategori_produk {
+  id_kategori_produk Int    @id @default(autoincrement())
+  kategori           String @db.VarChar(255)
+
+  products t_produk[]
+}
+
+model t_keranjang {
+  id_keranjang   Int                        @id @default(0)
+  kode_keranjang String                     @db.VarChar(255)
+  id_produk      Int
+  nama_produk    String                     @db.VarChar(255)
+  harga_jual     Int
+  berat          Float                      @db.Float
+  gambar_produk  String                     @db.Text
+  jenis_produk   String                     @db.VarChar(255)
+  qty            Int
+  varian         String?                    @db.VarChar(255)
+  ukuran         String?                    @db.VarChar(255)
+  kupon          String?                    @db.VarChar(50)
+  potongan       Float?                     @db.Float
+  total          Int
+  status         Int                        @default(0)
+  id_user        Int
+  is_free_ongkir t_keranjang_is_free_ongkir
+  is_free        t_keranjang_is_free
+}
+
+model t_keranjang_temp {
+  kode           Int    @id
+  session        String @db.VarChar(255)
+  kode_keranjang String @db.VarChar(255)
+}
+
+model t_kupon {
+  id_kupon     Int               @id @default(autoincrement())
+  id_user      Int
+  id_produk    String            @db.Text
+  kupon        String            @db.VarChar(25)
+  diskon       Int
+  tipe         String            @db.VarChar(50)
+  jumlah_batas Int
+  is_active    t_kupon_is_active
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_kurir_lokal {
+  id_kurir_lokal Int                     @id @default(autoincrement())
+  kurir_lokal    String                  @db.VarChar(50)
+  ongkir         Int
+  is_active      t_kurir_lokal_is_active
+  id_user        Int
+}
+
+model t_log {
+  id_log  Int    @id @default(autoincrement())
+  id_user Int
+  aksi    String @db.VarChar(75)
+  pesanan String @db.Text
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_log_follow_up_expired {
+  kd_log_follow_up_expired String   @id @db.VarChar(10)
+  user_id                  String   @db.VarChar(25)
+  tgl_expired              DateTime @db.Date
+  follow_up_status         String   @default("'',''") @db.VarChar(10)
+  valid                    String   @default("yes") @db.VarChar(5)
+  reason                   String   @default("working") @db.VarChar(25)
+  message                  String?  @db.Text
+  created_at               DateTime @default(now()) @db.DateTime(0)
+
+  @@index([tgl_expired], map: "tgl_expired")
+  @@index([user_id], map: "user_id")
+  @@index([valid], map: "valid")
+}
+
+model t_log_follow_up_teks {
+  id_log_follow_up_teks Int    @id @default(autoincrement())
+  teks                  String @db.Text
+  type                  String @default("'',''") @db.VarChar(20)
+}
+
+model t_log_notif {
+  id_log_notif Int              @id @default(autoincrement())
+  title        String           @db.VarChar(255)
+  description  String           @db.Text
+  link         String?          @db.Text
+  type         t_log_notif_type @default(app)
+  image        String?          @db.Text
+  created_at   DateTime?        @db.DateTime(0)
+  end_at       DateTime?        @db.DateTime(0)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model t_log_notif_read {
+  id_log_notif_read String @db.VarChar(10)
+  id_log_notif      Int
+  id_user           Int
+
+  @@ignore
+}
+
+model t_multi_order {
+  id_order       Int                        @id @default(autoincrement())
+  order_id       String                     @db.VarChar(128)
+  kode_keranjang String                     @db.VarChar(255)
+  nama_pembeli   String                     @db.VarChar(75)
+  alamat_pembeli String                     @db.Text
+  no_hp_pembeli  String                     @db.VarChar(20)
+  email_pembeli  String                     @db.VarChar(128)
+  prov           String                     @db.VarChar(50)
+  kab            String                     @db.VarChar(50)
+  kec            String                     @db.VarChar(50)
+  expedisi       String?                    @db.VarChar(255)
+  estimasi       String?                    @db.VarChar(50)
+  paket          String?                    @db.VarChar(50)
+  ongkir         Int?
+  status_bayar   t_multi_order_status_bayar
+  order_status   t_multi_order_order_status
+  is_created     DateTime?                  @db.Date
+  tgl_order      DateTime                   @db.DateTime(0)
+  tgl_proses     DateTime                   @db.DateTime(0)
+  tgl_kirim      DateTime                   @db.DateTime(0)
+  tgl_selesai    DateTime                   @db.DateTime(0)
+  totalbayar     Int
+  bank           String                     @db.Text
+  payment        String?                    @db.VarChar(128)
+  no_resi        String?                    @db.Text
+  mutasi         t_multi_order_mutasi       @default(manual)
+  id_user        Int
+  id_payment     String                     @db.VarChar(255)
+
+  @@index([id_payment], map: "id_payment")
+}
+
+model t_option {
+  id_option       Int    @id @default(autoincrement())
+  id_custom_field Int
+  value           String @db.VarChar(255)
+
+  @@index([id_custom_field], map: "id_custom_field")
+}
+
+model t_order {
+  id_order        Int                  @id @default(autoincrement())
+  order_id        String               @db.VarChar(128)
+  id_produk       Int
+  nama_produk     String               @db.VarChar(255)
+  harga_jual      Int
+  berat           Int
+  gambar_produk   String               @db.Text
+  jenis_produk    String               @db.VarChar(255)
+  nama_pembeli    String               @db.VarChar(75)
+  alamat_pembeli  String               @db.Text
+  no_hp_pembeli   String               @db.VarChar(20)
+  email_pembeli   String               @db.VarChar(128)
+  prov            String               @db.VarChar(50)
+  kab             String               @db.VarChar(50)
+  kec             String               @db.VarChar(50)
+  qty             Int
+  varian          String?              @db.VarChar(255)
+  ukuran          String?              @db.VarChar(255)
+  expedisi        String?              @db.VarChar(255)
+  estimasi        String?              @db.VarChar(50)
+  paket           String?              @db.VarChar(50)
+  ongkir          Int?
+  status_bayar    t_order_status_bayar
+  order_status    t_order_order_status
+  is_created      DateTime?            @default(now()) @db.Date
+  tgl_order       DateTime             @default(now()) @db.DateTime(0)
+  tgl_proses      DateTime             @db.DateTime(0)
+  tgl_kirim       DateTime             @db.DateTime(0)
+  tgl_selesai     DateTime             @db.DateTime(0)
+  kupon           String?              @db.VarChar(50)
+  potongan        Int?
+  total           Int
+  totalbayar      Int
+  bank            String               @db.Text
+  payment         String?              @db.VarChar(128)
+  no_resi         String?              @db.Text
+  mutasi          t_order_mutasi       @default(manual)
+  id_user         Int
+  id_custom_field Int
+  id_payment      String?              @db.VarChar(255)
+
+  @@index([id_produk], map: "FK")
+  @@index([id_custom_field], map: "id_custom_field")
+  @@index([id_user], map: "id_user")
+  @@index([id_payment], map: "id_virtual_akun")
+  @@index([order_status], map: "order_status")
+}
+
+model t_platform_fee {
+  id_platform_fee Int                    @id @default(autoincrement())
+  payment         t_platform_fee_payment
+  fee             String                 @db.VarChar(255)
+}
+
+model t_produk {
+  id_produk          Int                     @id @default(autoincrement())
+  id_user            Int
+  id_kategori_produk Int
+  nama_produk        String                  @db.VarChar(75)
+  jenis_produk       String                  @db.VarChar(50)
+  harga_jual         Int
+  berat              Int
+  gambar             String                  @db.Text
+  video              String?                 @db.Text
+  link               String?                 @db.Text
+  deskripsi          String                  @db.Text
+  is_active          t_produk_is_active
+  is_free_ongkir     t_produk_is_free_ongkir @default(dbgenerated("0"))
+  is_free            t_produk_is_free        @default(dbgenerated("0"))
+  status             String                  @default("aktif") @db.VarChar(25)
+  text_button_order  String                  @default("Beli Sekarang") @db.VarChar(75)
+  created            DateTime?               @db.Date
+  sts_kupon          Int                     @default(1)
+
+  user t_user @relation(fields: [id_user], references: [id_user])
+  category t_kategori_produk? @relation(fields: [id_kategori_produk], references: [id_kategori_produk])
+  
+  sizes t_produk_ukuran[]
+  variants t_produk_varian[]
+  benefits t_produk_benefit[]
+
+  views t_view_produk?
+
+  @@index([id_user], map: "FK")
+  @@index([id_kategori_produk], map: "id_kategori_produk")
+}
+
+model t_produk_benefit {
+  id_benefit Int     @id @default(autoincrement())
+  benefit    String? @db.Text
+  id_user    Int
+  id_produk  Int
+
+  product t_produk @relation(fields: [id_produk], references: [id_produk])
+
+  @@index([id_produk], map: "id_produk")
+  @@index([id_user], map: "id_user")
+}
+
+model t_produk_link {
+  id_produk_link Int                     @id @default(autoincrement())
+  id_produk      Int
+  link           String                  @db.Text
+  embed          String                  @db.Text
+  is_active      t_produk_link_is_active
+  id_user        Int
+
+  @@index([id_produk], map: "FK")
+}
+
+model t_produk_ukuran {
+  id_produk_ukuran Int    @id @default(autoincrement())
+  ukuran           String @db.Text
+  harga_uk         Int
+  id_user          Int
+  id_produk        Int
+
+  product t_produk @relation(fields: [id_produk], references: [id_produk])
+
+  @@index([id_produk], map: "id_produk")
+  @@index([id_user], map: "id_user")
+}
+
+model t_produk_varian {
+  id_produk_varian Int     @id @default(autoincrement())
+  varian           String? @db.Text
+  id_user          Int
+  id_produk        Int
+
+  product t_produk @relation(fields: [id_produk], references: [id_produk])
+
+  @@index([id_produk], map: "id_produk")
+  @@index([id_user], map: "id_user")
+}
+
+model t_set_fittur {
+  kd_fittur Int                 @id @default(autoincrement())
+  id_fittur Int
+  id_user   Int
+  status    t_set_fittur_status
+
+  @@index([id_fittur], map: "id_fittur")
+  @@index([id_user], map: "id_user")
+}
+
+model t_set_fittur_data {
+  id_set_fittur_data Int    @id @default(autoincrement())
+  kd_fittur          Int
+  field              String @db.VarChar(150)
+  value              String @db.Text
+
+  @@index([kd_fittur], map: "id_setting_fitur")
+}
+
+model t_setting {
+  id_setting         Int                        @id @default(autoincrement())
+  nama_toko          String                     @db.VarChar(255)
+  email_toko         String                     @db.VarChar(50)
+  permalink          String?                    @db.Text
+  no_hp_toko         String                     @db.VarChar(20)
+  alamat_toko        String                     @db.Text
+  logo_toko          String                     @db.Text
+  prov               Int
+  kab                Int
+  kec                Int
+  lokasi_map         String?                    @db.Text
+  instagram          String                     @db.Text
+  whatsapp           String                     @db.Text
+  facebook           String                     @db.Text
+  tiktok             String                     @db.Text
+  youtube            String                     @db.Text
+  pixel_fb           String                     @default("'484492405698244'") @db.VarChar(255)
+  pixel_google       String                     @db.Text
+  pixel_tiktok       String                     @db.Text
+  es_batal           Int                        @default(7)
+  es_hapus           Int                        @default(7)
+  es_selesai         Int                        @default(7)
+  kode_unik          String                     @default("tambah") @db.VarChar(25)
+  status_kode_unik   t_setting_status_kode_unik @default(dbgenerated("1"))
+  id_user            Int @unique
+  id_kategori_bisnis Int
+
+  user t_user @relation(fields: [id_user], references: [id_user])
+}
+
+model t_setting_cron {
+  id_setting_cron Int @id @default(autoincrement())
+  total_user      Int
+  limit_user      Int @default(50)
+}
+
+model t_setting_diskon_arveoli {
+  kd_setting_diskon_arveoli String                            @id @db.VarChar(15)
+  id_user                   Int?
+  is_admin                  t_setting_diskon_arveoli_is_admin @default(dbgenerated("0"))
+  tipe                      t_setting_diskon_arveoli_tipe
+  nominal                   Int                               @default(0)
+  created_at                DateTime                          @default(now()) @db.DateTime(0)
+  update_at                 DateTime?                         @db.DateTime(0)
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_setting_fitur {
+  id_setting_fitur Int                    @id @default(autoincrement())
+  fitur            String                 @db.VarChar(50)
+  status           t_setting_fitur_status
+  pesan            String                 @db.Text
+}
+
+model t_setting_moota {
+  id_setting_moota Int                       @id @default(autoincrement())
+  id_user          Int
+  token            String?                   @db.Text
+  is_active        t_setting_moota_is_active
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_setting_pickup_arveoli {
+  kd_setting_pickup_arveoli String                            @id @db.VarChar(15)
+  id_user                   Int
+  expedisi                  String
+  label                     String                            @db.VarChar(150)
+  nama_tim_gudang           String                            @db.VarChar(150)
+  no_hp_tim_gudang          String                            @db.VarChar(15)
+  origin_code               String?                           @db.VarChar(50)
+  branch_code               String?                           @db.VarChar(50)
+  kota_pickup               String                            @db.VarChar(255)
+  kecamatan_pickup          String                            @db.VarChar(255)
+  kode_pos                  String?                           @db.VarChar(10)
+  alamat_lengkap            String                            @db.Text
+  created_at                DateTime                          @default(now()) @db.DateTime(0)
+  update_at                 DateTime?                         @db.DateTime(0)
+
+  user t_user @relation(fields: [id_user], references: [id_user])
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_setting_wbschat {
+  id_setting_wbschat Int                      @id @default(autoincrement())
+  id_user            Int
+  token              String?                  @db.Text
+  username           String?                  @db.VarChar(255)
+  token_sender       String?                  @db.Text
+  status             t_setting_wbschat_status @default(dbgenerated("1"))
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_setting_xendit {
+  id_setting_xendit Int                          @id @default(autoincrement())
+  id_user           Int
+  id                String                       @db.VarChar(255)
+  created           String                       @db.VarChar(255)
+  updated           String                       @db.VarChar(255)
+  email             String                       @db.VarChar(255)
+  type              String                       @db.VarChar(15)
+  business_name     String                       @db.VarChar(255)
+  country           String                       @db.VarChar(5)
+  status            String                       @db.VarChar(75)
+  is_active         t_setting_xendit_is_active
+  is_blocked        t_setting_xendit_is_blocked  @default(dbgenerated("0"))
+  pin               String?                      @db.VarChar(255)
+  status_qris       t_setting_xendit_status_qris @default(dbgenerated("1"))
+  status_va         t_setting_xendit_status_va   @default(dbgenerated("1"))
+  fee               t_setting_xendit_fee?        @default(seller)
+
+  user t_user @relation(fields: [id_user], references: [id_user])
+
+  @@index([id], map: "id")
+  @@index([id_user], map: "id_user")
+}
+
+model t_target {
+  id_target   Int            @id @default(autoincrement())
+  pendaftaran Int
+  nominal     Int
+  transaksi   Int
+  bulan       t_target_bulan
+  tahun       Int            @db.Year
+}
+
+model t_teks_follow_up {
+  id_teks_follow_up Int                           @id @default(autoincrement())
+  id_user           Int
+  teks_follow_up    String                        @db.Text
+  status_order      t_teks_follow_up_status_order
+  idx               t_teks_follow_up_idx?
+  frekuensi         Int?
+}
+
+model t_teks_pesan {
+  id_teks_pesan Int                       @id @default(autoincrement())
+  id_user       Int
+  teks_pesan    String                    @db.Text
+  status_order  t_teks_pesan_status_order
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_token_firebase {
+  id_token_firebase Int    @id @default(autoincrement())
+  id_user           Int
+  token             String @db.Text
+
+  @@index([id_user], map: "id_user")
+}
+
+model t_tutorial {
+  id_tutorial Int     @id @default(autoincrement())
+  menu        String  @db.VarChar(75)
+  link        String? @db.Text
+}
+
+model t_url_callback {
+  id_url_callback Int    @id @default(autoincrement())
+  id_user         Int
+  api_key         String @db.Text
+  url_callback    String @db.Text
+
+  @@index([id_user], map: "FK")
+}
+
+model t_user {
+  id_user      Int       @id @default(autoincrement())
+  username     String    @db.VarChar(50)
+  password     String    @db.Text
+  nama_lengkap String    @db.VarChar(255)
+  email        String    @db.VarChar(50)
+  no_hp        String    @db.VarChar(20)
+  alamat       String    @db.Text
+  user_id      Int
+  produk_id    Int
+  tgl_expired  DateTime  @db.Date
+  is_active    Int       @default(1)
+  is_created   DateTime? @db.Date
+
+  setting t_setting?
+  products t_produk[]
+  pickups t_setting_pickup_arveoli[]
+
+  banks t_bank[]
+  xendits t_setting_xendit[]
+  xendits_va t_bank_va_xendit[]
+
+  @@index([user_id], map: "Fk3")
+  @@index([produk_id], map: "Fk4")
+  @@index([is_active], map: "is_active")
+}
+
+model t_view_produk {
+  kd_view_produk String @id @db.VarChar(255)
+  id_user        Int
+  id_produk      Int @unique
+  view           Int
+  cache          String @db.Text
+
+  product t_produk @relation(fields: [id_produk], references: [id_produk])
+}
+
+model users {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String    @db.VarChar(255)
+  email             String    @unique(map: "users_email_unique") @db.VarChar(255)
+  email_verified_at DateTime? @db.Timestamp(0)
+  password          String    @db.VarChar(255)
+  remember_token    String?   @db.VarChar(100)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+}
+
+enum t_platform_fee_payment {
+  qris
+  virtual
+}
+
+enum t_setting_diskon_arveoli_is_admin {
+  SATU @map("1")
+  NOL @map("0")
+}
+
+enum t_setting_fitur_status {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_setting_pickup_arveoli_expedisi {
+  jne
+  sicepat
+  sap
+  idx
+}
+
+enum t_bank_va_xendit_is_active {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_custom_field_field {
+  input
+  textarea
+  select
+}
+
+enum t_kurir_lokal_is_active {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_set_fittur_status {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_setting_diskon_arveoli_tipe {
+  persen
+  nominal
+}
+
+enum t_setting_moota_is_active {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_teks_follow_up_status_order {
+  pending
+  cancel
+  selesai
+  upselling
+}
+
+enum t_teks_pesan_status_order {
+  cancel
+  proses
+  kirim
+  order
+  selesai
+}
+
+enum t_bank_is_active {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_custom_field_type {
+  text
+  date
+  number
+  email
+  url
+}
+
+enum t_log_notif_type {
+  app
+  link
+}
+
+enum t_produk_link_is_active {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_target_bulan {
+  januari
+  februari
+  maret
+  april
+  mei
+  juni
+  juli
+  agustus
+  september
+  oktober
+  november
+  desember
+}
+
+enum t_teks_follow_up_idx {
+  SATU @map("1")
+  DUA @map("2")
+  TIGA @map("3")
+}
+
+enum t_custom_field_required {
+  no
+  yes
+}
+
+enum t_setting_wbschat_status {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_kupon_is_active {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_custom_field_is_option {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_setting_xendit_is_active {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_produk_is_active {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_setting_xendit_is_blocked {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_produk_is_free_ongkir {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_produk_is_free {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_setting_xendit_status_qris {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_multi_order_status_bayar {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_setting_xendit_status_va {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_multi_order_order_status {
+  NOL @map("0")
+  SATU @map("1")
+  DUA @map("2")
+  TIGA @map("3")
+  EMPAT @map("4")
+}
+
+enum t_setting_xendit_fee {
+  seller
+  customer
+}
+
+enum t_keranjang_is_free_ongkir {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_keranjang_is_free {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_order_status_bayar {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_order_order_status {
+  NOL @map("0")
+  SATU @map("1")
+  DUA @map("2")
+  TIGA @map("3")
+  EMPAT @map("4")
+}
+
+enum t_setting_status_kode_unik {
+  NOL @map("0")
+  SATU @map("1")
+}
+
+enum t_multi_order_mutasi {
+  manual
+  moota
+  xendit
+}
+
+enum t_order_mutasi {
+  manual
+  moota
+  xendit
+}
