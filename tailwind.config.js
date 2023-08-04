@@ -25,7 +25,7 @@ module.exports = {
           '800': '#020226',
           '900': '#01011f'
         },
-        'stora-main': {
+        'stora': {
           '50': '#faf5ff',
           '100': '#f2e9fe',
           '200': '#e8d6fe',
@@ -38,7 +38,7 @@ module.exports = {
           '900': '#552084', // warna utama
           '950': '#380a61',
         },
-        'stora-second': {
+        'storano': {
           '50': '#fffaeb',
           '100': '#fff2c6',
           '200': '#fee489',

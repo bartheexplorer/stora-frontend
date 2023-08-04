@@ -35,7 +35,7 @@ export default function Category({
             >
                 {categories.map((item) => (
                     <SwiperSlide key={item.id_kategori_produk} className="relative h-28">
-                        <div className="shadow p-6 rounded-lg bg-stora-main-500">
+                        <div className="shadow p-6 rounded-lg bg-stora-500">
                             <h3 className="text-xs truncate text-white">{item.kategori}</h3>
                         </div>
                         <div className="absolute top-2.5 right-2.5 w-4 h-4 text-center bg-gray-300 rounded-full text-[10px] flex items-center justify-center tracking-wide">{item.count}</div>
@@ -49,7 +49,7 @@ export default function Category({
         <div className="overflow-x-scroll">
             <ul className="flex gap-4">
                 {categories.map((item) => (
-                    <li key={item.id_kategori_produk} className="p-4 shadow bg-stora-main-500 w-full max-w-[200px] rounded-lg text-white">
+                    <li key={item.id_kategori_produk} className="p-4 shadow bg-stora-500 w-full max-w-[200px] rounded-lg text-white">
                         <div className="flex items-center space-between">
                             <h3 className="text-xs font-medium whitespace-nowrap">
                                 {item.kategori}{' '}
