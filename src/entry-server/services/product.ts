@@ -1,6 +1,9 @@
 import type { Prisma, PrismaClient } from "@prisma/client"
 import type { CustomField, Options, Product, ProductDetail, TCountdown } from "./product-interface"
 import { createPaginator } from "prisma-pagination"
+import { appConfig } from "../config/app"
+
+const paginate = createPaginator({ perPage: 50 })
 
 export async function getProducts(prisma: PrismaClient, userId?: number) {
     if (!userId) return []
@@ -23,7 +26,6 @@ export async function getProductWithPaginate(
         perPage?: number
     }
 ) {
-    const paginate = createPaginator({ perPage: params.perPage ? params.perPage : 50 })
     const whereSearch: Prisma.t_produkWhereInput | undefined = params?.search
         ? {
             OR: [
@@ -76,6 +78,7 @@ export async function getProductWithPaginate(
         },
         {
             page: params?.page,
+            perPage: params?.perPage,
         }
     )
 }
@@ -203,6 +206,37 @@ export async function getProduct(
 
         return resultTrx
     } catch {
+        return null
+    }
+}
+
+// get photo produk1
+async function getPhotoProduct(fileName: string, userId: string) {
+    const url = `${appConfig.domain.storaAssets}/assets/image/produk/${userId}/${fileName}`
+    const result = await fetch(url, {
+        method: "GET"
+    })
+    if (!result.ok) throw new Error("Data tidak ditemukan")
+
+    return {
+        data: url,
+        data1: `/assets/image/produk/${userId}/${fileName}`,
+    }
+}
+
+// get photo produk2
+export async function getPhotoProduct2(fileName: string, userId: string) {
+    try {
+        const url = `${appConfig.domain.storaAssets}/assets/image/produk/${fileName}`
+        const result = await fetch(url, {
+            method: "GET",
+        })
+        if (!result.ok) return await getPhotoProduct(fileName, userId)
+        return {
+            data: url,
+            data1: `/assets/image/produk/${fileName}`,
+        }
+    } catch (error) {
         return null
     }
 }

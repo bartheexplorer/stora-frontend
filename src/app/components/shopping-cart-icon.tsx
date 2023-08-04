@@ -1,5 +1,5 @@
-import icon from "@/app/assets/app-icons/bag.svg"
-import Image from 'next/image'
+import icon from "@/app/assets/bag.svg"
+import Image from "next/image"
 
 export default function ShoppingCartIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (

@@ -60,7 +60,7 @@ export async function getUser(prisma: PrismaClient, permalink: string) {
         user.produk_id.toString()
     )
 
-    return {user, membership}
+    return { ...user, membership }
 }
 
 export async function findFeatureUser(prisma: PrismaClient, params: { userId: string }) {
