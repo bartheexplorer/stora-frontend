@@ -59,7 +59,7 @@ export async function getProductWithPaginate(
             include: {
                 category: true,
                 views: true,
-                variants: true,
+                variantions: true,
                 sizes: true,
                 user: {
                     select: {
@@ -111,9 +111,10 @@ export async function getProduct(
                     id_produk: { equals: params.productId }
                 },
                 include: {
+                    benefits: true,
                     category: true,
                     views: true,
-                    variants: true,
+                    variantions: true,
                     sizes: true,
                     user: {
                         select: {

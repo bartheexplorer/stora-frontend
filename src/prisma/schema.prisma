@@ -346,7 +346,7 @@ model t_produk {
   category t_kategori_produk? @relation(fields: [id_kategori_produk], references: [id_kategori_produk])
   
   sizes t_produk_ukuran[]
-  variants t_produk_varian[]
+  variantions t_produk_varian[]
   benefits t_produk_benefit[]
 
   views t_view_produk?

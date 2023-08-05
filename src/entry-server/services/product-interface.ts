@@ -16,7 +16,7 @@ export type Product = t_produk & {
     user: User
     category: t_kategori_produk | null
     views: t_view_produk | null
-    variants: t_produk_varian[]
+    variantions: t_produk_varian[]
     sizes: t_produk_ukuran[]
     benefits: t_produk_benefit[]
 }

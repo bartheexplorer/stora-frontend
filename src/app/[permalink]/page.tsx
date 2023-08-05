@@ -7,7 +7,7 @@ import Link from "next/link"
 import { getCategories } from "@/entry-server/services/category"
 import Category from "./components/category"
 import Product from "./components/product"
-
+// Icons
 import ShoppingCartIcon from "../components/shopping-cart-icon"
 import whatsAppIcon from "@/app/assets/medsos/WhatsApp.svg"
 import facebook from "@/app/assets/medsos/Facebook.svg"
@@ -15,7 +15,6 @@ import tiktok from "@/app/assets/medsos/TikTok.svg"
 import instagram from "@/app/assets/medsos/Instagram-Logo.wine.svg"
 import youtube from "@/app/assets/medsos/YouTube.svg"
 import Search from "./components/search"
-import { shimmer, toBase64 } from "@/utils/shimmer"
 import ImageProfile from "./components/image-profile"
 
 interface PermalinkProps {
@@ -26,22 +25,8 @@ interface PermalinkProps {
     searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export default async function Permalink({ params, searchParams }: PermalinkProps) {
-    const permalink = params.permalink
-    const categoryProductId = !isNaN(Number(searchParams?.id_category?.toString()))
-        ? Number(searchParams?.id_category?.toString())
-        : null
-    const user = await getUser(prisma, params.permalink)
-    const products = await getProductWithPaginate(prisma, {
-        permalink: params.permalink,
-        page: !isNaN(Number(searchParams?.page))
-            ? Number(searchParams.page)
-            : 0,
-        sort: searchParams?.sort?.toString(),
-        search: searchParams?.q?.toString(),
-        ...(categoryProductId ? { categoryProductId } : {})
-    })
-    const productArray = products.data.map((item) => ({
+const toProducts = (products: Awaited<ReturnType<typeof getProductWithPaginate>>) => {
+    return products.data.map((item) => ({
         id_produk: item.id_produk.toString(),
         nama_produk: item.nama_produk,
         is_free: Boolean(item.is_free === "SATU"),
@@ -58,12 +43,36 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
             : null,
         link: item.link,
     }))
-    const categories = await getCategories(prisma, params.permalink)
-    const categoryArray = categories.map((item) => ({
+}
+
+const toCategories = (categories: Awaited<ReturnType<typeof getCategories>>) => {
+    return categories.map((item) => ({
         id_kategori_produk: item.id_kategori_produk.toString(),
         kategori: item.kategori,
         count: item._count.products.toString(),
     }))
+}
+
+export default async function Permalink({ params, searchParams }: PermalinkProps) {
+    const permalink = params.permalink
+    const categoryProductId = !isNaN(Number(searchParams?.id_category?.toString()))
+        ? Number(searchParams?.id_category?.toString())
+        : null
+    // Service
+    const user = await getUser(prisma, permalink)
+    const products = await getProductWithPaginate(prisma, {
+        permalink,
+        page: !isNaN(Number(searchParams?.page))
+            ? Number(searchParams.page)
+            : 0,
+        sort: searchParams?.sort?.toString(),
+        search: searchParams?.q?.toString(),
+        ...(categoryProductId ? { categoryProductId } : {})
+    })
+    const categories = await getCategories(prisma, permalink)
+    // Map to array
+    const productArray = toProducts(products)
+    const categoryArray = toCategories(categories)
 
     if (!user) return null
 
