@@ -14,7 +14,15 @@ export const IFormValueCheckoutSchema = z.object({
             id: z.string(),
             value: z.string(),
         }).array()
-    }).array()
+    }).array(),
+    variasi: z.string().optional(),
+    ukuran: z.string().optional(),
+    payment: z.object({
+        id: z.string(),
+        account: z.string().optional(),
+        name: z.string().optional(),
+        payment_method: z.string(),
+    }).optional(),
 })
 
 export type IFormValueCheckout = z.infer<typeof IFormValueCheckoutSchema>

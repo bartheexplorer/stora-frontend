@@ -218,6 +218,8 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
                 products={productArray}
                 permalink={permalink}
             />
+
+            <pre>{JSON.stringify(user, undefined, 2)}</pre>
         </>
     )
 }

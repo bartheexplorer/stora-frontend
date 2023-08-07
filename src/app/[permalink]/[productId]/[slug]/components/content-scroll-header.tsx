@@ -1,10 +1,11 @@
 "use client"
 
 import "swiper/css"
-import "swiper/css/navigation"
+import "swiper/css/scrollbar"
 import { Swiper, SwiperSlide } from "swiper/react"
-import { Navigation } from "swiper/modules"
+import { Scrollbar } from "swiper/modules"
 import PhotoProduct from "./photo-product"
+import Link from "next/link"
 
 interface ContentHeaderProps {
     images: string[]
@@ -12,23 +13,30 @@ interface ContentHeaderProps {
     userId: string
 }
 
-export default function ContentHeader({
+export default function ContentScrollHeader({
     images,
     video,
     userId,
 }: ContentHeaderProps) {
     return (
-        <div className="px-12">
+        <>
             <Swiper
                 autoHeight={true}
-                navigation={true}
-                modules={[Navigation]}
+                scrollbar={{
+                    hide: true,
+                }}
+                spaceBetween={20}
+                slidesPerView={1}
+                slidesOffsetAfter={20}
+                slidesOffsetBefore={20}
+                modules={[Scrollbar]}
                 className="mySwiper"
+                style={{ paddingLeft: "25px", paddingRight: "25px" }}
             >
                 {video && (
                     <SwiperSlide>
-                        <div className="flex items-center h-full">
-                            <div className="aspect-h-1 aspect-w-2 w-full overflow-hidden bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
+                        <div className="relative flex items-center h-full">
+                            <div className="aspect-h-1 aspect-w-2 w-full overflow-hidden bg-gray-200 lg:aspect-none group-hover:opacity-75 h-96 rounded-lg">
                                 <iframe
                                     src={video}
                                     title="YouTube video player"
@@ -37,6 +45,7 @@ export default function ContentHeader({
                                     className="h-full w-full object-cover object-center lg:h-full lg:w-full"
                                 ></iframe>
                             </div>
+                            <Link href={video} target="_blank" className="absolute inset-0 z-40">&nbsp;</Link>
                         </div>
                     </SwiperSlide>
                 )}
@@ -52,6 +61,6 @@ export default function ContentHeader({
                     )
                 })}
             </Swiper>
-        </div>
+        </>
     );
 }

@@ -17,13 +17,15 @@ export default function PhotoProduct({
     if (!dataPhotoProduct?.data) return null
 
     return (
-        <Image
-            src={dataPhotoProduct.data.data1}
-            alt={dataPhotoProduct.data.data1}
-            loader={({ src, width }) => `${src}?width=${width}`}
-            width={300}
-            height={300}
-            className="h-full w-full border-0 object-center lg:h-full lg:w-full"
-        />
+        <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden lg:aspect-none group-hover:opacity-75 lg:h-96 rounded-lg">
+            <Image
+                src={dataPhotoProduct.data.data1}
+                alt={dataPhotoProduct.data.data1}
+                loader={({ src, width }) => `${src}?width=${width}`}
+                width={300}
+                height={300}
+                className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+            />
+        </div>
     )
 }

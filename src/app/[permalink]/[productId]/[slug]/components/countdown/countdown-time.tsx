@@ -40,18 +40,26 @@ const ShowCounter = ({
     )
 }
 
-const CountdownTimer = ({ targetDate = dateTimeAfterThreeDays }: { targetDate?: number }) => {
+const CountdownTimer = ({ teks_countdown, targetDate = dateTimeAfterThreeDays }: { targetDate?: number; teks_countdown: string }) => {
     const [days, hours, minutes, seconds] = useCountdown(targetDate)
 
     if ((days + hours + minutes + seconds) <= 0) return <ExpiredNotice />
 
     return (
-        <ShowCounter
-            days={days}
-            hours={hours}
-            minutes={minutes}
-            seconds={seconds}
-        />
+        <div className="w-full bg-stora-500 max-w-full mx-auto z-20 h-[50px] flex items-center">
+            <div className="text-center flex-1">
+                <h3 className="text-white uppercase text-[10px] font-medium">{teks_countdown}</h3>
+                <div className="mt-0 text-white text-base font-medium">
+                    {/* component */}
+                    <ShowCounter
+                        days={days}
+                        hours={hours}
+                        minutes={minutes}
+                        seconds={seconds}
+                    />
+                </div>
+            </div>
+        </div>
     )
 }
 
