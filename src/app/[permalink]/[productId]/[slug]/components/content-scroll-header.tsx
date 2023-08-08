@@ -3,6 +3,7 @@
 import "swiper/css"
 import "swiper/css/scrollbar"
 import "swiper/css/pagination"
+import "./content-scroll-header.module.css"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Scrollbar, Pagination } from "swiper/modules"
 import PhotoProduct from "./photo-product"
@@ -28,17 +29,26 @@ export default function ContentScrollHeader({
                 }}
                 pagination={{
                     type: "fraction",
+                    formatFractionTotal: (vl) => {
+                        return vl - 1
+                    },
+                    renderFraction: (currentClass, totalClass) => {
+                        console.log(currentClass)
+                        console.log(totalClass)
+                        return `<div style="color: #94a3b8; padding: 5px; font-size: 0.75rem; line-height: 1rem; display: flex;">
+                            <div style="background-color: rgb(241 245 249); width: 1.75rem; text-align: center; border-radius: 0.25rem;"><span class="${currentClass}"></span>/<span class="${totalClass}"></span></div>
+                        </div>`
+                    },
                 }}
                 spaceBetween={20}
                 slidesPerView={1}
-                slidesOffsetAfter={20}
-                slidesOffsetBefore={20}
+                slidesOffsetAfter={8}
+                slidesOffsetBefore={8}
                 modules={[Scrollbar, Pagination]}
                 className="mySwiper"
                 style={{
-                    paddingLeft: "25px",
-                    paddingRight: "25px",
-                    color: "#ffffff",
+                    paddingLeft: "18px",
+                    paddingRight: "18px",
                 }}
             >
                 {!!video && (

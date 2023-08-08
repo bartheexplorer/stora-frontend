@@ -10,6 +10,9 @@ import IFormAddressArveoli from "./form-address-arveoli"
 import { toIDR } from "@/utils/to-idr"
 import { OrderContext } from "@/context/order"
 import clsx from "clsx"
+import { getRandomThreeDigitNumber } from "@/utils/get-rand-number"
+
+const RAND_CODE = getRandomThreeDigitNumber()
 
 interface IFormCheckoutProps {
     variations: {
@@ -69,6 +72,7 @@ interface IFormCheckoutProps {
             fee: "seller" | "customer" | null
         }[]
     }
+    codeUnique: boolean
 }
 
 export default function IFormCheckout({
@@ -76,6 +80,7 @@ export default function IFormCheckout({
     sizes,
     product,
     payment,
+    codeUnique,
 }: IFormCheckoutProps) {
     const { shippingArveoli } = useContext(OrderContext)
     const [isOpenAddress, setIsOpenAddress] = useState<boolean>(false)
@@ -89,13 +94,19 @@ export default function IFormCheckout({
         name?: string
     } | null>(null)
     const [checkout, setCheckout] = useState<{
-        total: number
         price: number
         afterPrice: number
+        subTotal: number
+        total: number
+        qty: number
+        randCode: number
     }>({
         total: product.price,
+        subTotal: product.price,
         price: product.price,
         afterPrice: product.price,
+        qty: 1,
+        randCode: codeUnique ? RAND_CODE : 0,
     })
     const [address, setAddress] = useState<{
         province: string
@@ -131,6 +142,7 @@ export default function IFormCheckout({
                 placeholder: item.placeholder,
                 options: item.options,
             })),
+            jumlah: "1",
         }
     })
 
@@ -174,7 +186,8 @@ export default function IFormCheckout({
         for (let index = 1; index <= length; index++) {
             array.push(index);
         }
-        return array
+
+        return array.map((item) => (<option key={item} value={item}>{item}</option>))
     }
 
     const getPaymentMethod = (currentPayment: {
@@ -274,6 +287,7 @@ export default function IFormCheckout({
                                                                 type="button"
                                                                 className="absolute inset-0"
                                                                 onClick={() => {
+                                                                    const ongkir = Number(item.price)
                                                                     setAddress((prevState) => {
                                                                         if (!prevState) return prevState
                                                                         return {
@@ -283,11 +297,17 @@ export default function IFormCheckout({
                                                                                 s_name,
                                                                                 service_code: item.service_code,
                                                                                 service_name: item.service_name,
-                                                                                price: item.price,
+                                                                                price: ongkir,
                                                                                 etd: item.etd,
                                                                                 discount_price: item.discount_price,
                                                                                 cashless_discount_price: item.cashless_discount_price,
                                                                             }
+                                                                        }
+                                                                    })
+                                                                    setCheckout((prevState) => {
+                                                                        return {
+                                                                            ...prevState,
+                                                                            total: prevState.subTotal + ongkir
                                                                         }
                                                                     })
                                                                 }}
@@ -587,17 +607,46 @@ export default function IFormCheckout({
                             </>
                         )}
 
-                        <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                            <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="jumlah">
-                                Jumlah
-                            </label>
-                            <select
-                                {...(register("jumlah", { required: true }))}
-                                className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                            >
-                                {num().map((item) => (<option key={item} value={item}>{item}</option>))}
-                            </select>
-                        </fieldset>
+                        <Controller
+                            control={control}
+                            name="jumlah"
+                            rules={{
+                                required: true,
+                            }}
+                            render={({ field }) => {
+                                const { onChange, ref, ...rest } = field
+                                return (
+                                    <fieldset className="mb-[15px] w-full flex flex-col justify-start">
+                                        <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="jumlah">
+                                            Jumlah
+                                        </label>
+                                        <select
+                                            {...rest}
+                                            ref={ref}
+                                            onChange={(event) => {
+                                                const ongkir = address?.shipping?.price
+                                                    ? Number(address.shipping.price)
+                                                    : 0
+                                                onChange(event)
+                                                setCheckout((prevState) => {
+                                                    const qty = Number(event.target.value)
+                                                    const subtotal = qty * prevState.afterPrice
+                                                    return {
+                                                        ...prevState,
+                                                        qty: qty,
+                                                        subTotal:  subtotal,
+                                                        total: subtotal + ongkir, 
+                                                    }
+                                                })
+                                            }}
+                                            className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                        >
+                                            {num()}
+                                        </select>
+                                    </fieldset>
+                                )
+                            }}
+                        />
 
                         <fieldset className="mb-[15px] w-full flex flex-col justify-start">
                             <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="nama_lengkap">
@@ -677,7 +726,7 @@ export default function IFormCheckout({
                         )}
 
                         {Boolean(product.typeProduct === "fisik") && (
-                            <div>
+                            <>
                                 <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
                                     <div className="flex items-center justify-between">
                                         <div className="text-xs">Alamat Pengiriman:</div>
@@ -714,7 +763,16 @@ export default function IFormCheckout({
                                                                 onOpenAddressChange(false)
                                                                 // setAddress()
                                                                 console.log("A;amat peentima", val)
+                                                                const ongkir = val.shipping?.price
+                                                                    ? Number(val.shipping.price)
+                                                                    : 0 
                                                                 setAddress(() => val)
+                                                                setCheckout((prevState) => {
+                                                                    return {
+                                                                        ...prevState,
+                                                                        total: prevState.subTotal + (ongkir || 0)
+                                                                    }
+                                                                })
                                                             }}
                                                         />
                                                     </div>
@@ -848,8 +906,12 @@ export default function IFormCheckout({
                                     </div>
                                 </div>
 
-                                {!!currentPayment && getPaymentMethod(currentPayment)}
-                            </div>
+                                {!!currentPayment && (
+                                    <div className="mb-3">
+                                        {getPaymentMethod(currentPayment)}
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         {Boolean(product.typeProduct === "digital") && (
@@ -857,6 +919,55 @@ export default function IFormCheckout({
                                 typeProduct digital
                             </div>
                         )}
+
+                        <div className="bg-slate-50 rounded-lg">
+                            <div className="pt-4 px-4 pb-2 border-b">
+                                <h3 className="text-gray-800 text-[13px] font-medium tracking-wide">Rincian pembayaran:</h3>
+                            </div>
+                            <div className="px-4 py-2">
+                                <div className="flex flex-col">
+                                    {codeUnique && (
+                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
+                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                {checkout.randCode}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Jumlah</span>
+                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                            {checkout.qty}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Subtotal</span>
+                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                            {toIDR(checkout.subTotal.toString())}
+                                        </span>
+                                    </div>
+                                    {!product.isFreeOngkir && (
+                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Ongkir</span>
+                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                {!!address?.shipping
+                                                    ? (
+                                                        <>
+                                                            {toIDR(address.shipping.price.toString())}
+                                                        </>
+                                                    ) : toIDR("0")}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Total</span>
+                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                            {toIDR(checkout.total.toString())}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
