@@ -47,26 +47,26 @@ interface IFormCheckoutProps {
     }
     payment: {
         transfer: {
-            id_bank: string // item.id_bank.toString(), // 21,
-            bank: string // item.bank, // "BANK CENTRAL ASIA",
-            rekening: string // item.rekening, // "799199191",
-            pemilik: string // item.pemilik, // "Klikdigital Indonesia",
-            is_active: boolean // Boolean(item.is_active === "SATU"), // "SATU",
+            id_bank: string
+            bank: string
+            rekening: string
+            pemilik: string
+            is_active: boolean
         }[]
         va: {
-            id_bank_va_xendit: string // item.id_bank_va_xendit.toString(), // 35,
-            bank_code: string // item.bank_code, // "BCA",
-            is_active: boolean // Boolean(item.is_active === "SATU"), // "SATU"
+            id_bank_va_xendit: string
+            bank_code: string
+            is_active: boolean
         }[]
         settings: {
-            id_setting_xendit: string // item.id_setting_xendit.toString(), // 19,
-            business_name: string // item.business_name, // "admin",
-            country: string // item.country, // "ID",
-            is_active: boolean // Boolean(item.is_active === "SATU"), // "SATU",
-            is_blocked: boolean // Boolean(item.is_blocked === "SATU"), // "NOL",
-            status_qris: boolean // Boolean(item.status_qris === "SATU"), // "SATU",
-            status_va: boolean // Boolean(item.status_va === "SATU"), // "SATU",
-            fee: "seller" | "customer" | null // item.fee, // "seller"
+            id_setting_xendit: string
+            business_name: string
+            country: string
+            is_active: boolean
+            is_blocked: boolean
+            status_qris: boolean
+            status_va: boolean
+            fee: "seller" | "customer" | null
         }[]
     }
 }
@@ -81,6 +81,13 @@ export default function IFormCheckout({
     const [isOpenAddress, setIsOpenAddress] = useState<boolean>(false)
     const [isOpenShipping, setIsOpenShipping] = useState<boolean>(false)
     const [isOpenPayment, setIsOpenPayment] = useState<boolean>(false)
+    const [currentPayment, setCurrentPayment] = useState<{
+        id: string
+        payment_method: string
+        account?: string
+        bank?: string
+        name?: string
+    } | null>(null)
     const [checkout, setCheckout] = useState<{
         total: number
         price: number
@@ -99,13 +106,13 @@ export default function IFormCheckout({
         zip_code: string
         address: string
         shipping: {
-            service_code: string // "CTC23",
-            service_name: string // "CTC",
-            price: string | number // "960000",
-            etd: string // "2 - 3 hari",
-            discount_price: string | number // 960000,
-            cashless_discount_price: string | number // 960000,
-            s_name: any // "jne"
+            service_code: string
+            service_name: string
+            price: string | number
+            etd: string
+            discount_price: string | number
+            cashless_discount_price: string | number
+            s_name: any
         } | null
     } | null>(null)
     const {
@@ -170,6 +177,58 @@ export default function IFormCheckout({
         return array
     }
 
+    const getPaymentMethod = (currentPayment: {
+        id: string
+        payment_method: string
+        account?: string
+        bank?: string
+        name?: string
+    }) => {
+        if (currentPayment.payment_method === "tf") {
+            return (
+                <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
+                    <span className="text-xs">
+                        Transfer bank
+                    </span>
+                    <span className="text-xs">{currentPayment?.bank}</span>
+                </div>
+            )
+        }
+
+        if (currentPayment.payment_method === "va") {
+            return (
+                <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
+                    <span className="text-xs">
+                        Virtual account
+                    </span>
+                    <span className="text-xs">{currentPayment?.account}</span>
+                </div>
+            )
+        }
+
+        if (currentPayment.payment_method === "COD") {
+            return (
+                <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
+                    <span className="text-xs">
+                        COD
+                    </span>
+                </div>
+            )
+        }
+
+        if (currentPayment.payment_method === "QRIS") {
+            return (
+                <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
+                    <span className="text-xs">
+                        QRIS
+                    </span>
+                </div>
+            )
+        }
+
+        return null
+    }
+
     const shippingArveoliMap = () => {
         const shipping = []
         if (shippingArveoli?.data) {
@@ -185,57 +244,77 @@ export default function IFormCheckout({
 
         return (Array.isArray(shipping) && shipping.length > 0)
             ? (
-                <ul className="px-6 my-4 space-y-3">
-                    {shipping.map((item) => {
-                        const s_name = item.id
-                        return (
-                            <li key={item.id}>
-                                {(Array.isArray(item.options) && item.options.length > 0) && (
-                                    <>
-                                        <h4 className="uppercase text-xs font-semibold tracking-wide mb-2">{s_name}</h4>
-                                        <ul className="flex flex-wrap gap-3">
-                                            {item.options.map((item) => {
-                                                return (
-                                                    <li key={item.service_code} className="relative p-2 bg-gray-100 rounded-lg shadow border border-transparent hover:border-green-500">
-                                                        <p className="text-xs text-gray-800 mb-1.5">{item.service_name}</p>
-                                                        {!!item.price && (
-                                                            <p className="text-xs text-gray-800 mb-1.5">{toIDR(item.price.toString())}</p>
-                                                        )}
-                                                        <p className="text-xs text-gray-800">{item.etd}</p>
-                                                        <button
-                                                            type="button"
-                                                            className="absolute inset-0"
-                                                            onClick={() => {
-                                                                console.log(item)
-                                                                setIsOpenShipping(false)
-                                                                setAddress((prevState) => {
-                                                                    if (!prevState) return prevState
-                                                                    return {
-                                                                        ...prevState,
-                                                                        shipping: {
-                                                                            ...(prevState?.shipping ? prevState.shipping : {}),
-                                                                            s_name,
-                                                                            service_code: item.service_code,
-                                                                            service_name: item.service_name,
-                                                                            price: item.price,
-                                                                            etd: item.etd,
-                                                                            discount_price: item.discount_price,
-                                                                            cashless_discount_price: item.cashless_discount_price,
+                <>
+                    <ul className="px-6 my-4 space-y-3">
+                        {shipping.map((item) => {
+                            const s_name = item.id
+                            return (
+                                <li key={item.id}>
+                                    {(Array.isArray(item.options) && item.options.length > 0) && (
+                                        <>
+                                            <h4 className="uppercase text-xs font-semibold tracking-wide mb-2">{s_name}</h4>
+                                            <ul className="flex flex-wrap gap-3">
+                                                {item.options.map((item) => {
+                                                    return (
+                                                        <li
+                                                            key={item.service_code}
+                                                            className={clsx(
+                                                                "relative p-2 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
+                                                                item.service_code === address?.shipping?.service_code
+                                                                    ? "border-stora-500"
+                                                                    : "border-transparent"
+                                                            )}
+                                                        >
+                                                            <p className="text-xs text-gray-800 mb-1.5">{item.service_name}</p>
+                                                            {!!item.price && (
+                                                                <p className="text-xs text-gray-800 mb-1.5">{toIDR(item.price.toString())}</p>
+                                                            )}
+                                                            <p className="text-xs text-gray-800">{item.etd}</p>
+                                                            <button
+                                                                type="button"
+                                                                className="absolute inset-0"
+                                                                onClick={() => {
+                                                                    setAddress((prevState) => {
+                                                                        if (!prevState) return prevState
+                                                                        return {
+                                                                            ...prevState,
+                                                                            shipping: {
+                                                                                ...(prevState?.shipping ? prevState.shipping : {}),
+                                                                                s_name,
+                                                                                service_code: item.service_code,
+                                                                                service_name: item.service_name,
+                                                                                price: item.price,
+                                                                                etd: item.etd,
+                                                                                discount_price: item.discount_price,
+                                                                                cashless_discount_price: item.cashless_discount_price,
+                                                                            }
                                                                         }
-                                                                    }
-                                                                })
-                                                            }}
-                                                        >&nbsp;</button>
-                                                    </li>
-                                                )
-                                            })}
-                                        </ul>
-                                    </>
-                                )}
-                            </li>
-                        )
-                    })}
-                </ul>
+                                                                    })
+                                                                }}
+                                                            >&nbsp;</button>
+                                                        </li>
+                                                    )
+                                                })}
+                                            </ul>
+                                        </>
+                                    )}
+                                </li>
+                            )
+                        })}
+                    </ul>
+
+                    <div className="py-6 flex flex-col">
+                        <button
+                            type="button"
+                            className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
+                            onClick={() => {
+                                if (address?.id_mapping) {
+                                    setIsOpenShipping(false)
+                                }
+                            }}
+                        >Simpan</button>
+                    </div>
+                </>
             ) : null
     }
 
@@ -246,8 +325,20 @@ export default function IFormCheckout({
                     name="payment"
                     control={control}
                     render={({ field }) => {
-                        const { onChange: onChangeVal } = field
-                        const onChange = (vl?: { id?: string; name?: string; account?: string; payment_method?: string }) => {
+                        const { onChange: onChangeVal, value } = field
+                        const onChange = (vl: {
+                            id: string
+                            bank?: string
+                            name?: string
+                            account?: string
+                            payment_method: string
+                        }) => {
+                            setCurrentPayment({
+                                ...vl,
+                                id: vl.id,
+                                account: vl.account,
+                                payment_method: vl.payment_method,
+                            })
                             onChangeVal(vl)
                         }
 
@@ -259,14 +350,23 @@ export default function IFormCheckout({
                                         <ul className="flex flex-wrap gap-3">
                                             {payment.transfer.map((item) => {
                                                 return item.is_active ? (
-                                                    <li key={item.id_bank} className="relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border border-transparent hover:border-stora-500">
+                                                    <li
+                                                        key={item.id_bank}
+                                                        className={clsx(
+                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
+                                                            Boolean(item.id_bank.toString() === value?.id.toString())
+                                                                ? "border-stora-500"
+                                                                : "border-transparent"
+                                                        )}
+                                                    >
                                                         <p className="text-xs">{item.bank}</p>
                                                         <button
                                                             type="button"
                                                             className="absolute inset-0"
                                                             onClick={() => {
                                                                 onChange({
-                                                                    id: item.bank,
+                                                                    id: item.id_bank,
+                                                                    bank: item.bank.toString(),
                                                                     account: item.rekening,
                                                                     name: item.pemilik,
                                                                     payment_method: "tf"
@@ -285,16 +385,25 @@ export default function IFormCheckout({
                                         <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
                                         <ul className="flex flex-wrap gap-3">
                                             {payment.va.map((item) => {
+                                                const account = item.bank_code.replaceAll("_", " ").toString()
                                                 return item.is_active ? (
-                                                    <li key={item.id_bank_va_xendit} className="relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border border-transparent hover:border-stora-500">
-                                                        <p className="text-xs uppercase">Bank {item.bank_code}</p>
+                                                    <li
+                                                        key={item.id_bank_va_xendit}
+                                                        className={clsx(
+                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
+                                                            Boolean(item.id_bank_va_xendit.toString() === value?.id.toString())
+                                                                ? "border-stora-500"
+                                                                : "border-transparent"
+                                                        )}
+                                                    >
+                                                        <p className="text-xs uppercase">Bank {account}</p>
                                                         <button
                                                             type="button"
                                                             className="absolute inset-0"
                                                             onClick={() => {
                                                                 onChange({
                                                                     id: item.id_bank_va_xendit,
-                                                                    account: item.bank_code,
+                                                                    account: account,
                                                                     payment_method: "va",
 
                                                                 })
@@ -313,7 +422,15 @@ export default function IFormCheckout({
                                         <ul className="flex flex-col gap-3">
                                             {payment.settings.map((item) => {
                                                 return item.status_qris ? (
-                                                    <li key={item.id_setting_xendit} className="relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border border-transparent hover:border-stora-500">
+                                                    <li
+                                                        key={item.id_setting_xendit}
+                                                        className={clsx(
+                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
+                                                            Boolean(item.id_setting_xendit.toString() === value?.id.toString())
+                                                                ? "border-stora-500"
+                                                                : "border-transparent"
+                                                        )}
+                                                    >
                                                         <p className="text-xs uppercase">{`QRIS`}</p>
                                                         <button
                                                             type="button"
@@ -331,7 +448,14 @@ export default function IFormCheckout({
                                             })}
 
                                             {product.typeProduct === "fisik" && (
-                                                <li className="relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border border-transparent hover:border-stora-500">
+                                                <li
+                                                    className={clsx(
+                                                        "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
+                                                        Boolean("COD" === value?.id.toString())
+                                                            ? "border-stora-500"
+                                                            : "border-transparent"
+                                                    )}
+                                                >
                                                     <p className="text-xs uppercase">{`COD (Cash On Delivery)`}</p>
                                                     <button
                                                         type="button"
@@ -349,6 +473,17 @@ export default function IFormCheckout({
                                     </div>
                                 )}
 
+                                <div className="py-6 flex flex-col">
+                                    <button
+                                        type="button"
+                                        className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
+                                        onClick={() => {
+                                            if (value?.id) {
+                                                setIsOpenPayment(false)
+                                            }
+                                        }}
+                                    >Simpan</button>
+                                </div>
                             </>
                         )
                     }}
@@ -543,7 +678,7 @@ export default function IFormCheckout({
 
                         {Boolean(product.typeProduct === "fisik") && (
                             <div>
-                                <div className="w-full min-h-[75px] bg-gray-100 rounded-lg p-6">
+                                <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
                                     <div className="flex items-center justify-between">
                                         <div className="text-xs">Alamat Pengiriman:</div>
                                         <Dialog.Root
@@ -552,12 +687,12 @@ export default function IFormCheckout({
                                         >
                                             <Dialog.Trigger asChild>
                                                 {!!address ? (
-                                                    <button className="inline-flex items-center justify-center text-xs font-medium leading-none focus:outline-none">
+                                                    <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
                                                         <span className="text-[13px] leading-none text-stora-500 block">Ubah Alamat</span>
                                                         <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                     </button>
                                                 ) : (
-                                                    <button className="inline-flex items-center justify-center text-xs font-medium leading-none focus:outline-none">
+                                                    <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
                                                         <span className="text-[13px] leading-none text-stora-500 block">Tambah alamat</span>
                                                         <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                     </button>
@@ -566,7 +701,7 @@ export default function IFormCheckout({
                                             <Dialog.Portal>
                                                 <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
                                                 <Dialog.Content className="overflow-y-scroll z-40 data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                    <div className="py-8">
+                                                    <div className="py-6 py-8">
                                                         <Dialog.Title className="m-0 text-sm font-medium">
                                                             Alamat Penerima
                                                         </Dialog.Title>
@@ -578,7 +713,7 @@ export default function IFormCheckout({
                                                             onSelected={(val) => {
                                                                 onOpenAddressChange(false)
                                                                 // setAddress()
-                                                                console.log(val)
+                                                                console.log("A;amat peentima", val)
                                                                 setAddress(() => val)
                                                             }}
                                                         />
@@ -599,20 +734,22 @@ export default function IFormCheckout({
                                     {!!address && (
                                         <div className="my-3">
                                             <p className="text-xs">
-                                                {`${address.address}, 
-                                                    ${address.urban_village}, 
-                                                    ${address.sub_district},
-                                                    ${address.regency},
-                                                    ${address.province}
+                                                {`${address.address ? `${address.address},` : ""} 
+                                                    ${address.urban_village.length > 1 ? `${address.urban_village},` : ""} 
+                                                    ${address.sub_district.length > 1 ? `${address.sub_district},` : ""}
+                                                    ${address.regency.length > 1 ? `${address.regency},` : ""}
+                                                    ${address.province ? address.province : ""}
                                                 `}
                                             </p>
-                                            <p className="text-xs">
-                                                {`Kode Pos: ${address.zip_code}`}
-                                            </p>
+                                            {address.zip_code ? (
+                                                <p className="text-xs">
+                                                    {`Kode Pos: ${address.zip_code}`}
+                                                </p>
+                                            ) : null}
                                         </div>
                                     )}
 
-                                    {!!address && (
+                                    {!!address?.shipping && (
                                         <>
                                             <div className="flex items-center justify-between my-2">
                                                 <div className="text-xs">Informasi Pengiriman:</div>
@@ -621,15 +758,15 @@ export default function IFormCheckout({
                                                     onOpenChange={onOpenShippingChange}
                                                 >
                                                     <Dialog.Trigger asChild>
-                                                        <button className="inline-flex items-center justify-center text-xs font-medium leading-none focus:outline-none">
+                                                        <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
                                                             <span className="text-[13px] leading-none text-stora-500 block">Ubah pengiriman</span>
                                                             <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                         </button>
                                                     </Dialog.Trigger>
                                                     <Dialog.Portal>
                                                         <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                                        <Dialog.Content className="overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                            <div className="py-6">
+                                                        <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                            <div className="py-6 px-8">
                                                                 <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
                                                                     Pengiriman
                                                                 </Dialog.Title>
@@ -657,12 +794,12 @@ export default function IFormCheckout({
                                             <div>
                                                 <p className="text-xs">
                                                     <span className="uppercase">{address.shipping?.s_name}</span>{", "}
-                                                    {address.shipping?.service_name}{" "}
-                                                    {address.shipping?.price
+                                                    {address.shipping.service_name}{" "}
+                                                    {address.shipping.price
                                                         ? toIDR(address.shipping.price.toString())
                                                         : ""}
                                                 </p>
-                                                {!!address.shipping?.etd && (
+                                                {!!address.shipping.etd && (
                                                     <p className="text-xs italic">{address.shipping.etd}</p>
                                                 )}
                                             </div>
@@ -671,21 +808,25 @@ export default function IFormCheckout({
                                 </div>
 
                                 <div className="flex justify-between my-4">
-                                    <div className="text-[13px]">Metode Pembayaran</div>
+                                    <div>
+                                        <label className="text-[13px]">
+                                            Metode Pembayaran
+                                        </label>
+                                    </div>
                                     <div>
                                         <Dialog.Root
                                             open={isOpenPayment}
                                             onOpenChange={setIsOpenPayment}
                                         >
                                             <Dialog.Trigger asChild>
-                                                <button className="text-violet11 inline-flex items-center justify-center text-xs font-medium leading-none focus:outline-none">
+                                                <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
                                                     <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
                                                     <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                 </button>
                                             </Dialog.Trigger>
                                             <Dialog.Portal>
                                                 <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                                <Dialog.Content className="overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
                                                     <div className="py-8">
                                                         <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
                                                             Metode pembayaran
@@ -706,6 +847,8 @@ export default function IFormCheckout({
                                         </Dialog.Root>
                                     </div>
                                 </div>
+
+                                {!!currentPayment && getPaymentMethod(currentPayment)}
                             </div>
                         )}
 
@@ -716,9 +859,9 @@ export default function IFormCheckout({
                         )}
                     </div>
 
-                    <div className="fixed bottom-0 inset-x-0 pb-8 sm:pb-6">
+                    <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
                         <div className="w-full max-w-lg mx-auto px-3">
-                            <div className="h-12 flex items-center justify-between bg-stora-500 rounded-lg px-3">
+                            <div className="h-12 flex items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
                                 <span className="text-sm tracking-wide text-white">{toIDR(checkout.afterPrice.toString())}</span>
                                 <button className="inline-flex items-center justify-center rounded-lg px-[15px] text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default">
                                     {product.textBtnOrder}

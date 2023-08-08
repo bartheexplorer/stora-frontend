@@ -258,9 +258,11 @@ export default async function Slug(props: SlugProps) {
                 />
             )}
 
-            <pre className="block">
-                {JSON.stringify(product, undefined, 2)}
-            </pre>
+            {props.searchParams?.is_dev && (
+                <pre className="block">
+                    {JSON.stringify(product, undefined, 2)}
+                </pre>
+            )}
         </>
     )
 }

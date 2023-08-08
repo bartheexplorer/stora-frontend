@@ -108,10 +108,10 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                 province: data.province,
                 regency: data.regency,
                 sub_district: data.subDistrict,
-                urban_village: "",
+                urban_village: mapping?.name ? mapping.name : "",
                 address: data.address,
-                id_mapping: "",
-                zip_code: "",
+                id_mapping: mapping?.id_mapping ? mapping.id_mapping : "",
+                zip_code: mapping?.zip_code ? mapping.zip_code : "",
                 shipping: null,
             })
         }
@@ -123,7 +123,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                 <Controller
                     name="province"
                     control={control}
-                    render={({ field, formState }) => {
+                    render={({ field }) => {
                         const { ref, onChange, ...rest } = field
                         return (
                             <fieldset className="relative mb-[15px] w-full flex flex-col justify-start">
@@ -268,6 +268,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                                 name: string
                                                 zip_code: string
                                             }
+                                            console.log("value", value)
                                             setMapping((prevState) => ({
                                                 ...prevState,
                                                 id_mapping: value.id_mapping.toString(),

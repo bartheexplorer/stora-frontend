@@ -2,8 +2,9 @@
 
 import "swiper/css"
 import "swiper/css/scrollbar"
+import "swiper/css/pagination"
 import { Swiper, SwiperSlide } from "swiper/react"
-import { Scrollbar } from "swiper/modules"
+import { Scrollbar, Pagination } from "swiper/modules"
 import PhotoProduct from "./photo-product"
 import Link from "next/link"
 
@@ -25,15 +26,22 @@ export default function ContentScrollHeader({
                 scrollbar={{
                     hide: true,
                 }}
+                pagination={{
+                    type: "fraction",
+                }}
                 spaceBetween={20}
                 slidesPerView={1}
                 slidesOffsetAfter={20}
                 slidesOffsetBefore={20}
-                modules={[Scrollbar]}
+                modules={[Scrollbar, Pagination]}
                 className="mySwiper"
-                style={{ paddingLeft: "25px", paddingRight: "25px" }}
+                style={{
+                    paddingLeft: "25px",
+                    paddingRight: "25px",
+                    color: "#ffffff",
+                }}
             >
-                {video && (
+                {!!video && (
                     <SwiperSlide>
                         <div className="relative flex items-center h-full">
                             <div className="aspect-h-1 aspect-w-2 w-full overflow-hidden bg-gray-200 lg:aspect-none group-hover:opacity-75 h-96 rounded-lg">
