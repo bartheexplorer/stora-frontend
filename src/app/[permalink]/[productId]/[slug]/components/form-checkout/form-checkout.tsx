@@ -11,10 +11,13 @@ import { toIDR } from "@/utils/to-idr"
 import { OrderContext } from "@/context/order"
 import clsx from "clsx"
 import { getRandomThreeDigitNumber } from "@/utils/get-rand-number"
+import { multiplySubTotal, sumTotal } from "@/utils/add-decimal"
+import IFormCoupon from "./form-coupon"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
 interface IFormCheckoutProps {
+    permalink: string
     variations: {
         id: string
         name: string
@@ -25,6 +28,7 @@ interface IFormCheckoutProps {
         price: string
     }[]
     product: {
+        productName: string
         price: number
         userId: string
         isFree: boolean
@@ -76,6 +80,7 @@ interface IFormCheckoutProps {
 }
 
 export default function IFormCheckout({
+    permalink,
     variations,
     sizes,
     product,
@@ -83,6 +88,7 @@ export default function IFormCheckout({
     codeUnique,
 }: IFormCheckoutProps) {
     const { shippingArveoli } = useContext(OrderContext)
+    const [isOpenCoupon, setIsOpenCoupon] = useState<boolean>(false)
     const [isOpenAddress, setIsOpenAddress] = useState<boolean>(false)
     const [isOpenShipping, setIsOpenShipping] = useState<boolean>(false)
     const [isOpenPayment, setIsOpenPayment] = useState<boolean>(false)
@@ -93,6 +99,10 @@ export default function IFormCheckout({
         bank?: string
         name?: string
     } | null>(null)
+    const [couponData, setCouponData] = useState<{
+        discount: number
+        coupon?: string | null
+    } | null>(null)
     const [checkout, setCheckout] = useState<{
         price: number
         afterPrice: number
@@ -100,13 +110,15 @@ export default function IFormCheckout({
         total: number
         qty: number
         randCode: number
+        ongkir: number
     }>({
-        total: product.price,
+        total: Math.round(Number(product.price + RAND_CODE)),
         subTotal: product.price,
         price: product.price,
         afterPrice: product.price,
         qty: 1,
         randCode: codeUnique ? RAND_CODE : 0,
+        ongkir: 0,
     })
     const [address, setAddress] = useState<{
         province: string
@@ -131,6 +143,7 @@ export default function IFormCheckout({
         handleSubmit,
         control,
         formState: { errors },
+        watch,
     } = useForm<IFormValueCheckout>({
         resolver: zodResolver(IFormValueCheckoutSchema),
         defaultValues: {
@@ -288,6 +301,7 @@ export default function IFormCheckout({
                                                                 className="absolute inset-0"
                                                                 onClick={() => {
                                                                     const ongkir = Number(item.price)
+
                                                                     setAddress((prevState) => {
                                                                         if (!prevState) return prevState
                                                                         return {
@@ -299,15 +313,23 @@ export default function IFormCheckout({
                                                                                 service_name: item.service_name,
                                                                                 price: ongkir,
                                                                                 etd: item.etd,
-                                                                                discount_price: item.discount_price,
-                                                                                cashless_discount_price: item.cashless_discount_price,
+                                                                                discount_price: Number(item.discount_price),
+                                                                                cashless_discount_price: Number(item.cashless_discount_price),
                                                                             }
                                                                         }
                                                                     })
                                                                     setCheckout((prevState) => {
+                                                                        const total = sumTotal(
+                                                                            prevState.subTotal.toString(),
+                                                                            ongkir.toString()
+                                                                        )
                                                                         return {
                                                                             ...prevState,
-                                                                            total: prevState.subTotal + ongkir
+                                                                            ongkir,
+                                                                            total: sumTotal(
+                                                                                total.toString(),
+                                                                                prevState.randCode.toString()
+                                                                            ),
                                                                         }
                                                                     })
                                                                 }}
@@ -580,6 +602,7 @@ export default function IFormCheckout({
                                                 <h3 className="text-xs leading-none mb-2.5 block">Ukuran</h3>
                                                 <ul className="flex flex-wrap gap-4 mb-4">
                                                     {sizes.map((item) => {
+                                                        const afterPrice = Number(item.price)
                                                         return (
                                                             <li
                                                                 key={item.id}
@@ -588,12 +611,31 @@ export default function IFormCheckout({
                                                                     item.name === value ? "border-stora-500" : "border-transparent"
                                                                 )}
                                                             >
-                                                                <span className="text-xs">{item.name}</span>
+                                                                <span className="text-xs">{item.name} {toIDR(afterPrice.toString())}</span>
                                                                 <button
                                                                     type="button"
                                                                     className="absolute inset-0"
                                                                     onClick={() => {
                                                                         onChange(item.name)
+                                                                        setCheckout((prevState) => {
+                                                                            const subTotal = multiplySubTotal(
+                                                                                prevState.qty.toString(),
+                                                                                afterPrice.toString()
+                                                                            )
+                                                                            const total = sumTotal(
+                                                                                subTotal.toString(),
+                                                                                prevState.ongkir.toString()
+                                                                            )
+                                                                            return {
+                                                                                ...prevState,
+                                                                                subTotal,
+                                                                                afterPrice,
+                                                                                total: sumTotal(
+                                                                                    total.toString(),
+                                                                                    prevState.randCode.toString(),
+                                                                                ), //Math.round(Number(subTotal + prevState.randCode) + prevState.ongkir)
+                                                                            }
+                                                                        })
                                                                     }}
                                                                 >&nbsp;</button>
                                                             </li>
@@ -630,12 +672,22 @@ export default function IFormCheckout({
                                                 onChange(event)
                                                 setCheckout((prevState) => {
                                                     const qty = Number(event.target.value)
-                                                    const subtotal = qty * prevState.afterPrice
+                                                    const subtotal = multiplySubTotal(
+                                                        qty.toString(),
+                                                        prevState.afterPrice.toString()
+                                                    )
+                                                    const total = sumTotal(
+                                                        subtotal.toString(),
+                                                        ongkir.toString()
+                                                    )
                                                     return {
                                                         ...prevState,
                                                         qty: qty,
-                                                        subTotal:  subtotal,
-                                                        total: subtotal + ongkir, 
+                                                        subTotal: subtotal,
+                                                        total: sumTotal(
+                                                            total.toString(),
+                                                            prevState.randCode.toString()
+                                                        ), 
                                                     }
                                                 })
                                             }}
@@ -761,16 +813,27 @@ export default function IFormCheckout({
                                                             weight={product.weight}
                                                             onSelected={(val) => {
                                                                 onOpenAddressChange(false)
-                                                                // setAddress()
-                                                                console.log("A;amat peentima", val)
                                                                 const ongkir = val.shipping?.price
                                                                     ? Number(val.shipping.price)
-                                                                    : 0 
+                                                                    : 0
                                                                 setAddress(() => val)
                                                                 setCheckout((prevState) => {
+                                                                    const total = sumTotal(
+                                                                        prevState.subTotal.toString(),
+                                                                        (ongkir || 0).toString()
+                                                                    )
+                                                                    const randcodeTotal = sumTotal(
+                                                                        total.toString(),
+                                                                        prevState.randCode.toString()
+                                                                        
+                                                                    )
                                                                     return {
                                                                         ...prevState,
-                                                                        total: prevState.subTotal + (ongkir || 0)
+                                                                        ongkir,
+                                                                        total: sumTotal(
+                                                                            randcodeTotal.toString(),
+                                                                            (couponData?.discount || 0).toString()
+                                                                        ),
                                                                     }
                                                                 })
                                                             }}
@@ -865,10 +928,76 @@ export default function IFormCheckout({
                                     )}
                                 </div>
 
+                                {/* Kupon  */}
                                 <div className="flex justify-between my-4">
                                     <div>
                                         <label className="text-[13px]">
-                                            Metode Pembayaran
+                                            Kupon
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <Dialog.Root
+                                            open={isOpenCoupon}
+                                            onOpenChange={setIsOpenCoupon}
+                                        >
+                                            <Dialog.Trigger asChild>
+                                                <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                    <span className="text-[13px] leading-none text-stora-500 block">Pilih</span>
+                                                    <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                                </button>
+                                            </Dialog.Trigger>
+                                            <Dialog.Portal>
+                                                <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                                <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                    <div className="py-8">
+                                                        <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
+                                                            Kupon Stora
+                                                        </Dialog.Title>
+                                                        {/* Form kupon stora */}
+                                                        <IFormCoupon
+                                                            product_id={product.productId}
+                                                            permalink={permalink}
+                                                            price={checkout.afterPrice}
+                                                            applyCoupon={(data) => {
+                                                                setCouponData({
+                                                                    discount: data.discount,
+                                                                    coupon: data.coupon,
+                                                                })
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <Dialog.Close asChild>
+                                                        <button
+                                                            className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                            aria-label="Close"
+                                                        >
+                                                            <Cross2Icon className="w-5 h-5" />
+                                                        </button>
+                                                    </Dialog.Close>
+                                                </Dialog.Content>
+                                            </Dialog.Portal>
+                                        </Dialog.Root>
+                                    </div>
+                                </div>
+
+                                {!!couponData && (
+                                    <div className="mb-3">
+                                        <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
+                                            <div className="flex justify-between">
+                                                <span className="text-xs">
+                                                    {couponData.coupon}
+                                                </span>
+                                                <span className="text-xs">{toIDR(couponData.discount.toString())}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Pembayaran */}
+                                <div className="flex justify-between my-4">
+                                    <div>
+                                        <label className="text-[13px]">
+                                            Metode pembayaran
                                         </label>
                                     </div>
                                     <div>
@@ -925,21 +1054,30 @@ export default function IFormCheckout({
                                 <h3 className="text-gray-800 text-[13px] font-medium tracking-wide">Rincian pembayaran:</h3>
                             </div>
                             <div className="px-4 py-2">
-                                <div className="flex flex-col">
-                                    {codeUnique && (
-                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
-                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                                {checkout.randCode}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Jumlah</span>
-                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                            {checkout.qty}
+                                <div className="flex flex-col mb-2 rounded-lg shadow-sm px-3 py-2">
+                                    <div className="flex mb-1">
+                                        <p>
+                                            <span className="text-gray-800 text-[12px] font-normal tracking-wide">
+                                                {product.productName}
+                                            </span>{" "}
+                                            {(watch("variasi") || watch("ukuran")) && (
+                                                <span className="text-[12px]">
+                                                    {`(${(watch("variasi") || "")} ${(watch("ukuran") || "")})`}
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-800 text-[12px] font-normal tracking-wide">
+                                            {toIDR(checkout.afterPrice.toString())}
+                                        </span>
+                                        <span className="text-gray-800 text-[12px] font-normal tracking-wide">
+                                            x{checkout.qty}
                                         </span>
                                     </div>
+                                </div>
+
+                                <div className="flex flex-col">
                                     <div className="flex items-center justify-between border-b border-gray-100 mb-1">
                                         <span className="text-gray-800 text-[13px] font-medium tracking-wide">Subtotal</span>
                                         <span className="text-gray-800 text-[13px] font-normal tracking-wide">
@@ -948,7 +1086,7 @@ export default function IFormCheckout({
                                     </div>
                                     {!product.isFreeOngkir && (
                                         <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Ongkir</span>
+                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Pengiriman</span>
                                             <span className="text-gray-800 text-[13px] font-normal tracking-wide">
                                                 {!!address?.shipping
                                                     ? (
@@ -959,6 +1097,14 @@ export default function IFormCheckout({
                                             </span>
                                         </div>
                                     )}
+                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kupon Stora</span>
+                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                            {couponData
+                                                ? toIDR(couponData.discount.toString())
+                                                : toIDR("0")}
+                                        </span>
+                                    </div>
                                     <div className="flex items-center justify-between border-b border-gray-100 mb-1">
                                         <span className="text-gray-800 text-[13px] font-medium tracking-wide">Total</span>
                                         <span className="text-gray-800 text-[13px] font-normal tracking-wide">
@@ -973,7 +1119,9 @@ export default function IFormCheckout({
                     <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
                         <div className="w-full max-w-lg mx-auto px-3">
                             <div className="h-12 flex items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
-                                <span className="text-sm tracking-wide text-white">{toIDR(checkout.afterPrice.toString())}</span>
+                                <span className="text-sm tracking-wide text-white">
+                                    {toIDR(checkout.total.toString())}
+                                </span>
                                 <button className="inline-flex items-center justify-center rounded-lg px-[15px] text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default">
                                     {product.textBtnOrder}
                                 </button>

@@ -198,6 +198,7 @@ export default async function Slug(props: SlugProps) {
 
             {!!product && (
                 <IFormCheckout
+                    permalink={props.params.permalink}
                     variations={product.variantions.map((item) => ({
                         id: item.id_produk_varian.toString(),
                         name: item.varian ? item.varian : "",
@@ -208,6 +209,7 @@ export default async function Slug(props: SlugProps) {
                         price: item.harga_uk,
                     }))}
                     product={{
+                        productName: product.nama_produk,
                         price: Number(product.harga_jual),
                         isFree: product.is_free,
                         isFreeOngkir: product.is_free_ongkir,
