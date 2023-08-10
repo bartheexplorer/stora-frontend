@@ -17,8 +17,8 @@ import { getLastThreeWords } from "@/utils/get-unik-code"
 import * as Toast from "@radix-ui/react-toast"
 import { useCreateOrder } from "@/hooks/order"
 import ILoading from "../loading"
-import { useRouter } from "next/navigation"
 import { useCreateCart } from "@/hooks/cart"
+import { useRouter } from "next/navigation"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
@@ -138,12 +138,18 @@ export default function IFormCheckout({
         randCode: number
         ongkir: number
     }>({
-        total: Math.round(Number(product.price + RAND_CODE)),
+        total: (!product.isFree || !product.isFreeOngkir)
+            ? Math.round(Number(product.price + RAND_CODE))
+            : 0,
         subTotal: product.price,
         price: product.price,
         afterPrice: product.price,
         qty: 1,
-        randCode: codeUnique ? RAND_CODE : 0,
+        randCode: (!product.isFree || !product.isFreeOngkir)
+            ? codeUnique
+                ? RAND_CODE
+                : 0
+            : 0,
         ongkir: 0,
     })
     const [address, setAddress] = useState<{
@@ -243,7 +249,7 @@ export default function IFormCheckout({
             return
         }
         reset()
-        router.push(`/${permalink}/cart`)
+        router.replace(`/${permalink}/cart?id=${(Math.floor(Math.random() * 900) + 100).toString()}`)
     }
     const submitAction = handleSubmit(async (data) => {
         console.log("FORM UTAMA RENDER", data)
@@ -280,7 +286,7 @@ export default function IFormCheckout({
         }
 
         if (!product.isFree) {
-            if (!data.payment?.id || typeof data.payment.id !== "string") {
+            if (!currentPayment?.id && typeof currentPayment?.id !== "string") {
                 window.clearTimeout(timerRef.current);
                 timerRef.current = window.setTimeout(() => {
                     eventAlertRef.current = "Belum memilih metode pembayaran"
@@ -289,7 +295,7 @@ export default function IFormCheckout({
                 return
             }
         }
-        
+
         const alamat = `${address.address ? `${address.address},` : ""} 
             ${address.urban_village.length > 1 ? ` ${address.urban_village},` : ""} 
             ${address.sub_district.length > 1 ? ` ${address.sub_district},` : ""}
@@ -315,6 +321,8 @@ export default function IFormCheckout({
                 product_img: product.productImg,
             })
             if (!result?.data?.orderId) throw new Error("Error")
+
+
             reset()
             router.push(`/${permalink}/sucess?id=${result.data.orderId}`)
             console.log("result", result)
@@ -483,10 +491,10 @@ export default function IFormCheckout({
                                                                     })
                                                                     if (event) {
                                                                         if (typeof event.preventDefault === "function") {
-                                                                          event.preventDefault()
+                                                                            event.preventDefault()
                                                                         }
                                                                         if (typeof event.stopPropagation === "function") {
-                                                                          event.stopPropagation()
+                                                                            event.stopPropagation()
                                                                         }
                                                                     }
                                                                 }}
@@ -680,10 +688,10 @@ export default function IFormCheckout({
                                             }
                                             if (event) {
                                                 if (typeof event.preventDefault === "function") {
-                                                  event.preventDefault();
+                                                    event.preventDefault();
                                                 }
                                                 if (typeof event.stopPropagation === "function") {
-                                                  event.stopPropagation();
+                                                    event.stopPropagation();
                                                 }
                                             }
                                         }}
@@ -1213,52 +1221,56 @@ export default function IFormCheckout({
                                     </div>
                                 )}
 
-                                {/* Pembayaran */}
-                                <div className="flex justify-between my-4">
-                                    <div>
-                                        <label className="text-[13px]">
-                                            Metode pembayaran
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <Dialog.Root
-                                            open={isOpenPayment}
-                                            onOpenChange={setIsOpenPayment}
-                                        >
-                                            <Dialog.Trigger asChild>
-                                                <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                    <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
-                                                    <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                                </button>
-                                            </Dialog.Trigger>
-                                            <Dialog.Portal>
-                                                <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                                <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                    <div className="py-8">
-                                                        <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
-                                                            Metode pembayaran
-                                                        </Dialog.Title>
-                                                        {/* Form shipping data */}
-                                                        {paymentComponent()}
-                                                    </div>
-                                                    <Dialog.Close asChild>
-                                                        <button
-                                                            className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                                                            aria-label="Close"
-                                                        >
-                                                            <Cross2Icon className="w-5 h-5" />
+                                {(!product.isFree || !product.isFreeOngkir) && (
+                                    <>
+                                        {/* Pembayaran */}
+                                        <div className="flex justify-between my-4">
+                                            <div>
+                                                <label className="text-[13px]">
+                                                    Metode pembayaran
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <Dialog.Root
+                                                    open={isOpenPayment}
+                                                    onOpenChange={setIsOpenPayment}
+                                                >
+                                                    <Dialog.Trigger asChild>
+                                                        <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                            <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
+                                                            <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                         </button>
-                                                    </Dialog.Close>
-                                                </Dialog.Content>
-                                            </Dialog.Portal>
-                                        </Dialog.Root>
-                                    </div>
-                                </div>
-
-                                {!!currentPayment && (
-                                    <div className="mb-3">
-                                        {getPaymentMethod(currentPayment)}
-                                    </div>
+                                                    </Dialog.Trigger>
+                                                    <Dialog.Portal>
+                                                        <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                                        <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                            <div className="py-8">
+                                                                <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
+                                                                    Metode pembayaran
+                                                                </Dialog.Title>
+                                                                {/* Form shipping data */}
+                                                                {paymentComponent()}
+                                                            </div>
+                                                            <Dialog.Close asChild>
+                                                                <button
+                                                                    className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                                    aria-label="Close"
+                                                                >
+                                                                    <Cross2Icon className="w-5 h-5" />
+                                                                </button>
+                                                            </Dialog.Close>
+                                                        </Dialog.Content>
+                                                    </Dialog.Portal>
+                                                </Dialog.Root>
+                                            </div>
+                                        </div>
+        
+                                        {!!currentPayment && (
+                                            <div className="mb-3">
+                                                {getPaymentMethod(currentPayment)}
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </>
                         )}
@@ -1298,13 +1310,17 @@ export default function IFormCheckout({
                                 </div>
 
                                 <div className="flex flex-col">
-                                    {codeUnique && (
-                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
-                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                                {getLastThreeWords(checkout.total.toString())}
-                                            </span>
-                                        </div>
+                                    {(!product.isFree || !product.isFreeOngkir) && (
+                                        <>
+                                            {codeUnique && (
+                                                <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                                    <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
+                                                    <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                        {getLastThreeWords(checkout.total.toString())}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                     <div className="flex items-center justify-between border-b border-gray-100 mb-1">
                                         <span className="text-gray-800 text-[13px] font-medium tracking-wide">Subtotal</span>

@@ -47,6 +47,14 @@ export default async function Success(props: SuccessProps) {
 
             {!!order && (
                 <div>
+                    {!!!order.payment && (
+                        <div className="p-12">
+                            <div className="p-6 rounded-xl bg-slate-200">
+                                <h3 className="text-gray-500 font-semibold">Terimakasih telah melakukan pemesanan</h3>
+                            </div>
+                        </div>
+                    )}
+
                     {order.payment === "bank" && (
                         <Tf
                             bank={order.bank}
@@ -75,6 +83,8 @@ export default async function Success(props: SuccessProps) {
                     )}
                 </div>
             )}
+
+            <pre>{JSON.stringify(order, undefined, 2)}</pre>
         </div>
     )
 }

@@ -11,7 +11,7 @@ export type OrderParams = {
     productId: t_produk['id_produk']
     orderId: t_order['order_id']
     customFields: OrderCustomField[]
-    paymentMethodCode: "bank" | "virtual" | "qris" | "cod"
+    paymentMethodCode: ("bank" | "virtual" | "qris" | "cod") | null
     isFree: boolean
     paymentMethodId: number
     name: string

@@ -23,14 +23,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
     }
 
-    let metode_pembayaran: OrderParams["paymentMethodCode"] = "bank"
-    if (body.payment.payment_method === "COD") {
+    let metode_pembayaran: OrderParams["paymentMethodCode"] = null
+    if (body.currentPayment?.payment_method === "COD") {
         metode_pembayaran = "cod"
-    } else if (body.payment.payment_method === "QRIS") {
+    } else if (body.currentPayment?.payment_method === "QRIS") {
         metode_pembayaran = "qris"
-    } else if (body.payment.payment_method === "va") {
+    } else if (body.currentPayment?.payment_method === "va") {
         metode_pembayaran = "virtual"
-    } else if (body.payment.payment_method === "tf") {
+    } else if (body.currentPayment?.payment_method === "tf") {
         metode_pembayaran = "bank"
     }
     
@@ -41,7 +41,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         customFields: custom,
         paymentMethodCode: metode_pembayaran,
         isFree: Boolean(body.is_free),
-        paymentMethodId: !Number.isNaN(parseInt(body.payment?.id)) ? Number(body.payment.id) : 0,
+        paymentMethodId: !Number.isNaN(parseInt(body.currentPayment?.id))
+            ? Number(body.currentPayment.id)
+            : 0,
         name: body.nama_lengkap ? body.nama_lengkap: "",
         phone: body.nomor_whatsapp ? body.nomor_whatsapp.toString() : "",
         email: body.email ? body.email : "" ,
@@ -78,9 +80,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const result = await createOrder(prisma, params)
+    if (!result) {
+        return res.status(400)
+            .json({
+                message: "Gagal menyimpan"
+            })
+    }
 
     return res.json({
-        // data: "post",
         // body,
         // params,
         data: {...result},

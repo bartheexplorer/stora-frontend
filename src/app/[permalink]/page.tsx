@@ -55,14 +55,14 @@ const toCategories = (categories: Awaited<ReturnType<typeof getCategories>>) => 
 
 export default async function Permalink({ params, searchParams }: PermalinkProps) {
     const permalink = params.permalink
-    const categoryProductId = !isNaN(Number(searchParams?.id_category?.toString()))
+    const categoryProductId = !Number.isNaN(Number(searchParams?.id_category?.toString()))
         ? Number(searchParams?.id_category?.toString())
         : null
     // Service
     const user = await getUser(prisma, permalink)
     const products = await getProductWithPaginate(prisma, {
         permalink,
-        page: !isNaN(Number(searchParams?.page))
+        page: !Number.isNaN(Number(searchParams?.page))
             ? Number(searchParams.page)
             : 0,
         sort: searchParams?.sort?.toString(),
@@ -83,7 +83,7 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
             {/* Shopping cart icon */}
             <div className="w-full relative">
                 <div className="absolute top-10 right-10">
-                    <Link href={`/carts`} className="relative">
+                    <Link href={`/${permalink}/cart`} className="relative">
                         <ShoppingCartIcon className="inline-block h-7 w-7" />
                         <div className="absolute -top-1 -left-3 bg-gray-500 rounded-full text-[9px] w-4 h-4 leading-3 text-gray-100 flex items-center justify-center">
                             99+
