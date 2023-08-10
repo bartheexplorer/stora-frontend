@@ -1,6 +1,6 @@
-import type { PrismaClient } from "@prisma/client"
+import type { PrismaClient, t_order as TOrder } from "@prisma/client"
 import { appConfig } from "../config/app"
-import { OrderParams } from "./order-interface"
+import type { OrderParams } from "./order-interface"
 
 function formatCurrency(amount: number): string {
     const formattedAmount = new Intl.NumberFormat('id-ID').format(amount)
@@ -115,8 +115,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
                     }
                 }
             }
-
-        const order = await tx.$executeRaw`
+            const order = await tx.$executeRaw`
           INSERT INTO t_order (
             order_id,
             id_produk,
@@ -262,12 +261,14 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             return {
                 notip,
                 textOrder: textOrder4,
+                orderId: params.orderId,
             }
         })
 
         return {
             textOrder: result.textOrder,
             notip: result.notip,
+            orderId: result.orderId,
         }
     } catch (error) {
         console.log('repo', error)
@@ -394,4 +395,59 @@ export function getOrderId() {
 
     return [intRandom, date].filter(Boolean)
         .join('')
+}
+
+// get order
+export async function findOrderById(prisma: PrismaClient, orderId?: string) {
+    if (!orderId) return null 
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            const order = await tx.$queryRaw<TOrder[]>`SELECT t_order.order_id,
+          t_order.id_produk,
+          t_order.nama_produk, 
+          t_order.harga_jual, 
+          t_order.berat, 
+          t_order.gambar_produk, 
+          t_order.jenis_produk, 
+          t_order.nama_pembeli, 
+          t_order.alamat_pembeli, 
+          t_order.no_hp_pembeli, 
+          t_order.email_pembeli, 
+          t_order.prov, 
+          t_order.kab, 
+          t_order.kec, 
+          t_order.qty, 
+          t_order.varian, 
+          t_order.ukuran, 
+          t_order.expedisi, 
+          t_order.estimasi, 
+          t_order.paket,
+          t_order.ongkir,
+          t_order.status_bayar,
+          t_order.order_status,
+          t_order.is_created,
+          -- t_order.tgl_order,
+          -- t_order.tgl_proses,
+          -- t_order.tgl_kirim,
+          -- t_order.tgl_selesai,
+          t_order.kupon,
+          t_order.potongan,
+          t_order.total,
+          t_order.totalbayar,
+          t_order.bank,
+          t_order.payment,
+          t_order.no_resi,
+          t_order.mutasi,
+          t_order.id_user,
+          t_order.id_custom_field,
+          t_order.id_payment
+         FROM t_order WHERE order_id = ${orderId} LIMIT 1 OFFSET 0`
+            const [firstOrder] = order.filter((_item, index) => index === 0)
+            if (!firstOrder) throw new Error('Data tidak ditemukan')
+            return firstOrder
+        })
+        return result
+    } catch (error) {
+        return null
+    }
 }

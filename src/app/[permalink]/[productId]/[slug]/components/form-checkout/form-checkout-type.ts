@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 export const IFormValueCheckoutSchema = z.object({
+    is_cart: z.string().optional(),
     nama_lengkap: z.string().min(1),
     nomor_whatsapp: z.string().min(1),
     jumlah: z.string().min(1),

@@ -145,12 +145,12 @@ export default function ProductCard(props: ProductCardProps) {
                 <div className="absolute bottom-1.5 right-2">
                     <div className="p-3">
                         <div>
-                            <button
-                                type="button"
+                            <Link
+                                href={`${props.slug}?cart=true`}
                                 className="w-full cursor-pointer"
                             >
                                 <ShoppingCartIcon className="inline-block h-6 w-6" />
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

@@ -4,7 +4,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { IFormValueCheckoutSchema, type IFormValueCheckout } from "./form-checkout-type"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as Dialog from "@radix-ui/react-dialog"
-import { CaretRightIcon, Cross2Icon } from "@radix-ui/react-icons"
+import { CaretRightIcon, Cross2Icon, TrashIcon } from "@radix-ui/react-icons"
 import { useContext, useEffect, useRef, useState } from "react"
 import IFormAddressArveoli from "./form-address-arveoli"
 import { toIDR } from "@/utils/to-idr"
@@ -16,10 +16,15 @@ import IFormCoupon from "./form-coupon"
 import { getLastThreeWords } from "@/utils/get-unik-code"
 import * as Toast from "@radix-ui/react-toast"
 import { useCreateOrder } from "@/hooks/order"
+import ILoading from "../loading"
+import { useRouter } from "next/navigation"
+import { useCreateCart } from "@/hooks/cart"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
 interface IFormCheckoutProps {
+    cartId?: string
+    isCart: boolean
     user: {
         name?: string | null
         no_hp?: string | null
@@ -97,9 +102,16 @@ export default function IFormCheckout({
     payment,
     codeUnique,
     user,
+    isCart,
+    cartId,
 }: IFormCheckoutProps) {
+    const router = useRouter()
+    const {
+        sendRequest: createCart,
+    } = useCreateCart()
     const {
         sendRequest: createOrder,
+        isLoading: loadingCreateOrder,
     } = useCreateOrder()
     const { shippingArveoli } = useContext(OrderContext)
     const [isOpenCoupon, setIsOpenCoupon] = useState<boolean>(false)
@@ -160,6 +172,8 @@ export default function IFormCheckout({
         handleSubmit,
         control,
         watch,
+        reset,
+        getValues,
     } = useForm<IFormValueCheckout>({
         resolver: zodResolver(IFormValueCheckoutSchema),
         defaultValues: {
@@ -182,8 +196,57 @@ export default function IFormCheckout({
 
     const { fields } = useFieldArray({ control, name: "custom_fields" })
 
+    const shoppingCarts = async () => {
+        const variation = getValues("variasi")
+        const size = getValues("ukuran")
+        const qty = getValues("jumlah")
+
+        setAlertOpen(false)
+        if ((Array.isArray(variations) && variations.length > 0)) {
+            if (!variation || typeof variation !== "string") {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih variasi"
+                    setAlertOpen(true)
+                }, 100)
+                return
+            }
+        }
+
+        if (Array.isArray(sizes) && sizes.length > 0) {
+            if (!size || typeof size !== "string") {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih ukuran"
+                    setAlertOpen(true)
+                }, 100)
+                return
+            }
+        }
+
+        const params = {
+            variation,
+            size,
+            cartId,
+            couponData,
+            checkout,
+            product,
+            qty,
+        }
+        const result = await createCart(params)
+        if (!result?.data) {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = window.setTimeout(() => {
+                eventAlertRef.current = "Gagal menambahkan produk"
+                setAlertOpen(true)
+            }, 100)
+            return
+        }
+        reset()
+        router.push(`/${permalink}/cart`)
+    }
     const submitAction = handleSubmit(async (data) => {
-        console.log("FORM UTAMA RENDER")
+        console.log("FORM UTAMA RENDER", data)
         setAlertOpen(false)
         if ((Array.isArray(variations) && variations.length > 0)) {
             if (!data.variasi || typeof data.variasi !== "string") {
@@ -207,6 +270,15 @@ export default function IFormCheckout({
             }
         }
 
+        if (!address) {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = window.setTimeout(() => {
+                eventAlertRef.current = "Belum mengisi alamat"
+                setAlertOpen(true)
+            }, 100)
+            return
+        }
+
         if (!product.isFree) {
             if (!data.payment?.id || typeof data.payment.id !== "string") {
                 window.clearTimeout(timerRef.current);
@@ -217,32 +289,43 @@ export default function IFormCheckout({
                 return
             }
         }
-
-        if (!address) {
+        
+        const alamat = `${address.address ? `${address.address},` : ""} 
+            ${address.urban_village.length > 1 ? ` ${address.urban_village},` : ""} 
+            ${address.sub_district.length > 1 ? ` ${address.sub_district},` : ""}
+            ${address.regency.length > 1 ? ` ${address.regency},` : ""}
+            ${address.province ? ` ${address.province},` : ""}
+            ${address.zip_code ? ` Kode Pos: ${address.zip_code}` : ""}`
+        try {
+            const result = await createOrder({
+                ...data,
+                checkout,
+                address,
+                currentPayment,
+                couponData,
+                permalink,
+                user,
+                alamat,
+                is_free: product.isFree,
+                is_free_ongkir: product.isFreeOngkir,
+                weight: product.weight,
+                nama_produk: product.productName,
+                product_id: product.productId,
+                type_product: product.typeProduct,
+                product_img: product.productImg,
+            })
+            if (!result?.data?.orderId) throw new Error("Error")
+            reset()
+            router.push(`/${permalink}/sucess?id=${result.data.orderId}`)
+            console.log("result", result)
+        } catch (error) {
+            console.log(error)
             window.clearTimeout(timerRef.current);
             timerRef.current = window.setTimeout(() => {
-                eventAlertRef.current = "Belum mengisi alamat"
+                eventAlertRef.current = "Pesanan tidak dapat diproses"
                 setAlertOpen(true)
             }, 100)
-            return
         }
-        console.log(data)
-        await createOrder({
-            ...data,
-            checkout,
-            address,
-            currentPayment,
-            couponData,
-            permalink,
-            user,
-            is_free: product.isFree,
-            is_free_ongkir: product.isFreeOngkir,
-            weight: product.weight,
-            nama_produk: product.productName,
-            product_id: product.productId,
-            type_product: product.typeProduct,
-            product_img: product.productImg,
-        })
     })
 
     const onOpenAddressChange = (value: boolean) => {
@@ -1089,6 +1172,8 @@ export default function IFormCheckout({
                                                                         total: totalCoupon,
                                                                     }
                                                                 })
+                                                                // close coupon modal
+                                                                setIsOpenCoupon(false)
                                                             }}
                                                         />
                                                     </div>
@@ -1107,15 +1192,24 @@ export default function IFormCheckout({
                                 </div>
 
                                 {!!couponData && (
-                                    <div className="mb-3">
+                                    <div className="relative mb-3">
                                         <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
                                             <div className="flex justify-between">
                                                 <span className="text-xs">
                                                     {couponData.coupon}
                                                 </span>
-                                                <span className="text-xs">{toIDR(couponData.discount.toString())}</span>
+                                                <span className="text-xs mr-6">{toIDR(couponData.discount.toString())}</span>
                                             </div>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCouponData(null)
+                                            }}
+                                            className="absolute top-2 right-3 w-5 rounded-full shadow hover:bg-slate-200 flex justify-center items-center"
+                                        >
+                                            <TrashIcon className="w-4 h-5 text-red-500" />
+                                        </button>
                                     </div>
                                 )}
 
@@ -1256,14 +1350,41 @@ export default function IFormCheckout({
                                 <span className="text-sm tracking-wide text-white">
                                     {toIDR(checkout.total.toString())}
                                 </span>
-                                <button className="inline-flex items-center justify-center rounded-lg px-[15px] text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default">
-                                    {product.textBtnOrder}
-                                </button>
+                                <div className="flex gap-3">
+                                    {isCart && (
+                                        <div>
+                                            <button
+                                                type="button"
+                                                className="flex flex-col items-center justify-center rounded-lg px-2 text-[10px] sm:text-xs leading-none font-medium h-[35px] bg-red-400 text-white hover:bg-red-400/75 focus:shadow focus:shadow-gray-400 outline-none cursor-default"
+                                                disabled={loadingCreateOrder}
+                                                onClick={(event) => {
+                                                    event.preventDefault()
+                                                    shoppingCarts()
+                                                }}
+                                            >
+                                                Masukkan Keranjang
+                                            </button>
+                                        </div>
+                                    )}
+                                    <button
+                                        type="submit"
+                                        className="inline-flex items-center justify-center rounded-lg px-4 text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default"
+                                        disabled={loadingCreateOrder}
+                                    >
+                                        {product.textBtnOrder}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
+
+            {loadingCreateOrder && (
+                <div className="z-50 overflow-hidden w-full h-screen fixed inset-0 bg-slate-300/25 flex flex-col items-center justify-center">
+                    <ILoading />
+                </div>
+            )}
 
             <Toast.Provider swipeDirection="right">
                 <Toast.Root

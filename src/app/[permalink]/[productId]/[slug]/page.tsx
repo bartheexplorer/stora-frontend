@@ -7,6 +7,7 @@ import dynamic from "next/dynamic"
 import ILoading from "./components/loading"
 import { getUser } from "@/entry-server/services/user"
 import ContentScrollHeader from "./components/content-scroll-header"
+import { cookies } from "next/headers"
 
 const CountdownTimer = dynamic(() => import("./components/countdown/countdown-time"), {
     ssr: false,
@@ -87,6 +88,9 @@ const toProduct = (product: Awaited<ReturnType<typeof getProduct>>) => {
 }
 
 export default async function Slug(props: SlugProps) {
+    const cookieStore = cookies()
+    const cartId = cookieStore.get("cartid")
+    const isCart = Boolean(props.searchParams?.cart)
     const user = await getUser(prisma, props.params.permalink)
     const productService = await getProduct(prisma, {
         permalink: props.params.permalink,
@@ -198,6 +202,8 @@ export default async function Slug(props: SlugProps) {
 
             {!!product && (
                 <IFormCheckout
+                    cartId={cartId?.value}
+                    isCart={isCart}
                     user={{
                         name: user?.nama_lengkap,
                         no_hp: user?.setting?.no_hp_toko,
