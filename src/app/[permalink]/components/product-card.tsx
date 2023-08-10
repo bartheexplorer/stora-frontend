@@ -118,19 +118,17 @@ export default function ProductCard(props: ProductCardProps) {
                                 </div>
 
                                 <div className={clsx(
-                                    'flex',
-                                    isList ? 'flex-col justify-start' : 'items-center justify-between'
+                                    "flex mt-2",
+                                    isList ? "flex-col justify-start" : "flex-col sm:flex-row justify-start sm:items-center sm:justify-between"
                                 )}>
                                     {product.is_free_ongkir && (
-                                        <div className="mt-2">
-                                            <div className="flex">
-                                                <span className="bg-gray-400 py-1 px-2 rounded-md text-[10px] text-gray-50 !leading-3">Gratis ongkir</span>
-                                            </div>
+                                        <div className="flex-1">
+                                            <span className="bg-gray-400 py-1 px-2 rounded-md text-[10px] text-gray-50 !leading-3">Gratis ongkir</span>
                                         </div>
                                     )}
 
                                     {product.views && (
-                                        <div className="mt-2">
+                                        <div>
                                             <div className="text-[10px] text-gray-600 font-medium !leading-4">Dilihat {product.views.view} kali</div>
                                         </div>
                                     )}

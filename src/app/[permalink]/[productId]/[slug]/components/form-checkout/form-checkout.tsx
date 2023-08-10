@@ -5,14 +5,16 @@ import { IFormValueCheckoutSchema, type IFormValueCheckout } from "./form-checko
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as Dialog from "@radix-ui/react-dialog"
 import { CaretRightIcon, Cross2Icon } from "@radix-ui/react-icons"
-import { useContext, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import IFormAddressArveoli from "./form-address-arveoli"
 import { toIDR } from "@/utils/to-idr"
 import { OrderContext } from "@/context/order"
 import clsx from "clsx"
 import { getRandomThreeDigitNumber } from "@/utils/get-rand-number"
-import { multiplySubTotal, sumTotal } from "@/utils/add-decimal"
+import { multiplySubTotal, subtractTotal, sumTotal } from "@/utils/add-decimal"
 import IFormCoupon from "./form-coupon"
+import { getLastThreeWords } from "@/utils/get-unik-code"
+import * as Toast from "@radix-ui/react-toast"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
@@ -138,6 +140,9 @@ export default function IFormCheckout({
             s_name: any
         } | null
     } | null>(null)
+    const [openAlert, setAlertOpen] = useState(false)
+    const eventAlertRef = useRef<string | null>(null)
+    const timerRef = useRef(0)
     const {
         register,
         handleSubmit,
@@ -159,28 +164,55 @@ export default function IFormCheckout({
         }
     })
 
+    useEffect(() => {
+        return () => clearTimeout(timerRef.current);
+    }, [])
+
     const { fields } = useFieldArray({ control, name: "custom_fields" })
 
     const submitAction = handleSubmit((data) => {
+        console.log("FORM UTAMA RENDER")
+        setAlertOpen(false)
         if ((Array.isArray(variations) && variations.length > 0)) {
             if (!data.variasi || typeof data.variasi !== "string") {
-                console.log("error")
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih variasi"
+                    setAlertOpen(true)
+                }, 100)
                 return
             }
         }
 
         if (Array.isArray(sizes) && sizes.length > 0) {
             if (!data.ukuran || typeof data.ukuran !== "string") {
-                console.log("error")
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih ukuran"
+                    setAlertOpen(true)
+                }, 100)
                 return
             }
         }
 
         if (!product.isFree) {
-            if (!data.payment) {
-                console.log("Error")
+            if (!data.payment?.id || typeof data.payment.id !== "string") {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih metode pembayaran"
+                    setAlertOpen(true)
+                }, 100)
                 return
             }
+        }
+
+        if (!address) {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = window.setTimeout(() => {
+                eventAlertRef.current = "Belum mengisi alamat"
+                setAlertOpen(true)
+            }, 100)
+            return
         }
 
         console.log(data)
@@ -299,9 +331,10 @@ export default function IFormCheckout({
                                                             <button
                                                                 type="button"
                                                                 className="absolute inset-0"
-                                                                onClick={() => {
+                                                                onClick={(event) => {
                                                                     const ongkir = Number(item.price)
 
+                                                                    // set_address
                                                                     setAddress((prevState) => {
                                                                         if (!prevState) return prevState
                                                                         return {
@@ -318,20 +351,34 @@ export default function IFormCheckout({
                                                                             }
                                                                         }
                                                                     })
+                                                                    // set_checkout
                                                                     setCheckout((prevState) => {
-                                                                        const total = sumTotal(
+                                                                        const totalOngkir = sumTotal(
                                                                             prevState.subTotal.toString(),
                                                                             ongkir.toString()
+                                                                        )
+                                                                        const totalRand = sumTotal(
+                                                                            totalOngkir.toString(),
+                                                                            prevState.randCode.toString()
+                                                                        )
+                                                                        const totalCoupon = subtractTotal(
+                                                                            totalRand.toString(),
+                                                                            (couponData?.discount || 0).toString()
                                                                         )
                                                                         return {
                                                                             ...prevState,
                                                                             ongkir,
-                                                                            total: sumTotal(
-                                                                                total.toString(),
-                                                                                prevState.randCode.toString()
-                                                                            ),
+                                                                            total: totalCoupon,
                                                                         }
                                                                     })
+                                                                    if (event) {
+                                                                        if (typeof event.preventDefault === "function") {
+                                                                          event.preventDefault()
+                                                                        }
+                                                                        if (typeof event.stopPropagation === "function") {
+                                                                          event.stopPropagation()
+                                                                        }
+                                                                    }
                                                                 }}
                                                             >&nbsp;</button>
                                                         </li>
@@ -367,22 +414,7 @@ export default function IFormCheckout({
                     name="payment"
                     control={control}
                     render={({ field }) => {
-                        const { onChange: onChangeVal, value } = field
-                        const onChange = (vl: {
-                            id: string
-                            bank?: string
-                            name?: string
-                            account?: string
-                            payment_method: string
-                        }) => {
-                            setCurrentPayment({
-                                ...vl,
-                                id: vl.id,
-                                account: vl.account,
-                                payment_method: vl.payment_method,
-                            })
-                            onChangeVal(vl)
-                        }
+                        const { onChange, value } = field
 
                         return (
                             <>
@@ -519,9 +551,30 @@ export default function IFormCheckout({
                                     <button
                                         type="button"
                                         className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
-                                        onClick={() => {
-                                            if (value?.id) {
+                                        onClick={(event) => {
+                                            setAlertOpen(false)
+                                            if (value) {
                                                 setIsOpenPayment(false)
+                                                setCurrentPayment({
+                                                    ...value,
+                                                    id: value.id,
+                                                    account: value.account,
+                                                    payment_method: value.payment_method,
+                                                })
+                                            } else {
+                                                window.clearTimeout(timerRef.current);
+                                                timerRef.current = window.setTimeout(() => {
+                                                    eventAlertRef.current = "Belum memilih metode pembayaran"
+                                                    setAlertOpen(true)
+                                                }, 100)
+                                            }
+                                            if (event) {
+                                                if (typeof event.preventDefault === "function") {
+                                                  event.preventDefault();
+                                                }
+                                                if (typeof event.stopPropagation === "function") {
+                                                  event.stopPropagation();
+                                                }
                                             }
                                         }}
                                     >Simpan</button>
@@ -534,6 +587,9 @@ export default function IFormCheckout({
         )
     }
 
+    const totalStr = checkout.total.toString()
+    totalStr.split(",")[0]
+
     console.log(errors)
 
     return (
@@ -543,7 +599,17 @@ export default function IFormCheckout({
                     <h3 className="mb-2 text-sm font-semibold tracking-wide text-gray-800">Checkout</h3>
                 </div>
 
-                <form onSubmit={submitAction}>
+                <form onSubmit={(event) => {
+                    submitAction(event)
+                    if (event) {
+                        if (typeof event.preventDefault === 'function') {
+                            event.preventDefault();
+                        }
+                        if (typeof event.stopPropagation === 'function') {
+                            event.stopPropagation();
+                        }
+                    }
+                }}>
                     <div className="px-8 sm:px-12 pb-[175px]">
                         {(Array.isArray(variations) && variations.length > 0) && (
                             <>
@@ -617,23 +683,29 @@ export default function IFormCheckout({
                                                                     className="absolute inset-0"
                                                                     onClick={() => {
                                                                         onChange(item.name)
+                                                                        // set_checkout
                                                                         setCheckout((prevState) => {
                                                                             const subTotal = multiplySubTotal(
                                                                                 prevState.qty.toString(),
                                                                                 afterPrice.toString()
                                                                             )
-                                                                            const total = sumTotal(
+                                                                            const totalOngkir = sumTotal(
                                                                                 subTotal.toString(),
                                                                                 prevState.ongkir.toString()
+                                                                            )
+                                                                            const totalRand = sumTotal(
+                                                                                totalOngkir.toString(),
+                                                                                prevState.randCode.toString(),
+                                                                            )
+                                                                            const totalCoupon = subtractTotal(
+                                                                                totalRand.toString(),
+                                                                                (couponData?.discount || 0).toString()
                                                                             )
                                                                             return {
                                                                                 ...prevState,
                                                                                 subTotal,
                                                                                 afterPrice,
-                                                                                total: sumTotal(
-                                                                                    total.toString(),
-                                                                                    prevState.randCode.toString(),
-                                                                                ), //Math.round(Number(subTotal + prevState.randCode) + prevState.ongkir)
+                                                                                total: totalCoupon,
                                                                             }
                                                                         })
                                                                     }}
@@ -670,24 +742,30 @@ export default function IFormCheckout({
                                                     ? Number(address.shipping.price)
                                                     : 0
                                                 onChange(event)
+                                                // set_checkout
                                                 setCheckout((prevState) => {
                                                     const qty = Number(event.target.value)
                                                     const subtotal = multiplySubTotal(
                                                         qty.toString(),
                                                         prevState.afterPrice.toString()
                                                     )
-                                                    const total = sumTotal(
+                                                    const totalOngkir = sumTotal(
                                                         subtotal.toString(),
                                                         ongkir.toString()
+                                                    )
+                                                    const totalRand = sumTotal(
+                                                        totalOngkir.toString(),
+                                                        prevState.randCode.toString()
+                                                    )
+                                                    const totalCoupon = subtractTotal(
+                                                        totalRand.toString(),
+                                                        (couponData?.discount || 0).toString()
                                                     )
                                                     return {
                                                         ...prevState,
                                                         qty: qty,
                                                         subTotal: subtotal,
-                                                        total: sumTotal(
-                                                            total.toString(),
-                                                            prevState.randCode.toString()
-                                                        ), 
+                                                        total: totalCoupon,
                                                     }
                                                 })
                                             }}
@@ -816,24 +894,26 @@ export default function IFormCheckout({
                                                                 const ongkir = val.shipping?.price
                                                                     ? Number(val.shipping.price)
                                                                     : 0
+                                                                // set_address
                                                                 setAddress(() => val)
+                                                                // set_checkout
                                                                 setCheckout((prevState) => {
-                                                                    const total = sumTotal(
+                                                                    const totalOngkir = sumTotal(
                                                                         prevState.subTotal.toString(),
                                                                         (ongkir || 0).toString()
                                                                     )
-                                                                    const randcodeTotal = sumTotal(
-                                                                        total.toString(),
+                                                                    const totalRand = sumTotal(
+                                                                        totalOngkir.toString(),
                                                                         prevState.randCode.toString()
-                                                                        
+                                                                    )
+                                                                    const totalCoupon = subtractTotal(
+                                                                        totalRand.toString(),
+                                                                        (couponData?.discount || 0).toString()
                                                                     )
                                                                     return {
                                                                         ...prevState,
                                                                         ongkir,
-                                                                        total: sumTotal(
-                                                                            randcodeTotal.toString(),
-                                                                            (couponData?.discount || 0).toString()
-                                                                        ),
+                                                                        total: totalCoupon,
                                                                     }
                                                                 })
                                                             }}
@@ -959,9 +1039,30 @@ export default function IFormCheckout({
                                                             permalink={permalink}
                                                             price={checkout.afterPrice}
                                                             applyCoupon={(data) => {
+                                                                const discount = data.discount || 0
+                                                                // set_coupon
                                                                 setCouponData({
-                                                                    discount: data.discount,
+                                                                    discount,
                                                                     coupon: data.coupon,
+                                                                })
+                                                                // set_checkout
+                                                                setCheckout((prevState) => {
+                                                                    const totalOngkir = sumTotal(
+                                                                        prevState.subTotal.toString(),
+                                                                        prevState.ongkir.toString()
+                                                                    )
+                                                                    const totalRand = sumTotal(
+                                                                        totalOngkir.toString(),
+                                                                        prevState.randCode.toString()
+                                                                    )
+                                                                    const totalCoupon = subtractTotal(
+                                                                        totalRand.toString(),
+                                                                        discount.toString(),
+                                                                    )
+                                                                    return {
+                                                                        ...prevState,
+                                                                        total: totalCoupon,
+                                                                    }
                                                                 })
                                                             }}
                                                         />
@@ -1078,6 +1179,14 @@ export default function IFormCheckout({
                                 </div>
 
                                 <div className="flex flex-col">
+                                    {codeUnique && (
+                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
+                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                {getLastThreeWords(checkout.total.toString())}
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="flex items-center justify-between border-b border-gray-100 mb-1">
                                         <span className="text-gray-800 text-[13px] font-medium tracking-wide">Subtotal</span>
                                         <span className="text-gray-800 text-[13px] font-normal tracking-wide">
@@ -1130,6 +1239,28 @@ export default function IFormCheckout({
                     </div>
                 </form>
             </div>
+
+            <Toast.Provider swipeDirection="right">
+                <Toast.Root
+                    className="bg-white rounded-lg shadow shadow-red-500 p-3 flex justify-between items-center data-[state=open]:animate-slideIn data-[state=closed]:animate-hide data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=cancel]:translate-x-0 data-[swipe=cancel]:transition-[transform_200ms_ease-out] data-[swipe=end]:animate-swipeOut"
+                    open={openAlert}
+                    onOpenChange={setAlertOpen}
+                >
+                    <Toast.Description asChild>
+                        {eventAlertRef.current && (
+                            <span className="[grid-area:_description] text-slate11 text-xs leading-[1.3]">
+                                {eventAlertRef.current.toString()}
+                            </span>
+                        )}
+                    </Toast.Description>
+                    <Toast.Action className="[grid-area:_action]" asChild altText="Oke">
+                        <button className="inline-flex items-center justify-center rounded font-normal text-xs px-[10px] leading-[25px] h-[25px] shadow-[inset_0_0_0_1px] shadow-gray-300 hover:shadow-[inset_0_0_0_1px] hover:shadow-gray-400 focus:shadow-[0_0_0_2px] focus:shadow-gray-500">
+                            OKE
+                        </button>
+                    </Toast.Action>
+                </Toast.Root>
+                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-20 flex flex-col px-3 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
+            </Toast.Provider>
         </>
     )
 }

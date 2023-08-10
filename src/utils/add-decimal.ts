@@ -21,6 +21,19 @@ export function multiplySubTotal(num1: string, num2: string) {
     }
 }
 
+
+export function subtractTotal(num1: string, num2: string) {
+    try {
+        const bigNum1 = new Big(num1)
+        const bigNum2 = new Big(num2)
+
+        const difference = bigNum1.minus(bigNum2)
+        return difference.toNumber() // Mengembalikan hasil sebagai string tanpa pembulatan
+    } catch (error) {
+        return 0
+    }
+}
+
 export const addDecimals = (num: number) => {
     return (Math.round(num * 100) / 100) // 12.3456 to 12.35
 }

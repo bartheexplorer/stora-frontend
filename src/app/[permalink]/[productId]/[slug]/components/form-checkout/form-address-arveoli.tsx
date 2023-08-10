@@ -119,7 +119,17 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
 
     return (
         <div className="py-4 px-8 w-full">
-            <form onSubmit={onSubmitAction}>
+            <form onSubmit={(event) => {
+                onSubmitAction(event)
+                if (event) {
+                    if (typeof event.preventDefault === "function") {
+                        event.preventDefault()
+                    }
+                    if (typeof event.stopPropagation === "function") {
+                        event.stopPropagation()
+                    }
+                }
+            }}>
                 <Controller
                     name="province"
                     control={control}

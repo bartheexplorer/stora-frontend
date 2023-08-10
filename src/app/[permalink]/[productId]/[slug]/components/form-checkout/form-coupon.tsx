@@ -40,7 +40,17 @@ export default function IFormCoupon(props: IFormCouponProps) {
 
     return (
         <div className="py-4 px-6">
-            <form onSubmit={onHandleSubmit}>
+            <form onSubmit={(event) => {
+                onHandleSubmit(event)
+                if (event) {
+                    if (typeof event.preventDefault === "function") {
+                        event.preventDefault()
+                    }
+                    if (typeof event.stopPropagation === "function") {
+                        event.stopPropagation()
+                    }
+                }
+            }}>
                 <fieldset className="mb-[15px] w-full flex flex-col justify-start">
                     <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="kode_coupon">
                         Kode Kupon
