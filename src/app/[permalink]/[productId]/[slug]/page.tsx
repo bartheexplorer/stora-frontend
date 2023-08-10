@@ -215,6 +215,7 @@ export default async function Slug(props: SlugProps) {
                         price: item.harga_uk,
                     }))}
                     product={{
+                        productImg: product.gambar.split(",")[0],
                         productName: product.nama_produk,
                         price: Number(product.harga_jual),
                         isFree: product.is_free,

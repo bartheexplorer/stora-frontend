@@ -5,6 +5,7 @@ export const IFormValueCheckoutSchema = z.object({
     nomor_whatsapp: z.string().min(1),
     jumlah: z.string().min(1),
     custom_fields: z.object({
+        id: z.string(),
         label: z.string(),
         value: z.string(),
         field: z.string(),

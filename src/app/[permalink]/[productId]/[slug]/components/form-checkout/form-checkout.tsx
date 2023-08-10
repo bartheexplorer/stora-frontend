@@ -37,6 +37,7 @@ interface IFormCheckoutProps {
         price: string
     }[]
     product: {
+        productImg: string
         productName: string
         price: number
         userId: string
@@ -158,12 +159,12 @@ export default function IFormCheckout({
         register,
         handleSubmit,
         control,
-        formState: { errors },
         watch,
     } = useForm<IFormValueCheckout>({
         resolver: zodResolver(IFormValueCheckoutSchema),
         defaultValues: {
             custom_fields: product.customFields.map((item) => ({
+                id: item.id,
                 label: item.label,
                 value: "",
                 field: item.field.toString(),
@@ -240,6 +241,7 @@ export default function IFormCheckout({
             nama_produk: product.productName,
             product_id: product.productId,
             type_product: product.typeProduct,
+            product_img: product.productImg,
         })
     })
 

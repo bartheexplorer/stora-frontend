@@ -1,5 +1,7 @@
 import { prisma } from "@/entry-server/config/db"
+import { getCustomFieldById } from "@/entry-server/services/custom-field"
 import { createOrder, getOrderId } from "@/entry-server/services/order"
+import type { OrderCustomField, OrderParams } from "@/entry-server/services/order-interface"
 import type { NextApiRequest, NextApiResponse } from "next"
 
 const ORDER_ID = getOrderId()
@@ -94,102 +96,81 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405)
             .json({ message: "Method not allowed" })
     }
-    const body = req.body
+    const body = JSON.parse(req.body)
+
+    const custom: OrderCustomField[] = []
+
+    if (Array.isArray(body.custom_fields) && body.custom_fields.length) {
+        for (const item of body.custom_fields) {
+            custom.push({
+                idCustomField: !Number.isNaN(parseInt(item.id)) ? Number(item.id) : 0,
+                value: item.value,
+                label: item.label,
+              })
+          }
+    }
+
+    let metode_pembayaran: OrderParams["paymentMethodCode"] = "bank"
+    if (body.payment.payment_method === "COD") {
+        metode_pembayaran = "cod"
+    } else if (body.payment.payment_method === "QRIS") {
+        metode_pembayaran = "qris"
+    } else if (body.payment.payment_method === "va") {
+        metode_pembayaran = "virtual"
+    } else if (body.payment.payment_method === "tf") {
+        metode_pembayaran = "bank"
+    }
     
-    
-    const params = {
-        userId: body.user?.id_user, // t_user['id_user']
-        productId: body.product_id, // t_produk['id_produk']
+    const params: OrderParams = {
+        userId: !Number.isNaN(parseInt(body.user?.user_id)) ? Number(body.user.user_id) : 0, // t_user['id_user']
+        productId: !Number.isNaN(parseInt(body.product_id)) ? Number(body.product_id) : 0, // t_produk['id_produk']
         orderId: ORDER_ID, // t_order['order_id']
-        customFields: [], // CustomField[]
-        paymentMethodCode: "bank", // string | null
+        customFields: custom, // CustomField[]
+        paymentMethodCode: metode_pembayaran, // string | null
         isFree: body.is_free, // boolean
-        paymentMethodId: body.payment?.id, // number
+        paymentMethodId: !Number.isNaN(parseInt(body.payment?.id)) ? Number(body.payment.id) : 0, // number
         name: body.nama_lengkap, // string
-        phone: body.nomor_whatsapp, // string
+        phone: body.nomor_whatsapp ? body.nomor_whatsapp.toString() : "", // string
         email: body.email ? body.email : "" , // string
         // Address
-        address: body.address?.address, // string
-        province: body.address?.province, // string
-        city: body.address?.regency, // string
-        subdistrict: body.address?.sub_district, // string
-        qty: body.jumlah, // number
+        address: body.address?.address ? body.address.address : "", // string
+        province: body.address?.province ? body.address.province : "", // string
+        city: body.address?.regency ? body.address.regency : "", // string
+        subdistrict: body.address?.sub_district ? body.address.sub_district : "", // string
+        qty: !Number.isNaN(parseInt(body.jumlah)) ? Number(body.jumlah) : 0, // number
         // variant
-        variant: body.variasi, // string | null
-        size: body.ukuran, // string | null
+        variant: body.variasi ? body.variasi : null, // string | null
+        size: body.ukuran ? body.ukuran : null, // string | null
         // expedisi
-        expedisi: body.address?.shipping?.s_name, // string
-        paket: body.address?.shipping?.service_code, // string
-        ongkir: body.address?.shipping?.price, // number
+        expedisi: body.address?.shipping?.s_name ? body.address?.shipping?.s_name : "", // string
+        paket: body.address?.shipping?.service_code ? body.address?.shipping?.service_code : "", // string
+        ongkir: !Number.isNaN(parseInt(body.address?.shipping?.price)) ? Number(body.address?.shipping?.price) : 0, // number
         estimasi: body.address?.shipping?.etd, // string
         kupon: body.couponData ? body.couponData.coupon : null, // string | null
         // Total
-        potongan: body.couponData ? body.couponData.discount : 0, // number
-        total: body.checkout?.total, // number
-        totalbayar: body.checkout?.total, // number
+        potongan: !Number.isNaN(parseInt(body.couponData?.discount)) ? Number(body.couponData.discount) : 0, // number
+        total: !Number.isNaN(parseInt(body.checkout?.total)) ? Number(body.checkout.total) : 0, // number
+        totalbayar: !Number.isNaN(parseInt(body.checkout?.total)) ? Number(body.checkout.total) : 0, // number
 
         // Product
         productName: body.nama_produk, // string
-        productPrice: body.checkout?.afterPrice, // number
+        productPrice: !Number.isNaN(parseInt(body.checkout?.afterPrice)) ? Number(body.checkout.afterPrice) : 0, // number
         productImage: body.product_img ? body.product_img : "", // string
-        typeProduct: body.type_product, // string
-
-        weight: body.weight, // number
-        permalink: body.permalink, // string
-
+        typeProduct: body.type_product ? body.type_product : "", // string
+        // produk
+        weight: !Number.isNaN(parseInt(body.weight)) ? Number(body.weight) : 0, // number
+        permalink: body.permalink ? body.permalink : "", // string
         // Nama toko
-        namaToko:  body.user?.name, //string
-        phoneToko: body.user?.no_hp, // string
+        namaToko:  body.user?.name ? body.user.name : "", //string
+        phoneToko: body.user?.no_hp ? body.user.no_hp : "", // string
     }
 
-    // createOrder(prisma, {
-    //     userId: 0, // t_user['id_user']
-    //     productId: 0, // t_produk['id_produk']
-    //     orderId: "0", // t_order['order_id']
-    //     customFields: [], // CustomField[]
-    //     paymentMethodCode: "", // string | null
-    //     isFree: false, // boolean
-    //     paymentMethodId: 0, // number
-    //     name: "", // string
-    //     phone: "", // string
-    //     email: "", // string
-    //     // Address
-    //     address: "", // string
-    //     province: "", // string
-    //     city: "", // string
-    //     subdistrict: "", // string
-    //     qty: 0, // number
-    //     // variant
-    //     variant: "", // string | null
-    //     size: "", // string | null
-    //     // expedisi
-    //     expedisi: "", // string
-    //     paket: "", // string
-    //     ongkir: 0, // number
-    //     estimasi: "", // string
-    //     kupon: "", // string | null
-    //     // Total
-    //     potongan: 0, // number
-    //     total: 0, // number
-    //     totalbayar: 0, // number
-
-    //     // Product
-    //     productName: "", // string
-    //     productPrice: 0, // number
-    //     productImage: "", // string
-    //     typeProduct: "", // string
-
-    //     weight: 0, // number
-    //     permalink: "", // string
-
-    //     // Nama toko
-    //     namaToko:  "", //string
-    //     phoneToko: "", // string
-    // })
+    const result = await createOrder(prisma, params)
 
     return res.json({
         data: "post",
-        body: JSON.parse(body),
+        body,
         params,
+        result,
     })
 }
