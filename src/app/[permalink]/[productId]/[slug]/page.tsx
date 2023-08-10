@@ -198,6 +198,12 @@ export default async function Slug(props: SlugProps) {
 
             {!!product && (
                 <IFormCheckout
+                    user={{
+                        name: user?.nama_lengkap,
+                        no_hp: user?.setting?.no_hp_toko,
+                        user_id: user?.id_user.toString(),
+                        member_id: user?.user_id.toString(),
+                    }}
                     permalink={props.params.permalink}
                     variations={product.variantions.map((item) => ({
                         id: item.id_produk_varian.toString(),

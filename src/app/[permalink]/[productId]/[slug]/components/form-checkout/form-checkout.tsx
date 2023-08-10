@@ -15,10 +15,17 @@ import { multiplySubTotal, subtractTotal, sumTotal } from "@/utils/add-decimal"
 import IFormCoupon from "./form-coupon"
 import { getLastThreeWords } from "@/utils/get-unik-code"
 import * as Toast from "@radix-ui/react-toast"
+import { useCreateOrder } from "@/hooks/order"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
 interface IFormCheckoutProps {
+    user: {
+        name?: string | null
+        no_hp?: string | null
+        user_id?: string | null
+        member_id?: string | null
+    }
     permalink: string
     variations: {
         id: string
@@ -88,7 +95,11 @@ export default function IFormCheckout({
     product,
     payment,
     codeUnique,
+    user,
 }: IFormCheckoutProps) {
+    const {
+        sendRequest: createOrder,
+    } = useCreateOrder()
     const { shippingArveoli } = useContext(OrderContext)
     const [isOpenCoupon, setIsOpenCoupon] = useState<boolean>(false)
     const [isOpenAddress, setIsOpenAddress] = useState<boolean>(false)
@@ -170,7 +181,7 @@ export default function IFormCheckout({
 
     const { fields } = useFieldArray({ control, name: "custom_fields" })
 
-    const submitAction = handleSubmit((data) => {
+    const submitAction = handleSubmit(async (data) => {
         console.log("FORM UTAMA RENDER")
         setAlertOpen(false)
         if ((Array.isArray(variations) && variations.length > 0)) {
@@ -214,8 +225,22 @@ export default function IFormCheckout({
             }, 100)
             return
         }
-
         console.log(data)
+        await createOrder({
+            ...data,
+            checkout,
+            address,
+            currentPayment,
+            couponData,
+            permalink,
+            user,
+            is_free: product.isFree,
+            is_free_ongkir: product.isFreeOngkir,
+            weight: product.weight,
+            nama_produk: product.productName,
+            product_id: product.productId,
+            type_product: product.typeProduct,
+        })
     })
 
     const onOpenAddressChange = (value: boolean) => {
@@ -590,8 +615,6 @@ export default function IFormCheckout({
     const totalStr = checkout.total.toString()
     totalStr.split(",")[0]
 
-    console.log(errors)
-
     return (
         <>
             <div className="">
@@ -677,7 +700,7 @@ export default function IFormCheckout({
                                                                     item.name === value ? "border-stora-500" : "border-transparent"
                                                                 )}
                                                             >
-                                                                <span className="text-xs">{item.name} {toIDR(afterPrice.toString())}</span>
+                                                                <span className="text-xs">{item.name}</span>
                                                                 <button
                                                                     type="button"
                                                                     className="absolute inset-0"
