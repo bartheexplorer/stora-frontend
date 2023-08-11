@@ -19,6 +19,7 @@ import { useCreateOrder } from "@/hooks/order"
 import ILoading from "../loading"
 import { useCreateCart } from "@/hooks/cart"
 import { useRouter } from "next/navigation"
+import { validateAndConvertToString } from "@/utils/to-string-converter"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
@@ -106,6 +107,7 @@ export default function IFormCheckout({
     cartId,
 }: IFormCheckoutProps) {
     const router = useRouter()
+    const isProductFisik = product.typeProduct === "fisik"
     const {
         sendRequest: createCart,
     } = useCreateCart()
@@ -129,6 +131,24 @@ export default function IFormCheckout({
         discount: number
         coupon?: string | null
     } | null>(null)
+
+    let total = 0
+    let ranCodeUnique = codeUnique ? RAND_CODE : 0
+    const totalUniqueCode = Math.round(Number(product.price + ranCodeUnique))
+    if (product.typeProduct === "fisik") {
+        if (!product.isFree) {
+            total = totalUniqueCode
+        }
+        if (!product.isFreeOngkir) {
+            total = totalUniqueCode
+        }
+    } else {
+        if (!product.isFree) {
+            total = totalUniqueCode
+            ranCodeUnique = 0
+        }
+    }
+
     const [checkout, setCheckout] = useState<{
         price: number
         afterPrice: number
@@ -138,18 +158,12 @@ export default function IFormCheckout({
         randCode: number
         ongkir: number
     }>({
-        total: (!product.isFree || !product.isFreeOngkir)
-            ? Math.round(Number(product.price + RAND_CODE))
-            : 0,
+        total,
         subTotal: product.price,
         price: product.price,
         afterPrice: product.price,
         qty: 1,
-        randCode: (!product.isFree || !product.isFreeOngkir)
-            ? codeUnique
-                ? RAND_CODE
-                : 0
-            : 0,
+        randCode: ranCodeUnique,
         ongkir: 0,
     })
     const [address, setAddress] = useState<{
@@ -289,32 +303,87 @@ export default function IFormCheckout({
             }
         }
 
-        if (!address) {
-            window.clearTimeout(timerRef.current);
-            timerRef.current = window.setTimeout(() => {
-                eventAlertRef.current = "Belum mengisi alamat"
-                setAlertOpen(true)
-            }, 100)
-            return
-        }
-
-        if (!product.isFree) {
-            if (!currentPayment?.id && typeof currentPayment?.id !== "string") {
+        let alamat: string = ""
+        if (product.typeProduct === "fisik") {
+            if (!address) {
                 window.clearTimeout(timerRef.current);
                 timerRef.current = window.setTimeout(() => {
-                    eventAlertRef.current = "Belum memilih metode pembayaran"
+                    eventAlertRef.current = "Belum mengisi alamat"
                     setAlertOpen(true)
                 }, 100)
                 return
             }
+
+            alamat = validateAndConvertToString([
+                address.address,
+                address.urban_village,
+                address.sub_district,
+                address.regency,
+                address.province,
+                address.zip_code ? `Kode Pos: ${address.zip_code}` : "",
+            ])
+            
+            if (!product.isFree) {
+                if (!currentPayment) {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = window.setTimeout(() => {
+                        eventAlertRef.current = "Belum memilih metode pembayaran"
+                        setAlertOpen(true)
+                    }, 100)
+                    return
+                }
+    
+                if (!currentPayment.id && typeof currentPayment.id !== "string") {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = window.setTimeout(() => {
+                        eventAlertRef.current = "Belum memilih metode pembayaran"
+                        setAlertOpen(true)
+                    }, 100)
+                    return
+                }
+            }
+
+            if (!product.isFreeOngkir) {
+                if (!currentPayment) {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = window.setTimeout(() => {
+                        eventAlertRef.current = "Belum memilih metode pembayaran"
+                        setAlertOpen(true)
+                    }, 100)
+                    return
+                }
+    
+                if (!currentPayment.id && typeof currentPayment.id !== "string") {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = window.setTimeout(() => {
+                        eventAlertRef.current = "Belum memilih metode pembayaran"
+                        setAlertOpen(true)
+                    }, 100)
+                    return
+                }
+            } 
+        } else {
+            if (!product.isFree) {
+                if (!currentPayment) {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = window.setTimeout(() => {
+                        eventAlertRef.current = "Belum memilih metode pembayaran"
+                        setAlertOpen(true)
+                    }, 100)
+                    return
+                }
+    
+                if (!currentPayment.id && typeof currentPayment.id !== "string") {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = window.setTimeout(() => {
+                        eventAlertRef.current = "Belum memilih metode pembayaran"
+                        setAlertOpen(true)
+                    }, 100)
+                    return
+                }
+            }
         }
 
-        const alamat = `${address.address ? `${address.address},` : ""} 
-            ${address.urban_village.length > 1 ? ` ${address.urban_village},` : ""} 
-            ${address.sub_district.length > 1 ? ` ${address.sub_district},` : ""}
-            ${address.regency.length > 1 ? ` ${address.regency},` : ""}
-            ${address.province ? ` ${address.province},` : ""}
-            ${address.zip_code ? ` Kode Pos: ${address.zip_code}` : ""}`
         try {
             const result = await createOrder({
                 ...data,
@@ -334,7 +403,6 @@ export default function IFormCheckout({
                 product_img: product.productImg,
             })
             if (!result?.data?.orderId) throw new Error("Error")
-
 
             reset()
             router.push(`/${permalink}/sucess?id=${result.data.orderId}`)
@@ -464,7 +532,6 @@ export default function IFormCheckout({
                                                                 className="absolute inset-0"
                                                                 onClick={(event) => {
                                                                     const ongkir = Number(item.price)
-
                                                                     // set_address
                                                                     setAddress((prevState) => {
                                                                         if (!prevState) return prevState
@@ -482,26 +549,52 @@ export default function IFormCheckout({
                                                                             }
                                                                         }
                                                                     })
-                                                                    // set_checkout
-                                                                    setCheckout((prevState) => {
-                                                                        const totalOngkir = sumTotal(
-                                                                            prevState.subTotal.toString(),
-                                                                            ongkir.toString()
-                                                                        )
-                                                                        const totalRand = sumTotal(
-                                                                            totalOngkir.toString(),
-                                                                            prevState.randCode.toString()
-                                                                        )
-                                                                        const totalCoupon = subtractTotal(
-                                                                            totalRand.toString(),
-                                                                            (couponData?.discount || 0).toString()
-                                                                        )
-                                                                        return {
-                                                                            ...prevState,
-                                                                            ongkir,
-                                                                            total: totalCoupon,
+                                                                    if (product.typeProduct === "fisik") {
+                                                                        if (!product.isFree || !product.isFreeOngkir) {
+                                                                            setCheckout((prevState) => {
+                                                                                const totalOngkir = sumTotal(
+                                                                                    prevState.subTotal.toString(),
+                                                                                    ongkir.toString()
+                                                                                )
+                                                                                const totalRand = sumTotal(
+                                                                                    totalOngkir.toString(),
+                                                                                    prevState.randCode.toString()
+                                                                                )
+                                                                                const totalCoupon = subtractTotal(
+                                                                                    totalRand.toString(),
+                                                                                    (couponData?.discount || 0).toString()
+                                                                                )
+                                                                                return {
+                                                                                    ...prevState,
+                                                                                    ongkir,
+                                                                                    total: totalCoupon,
+                                                                                }
+                                                                            })
                                                                         }
-                                                                    })
+                                                                    } else {
+                                                                        if (!product.isFree) {
+                                                                            setCheckout((prevState) => {
+                                                                                const totalOngkir = sumTotal(
+                                                                                    prevState.subTotal.toString(),
+                                                                                    ongkir.toString()
+                                                                                )
+                                                                                const totalRand = sumTotal(
+                                                                                    totalOngkir.toString(),
+                                                                                    prevState.randCode.toString()
+                                                                                )
+                                                                                const totalCoupon = subtractTotal(
+                                                                                    totalRand.toString(),
+                                                                                    (couponData?.discount || 0).toString()
+                                                                                )
+                                                                                return {
+                                                                                    ...prevState,
+                                                                                    ongkir,
+                                                                                    total: totalCoupon,
+                                                                                }
+                                                                            })
+                                                                        }
+                                                                    }
+                                                                    // set_checkout
                                                                     if (event) {
                                                                         if (typeof event.preventDefault === "function") {
                                                                             event.preventDefault()
@@ -797,7 +890,9 @@ export default function IFormCheckout({
                                                 <h3 className="text-xs leading-none mb-2.5 block">Ukuran</h3>
                                                 <ul className="flex flex-wrap gap-4 mb-4">
                                                     {sizes.map((item) => {
-                                                        const afterPrice = Number(item.price)
+                                                        const afterPrice = !product.isFree
+                                                            ? Number(item.price)
+                                                            : 0
                                                         return (
                                                             <li
                                                                 key={item.id}
@@ -813,30 +908,61 @@ export default function IFormCheckout({
                                                                     onClick={() => {
                                                                         onChange(item.name)
                                                                         // set_checkout
-                                                                        setCheckout((prevState) => {
-                                                                            const subTotal = multiplySubTotal(
-                                                                                prevState.qty.toString(),
-                                                                                afterPrice.toString()
-                                                                            )
-                                                                            const totalOngkir = sumTotal(
-                                                                                subTotal.toString(),
-                                                                                prevState.ongkir.toString()
-                                                                            )
-                                                                            const totalRand = sumTotal(
-                                                                                totalOngkir.toString(),
-                                                                                prevState.randCode.toString(),
-                                                                            )
-                                                                            const totalCoupon = subtractTotal(
-                                                                                totalRand.toString(),
-                                                                                (couponData?.discount || 0).toString()
-                                                                            )
-                                                                            return {
-                                                                                ...prevState,
-                                                                                subTotal,
-                                                                                afterPrice,
-                                                                                total: totalCoupon,
+                                                                        if (product.typeProduct === "fisik") {
+                                                                            if (!product.isFree || !product.isFreeOngkir) {
+                                                                                setCheckout((prevState) => {
+                                                                                    const subTotal = multiplySubTotal(
+                                                                                        prevState.qty.toString(),
+                                                                                        afterPrice.toString()
+                                                                                    )
+                                                                                    const totalOngkir = sumTotal(
+                                                                                        subTotal.toString(),
+                                                                                        prevState.ongkir.toString()
+                                                                                    )
+                                                                                    const totalRand = sumTotal(
+                                                                                        totalOngkir.toString(),
+                                                                                        prevState.randCode.toString(),
+                                                                                    )
+                                                                                    const totalCoupon = subtractTotal(
+                                                                                        totalRand.toString(),
+                                                                                        (couponData?.discount || 0).toString()
+                                                                                    )
+                                                                                    return {
+                                                                                        ...prevState,
+                                                                                        subTotal,
+                                                                                        afterPrice,
+                                                                                        total: totalCoupon,
+                                                                                    }
+                                                                                })
                                                                             }
-                                                                        })
+                                                                        } else {
+                                                                            if (!product.isFree) {
+                                                                                setCheckout((prevState) => {
+                                                                                    const subTotal = multiplySubTotal(
+                                                                                        prevState.qty.toString(),
+                                                                                        afterPrice.toString()
+                                                                                    )
+                                                                                    const totalOngkir = sumTotal(
+                                                                                        subTotal.toString(),
+                                                                                        prevState.ongkir.toString()
+                                                                                    )
+                                                                                    const totalRand = sumTotal(
+                                                                                        totalOngkir.toString(),
+                                                                                        prevState.randCode.toString(),
+                                                                                    )
+                                                                                    const totalCoupon = subtractTotal(
+                                                                                        totalRand.toString(),
+                                                                                        (couponData?.discount || 0).toString()
+                                                                                    )
+                                                                                    return {
+                                                                                        ...prevState,
+                                                                                        subTotal,
+                                                                                        afterPrice,
+                                                                                        total: totalCoupon,
+                                                                                    }
+                                                                                })
+                                                                            }
+                                                                        }
                                                                     }}
                                                                 >&nbsp;</button>
                                                             </li>
@@ -867,10 +993,19 @@ export default function IFormCheckout({
                                             {...rest}
                                             ref={ref}
                                             onChange={(event) => {
-                                                const ongkir = address?.shipping?.price
-                                                    ? Number(address.shipping.price)
-                                                    : 0
                                                 onChange(event)
+                                                // address?.shipping?.price
+                                                let ongkir = 0
+                                                if (address) {
+                                                    if (address.shipping) {
+                                                        ongkir = !Number.isNaN(parseInt(address.shipping.price.toString()))
+                                                            ? Number(address.shipping.price)
+                                                            : 0
+                                                    }
+                                                }
+                                                // let ongkir = address?.shipping?.price
+                                                //     ? Number(address.shipping.price)
+                                                //     : 0
                                                 // set_checkout
                                                 setCheckout((prevState) => {
                                                     const qty = Number(event.target.value)
@@ -882,10 +1017,28 @@ export default function IFormCheckout({
                                                         subtotal.toString(),
                                                         ongkir.toString()
                                                     )
-                                                    const totalRand = sumTotal(
-                                                        totalOngkir.toString(),
-                                                        prevState.randCode.toString()
-                                                    )
+                                                    let totalRand = 0
+                                                    if (product.typeProduct === "fisik") {
+                                                        if (!product.isFree) {
+                                                            totalRand = sumTotal(
+                                                                totalOngkir.toString(),
+                                                                prevState.randCode.toString()
+                                                            )
+                                                        }
+                                                        if (!product.isFreeOngkir) {
+                                                            totalRand = sumTotal(
+                                                                totalOngkir.toString(),
+                                                                prevState.randCode.toString()
+                                                            )
+                                                        }
+                                                    } else {
+                                                        if (!product.isFree) {
+                                                            totalRand = sumTotal(
+                                                                totalOngkir.toString(),
+                                                                prevState.randCode.toString()
+                                                            )
+                                                        }
+                                                    }
                                                     const totalCoupon = subtractTotal(
                                                         totalRand.toString(),
                                                         (couponData?.discount || 0).toString()
@@ -1026,25 +1179,51 @@ export default function IFormCheckout({
                                                                 // set_address
                                                                 setAddress(() => val)
                                                                 // set_checkout
-                                                                setCheckout((prevState) => {
-                                                                    const totalOngkir = sumTotal(
-                                                                        prevState.subTotal.toString(),
-                                                                        (ongkir || 0).toString()
-                                                                    )
-                                                                    const totalRand = sumTotal(
-                                                                        totalOngkir.toString(),
-                                                                        prevState.randCode.toString()
-                                                                    )
-                                                                    const totalCoupon = subtractTotal(
-                                                                        totalRand.toString(),
-                                                                        (couponData?.discount || 0).toString()
-                                                                    )
-                                                                    return {
-                                                                        ...prevState,
-                                                                        ongkir,
-                                                                        total: totalCoupon,
+                                                                if (product.typeProduct === "fisik") {
+                                                                    if (!product.isFree || !product.isFreeOngkir) {
+                                                                        setCheckout((prevState) => {
+                                                                            const totalOngkir = sumTotal(
+                                                                                prevState.subTotal.toString(),
+                                                                                (ongkir || 0).toString()
+                                                                            )
+                                                                            const totalRand = sumTotal(
+                                                                                totalOngkir.toString(),
+                                                                                prevState.randCode.toString()
+                                                                            )
+                                                                            const totalCoupon = subtractTotal(
+                                                                                totalRand.toString(),
+                                                                                (couponData?.discount || 0).toString()
+                                                                            )
+                                                                            return {
+                                                                                ...prevState,
+                                                                                ongkir,
+                                                                                total: totalCoupon,
+                                                                            }
+                                                                        })
                                                                     }
-                                                                })
+                                                                } else {
+                                                                    if (!product.isFree) {
+                                                                        setCheckout((prevState) => {
+                                                                            const totalOngkir = sumTotal(
+                                                                                prevState.subTotal.toString(),
+                                                                                (ongkir || 0).toString()
+                                                                            )
+                                                                            const totalRand = sumTotal(
+                                                                                totalOngkir.toString(),
+                                                                                prevState.randCode.toString()
+                                                                            )
+                                                                            const totalCoupon = subtractTotal(
+                                                                                totalRand.toString(),
+                                                                                (couponData?.discount || 0).toString()
+                                                                            )
+                                                                            return {
+                                                                                ...prevState,
+                                                                                ongkir,
+                                                                                total: totalCoupon,
+                                                                            }
+                                                                        })
+                                                                    }
+                                                                }
                                                             }}
                                                         />
                                                     </div>
@@ -1175,24 +1354,49 @@ export default function IFormCheckout({
                                                                     coupon: data.coupon,
                                                                 })
                                                                 // set_checkout
-                                                                setCheckout((prevState) => {
-                                                                    const totalOngkir = sumTotal(
-                                                                        prevState.subTotal.toString(),
-                                                                        prevState.ongkir.toString()
-                                                                    )
-                                                                    const totalRand = sumTotal(
-                                                                        totalOngkir.toString(),
-                                                                        prevState.randCode.toString()
-                                                                    )
-                                                                    const totalCoupon = subtractTotal(
-                                                                        totalRand.toString(),
-                                                                        discount.toString(),
-                                                                    )
-                                                                    return {
-                                                                        ...prevState,
-                                                                        total: totalCoupon,
+                                                                if (product.typeProduct === "fisik") {
+                                                                    if (!product.isFree || !product.isFreeOngkir) {
+                                                                        setCheckout((prevState) => {
+                                                                            const totalOngkir = sumTotal(
+                                                                                prevState.subTotal.toString(),
+                                                                                prevState.ongkir.toString()
+                                                                            )
+                                                                            const totalRand = sumTotal(
+                                                                                totalOngkir.toString(),
+                                                                                prevState.randCode.toString()
+                                                                            )
+                                                                            const totalCoupon = subtractTotal(
+                                                                                totalRand.toString(),
+                                                                                discount.toString(),
+                                                                            )
+                                                                            return {
+                                                                                ...prevState,
+                                                                                total: totalCoupon,
+                                                                            }
+                                                                        })
                                                                     }
-                                                                })
+                                                                } else {
+                                                                    if (!product.isFree) {
+                                                                        setCheckout((prevState) => {
+                                                                            const totalOngkir = sumTotal(
+                                                                                prevState.subTotal.toString(),
+                                                                                prevState.ongkir.toString()
+                                                                            )
+                                                                            const totalRand = sumTotal(
+                                                                                totalOngkir.toString(),
+                                                                                prevState.randCode.toString()
+                                                                            )
+                                                                            const totalCoupon = subtractTotal(
+                                                                                totalRand.toString(),
+                                                                                discount.toString(),
+                                                                            )
+                                                                            return {
+                                                                                ...prevState,
+                                                                                total: totalCoupon,
+                                                                            }
+                                                                        })
+                                                                    }
+                                                                }
                                                                 // close coupon modal
                                                                 setIsOpenCoupon(false)
                                                             }}
@@ -1277,7 +1481,7 @@ export default function IFormCheckout({
                                                 </Dialog.Root>
                                             </div>
                                         </div>
-        
+
                                         {!!currentPayment && (
                                             <div className="mb-3">
                                                 {getPaymentMethod(currentPayment)}
@@ -1289,9 +1493,59 @@ export default function IFormCheckout({
                         )}
 
                         {Boolean(product.typeProduct === "digital") && (
-                            <div>
-                                typeProduct digital
-                            </div>
+                            <>
+                                {!product.isFree && (
+                                    <>
+                                        {/* Pembayaran */}
+                                        <div className="flex justify-between my-4">
+                                            <div>
+                                                <label className="text-[13px]">
+                                                    Metode pembayaran
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <Dialog.Root
+                                                    open={isOpenPayment}
+                                                    onOpenChange={setIsOpenPayment}
+                                                >
+                                                    <Dialog.Trigger asChild>
+                                                        <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                            <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
+                                                            <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                                        </button>
+                                                    </Dialog.Trigger>
+                                                    <Dialog.Portal>
+                                                        <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                                        <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                            <div className="py-8">
+                                                                <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
+                                                                    Metode pembayaran
+                                                                </Dialog.Title>
+                                                                {/* Form shipping data */}
+                                                                {paymentComponent()}
+                                                            </div>
+                                                            <Dialog.Close asChild>
+                                                                <button
+                                                                    className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                                    aria-label="Close"
+                                                                >
+                                                                    <Cross2Icon className="w-5 h-5" />
+                                                                </button>
+                                                            </Dialog.Close>
+                                                        </Dialog.Content>
+                                                    </Dialog.Portal>
+                                                </Dialog.Root>
+                                            </div>
+                                        </div>
+
+                                        {!!currentPayment && (
+                                            <div className="mb-3">
+                                                {getPaymentMethod(currentPayment)}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </>
                         )}
 
                         <div className="bg-slate-50 rounded-lg">

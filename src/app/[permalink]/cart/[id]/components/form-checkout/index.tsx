@@ -4,14 +4,15 @@ import { Controller, useForm } from "react-hook-form"
 import { type IFormValueCheckout, IFormValueCheckoutSchema } from "./form-checkout-type"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useContext, useRef, useState } from "react"
-import { multiplySubTotal, subtractTotal, sumTotal } from "@/utils/add-decimal"
+import { multiplySubTotal, sumTotal } from "@/utils/add-decimal"
 import * as Dialog from "@radix-ui/react-dialog"
-import { CaretRightIcon, Cross2Icon, TrashIcon } from "@radix-ui/react-icons"
+import { CaretRightIcon, Cross2Icon } from "@radix-ui/react-icons"
 import IFormAddressArveoli from "./form-address-arveoli"
 import * as Toast from "@radix-ui/react-toast"
 import { toIDR } from "@/utils/to-idr"
 import { OrderContext } from "@/context/order"
 import clsx from "clsx"
+import { validateAndConvertToString } from "@/utils/to-string-converter"
 
 interface IFormCheckoutProps {
     user: {
@@ -45,15 +46,21 @@ interface IFormCheckoutProps {
             fee: "seller" | "customer" | null
         }[]
     }
+    product: {
+        isFreeOngkir: boolean
+        isFree: boolean
+        weight: number
+        total: number
+    }
 }
 
 export default function IFormCheckout({
     permalink,
     payment,
     user,
+    product,
 }: IFormCheckoutProps) {
     const { shippingArveoli } = useContext(OrderContext)
-    const [isOpenCoupon, setIsOpenCoupon] = useState<boolean>(false)
     const [isOpenAddress, setIsOpenAddress] = useState<boolean>(false)
     const [isOpenShipping, setIsOpenShipping] = useState<boolean>(false)
     const [isOpenPayment, setIsOpenPayment] = useState<boolean>(false)
@@ -63,10 +70,6 @@ export default function IFormCheckout({
         account?: string
         bank?: string
         name?: string
-    } | null>(null)
-    const [couponData, setCouponData] = useState<{
-        discount: number
-        coupon?: string | null
     } | null>(null)
     const [checkout, setCheckout] = useState<{
         price: number
@@ -111,7 +114,62 @@ export default function IFormCheckout({
         handleSubmit,
         control,
     } = useForm<IFormValueCheckout>({
-        resolver: zodResolver(IFormValueCheckoutSchema)
+        resolver: zodResolver(IFormValueCheckoutSchema),
+        defaultValues: {
+            jumlah: "1",
+        }
+    })
+
+    const onHandleSubmit = handleSubmit((data) => {
+        setAlertOpen(false)
+        if (!address) {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = window.setTimeout(() => {
+                eventAlertRef.current = "Belum mengisi alamat"
+                setAlertOpen(true)
+            }, 100)
+            return
+        }
+
+        if (!product.isFree) {
+            if (!currentPayment) {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih metode pembayaran"
+                    setAlertOpen(true)
+                }, 100)
+                return
+            }
+
+            if (!currentPayment.id && typeof currentPayment.id !== "string") {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih metode pembayaran"
+                    setAlertOpen(true)
+                }, 100)
+                return
+            }
+        }
+
+        const addressStr = validateAndConvertToString([
+            address.address,
+            address.urban_village,
+            address.sub_district,
+            address.regency,
+            address.province,
+            address.zip_code ? `Kode Pos: ${address.zip_code}` : "",
+        ])
+
+        const body = {
+            ...data,
+            checkout,
+            address,
+            currentPayment,
+            product,
+            addressStr,
+        }
+
+        console.log(body)
     })
 
     const num = (length: number = 50) => {
@@ -249,14 +307,10 @@ export default function IFormCheckout({
                                                                             totalOngkir.toString(),
                                                                             prevState.randCode.toString()
                                                                         )
-                                                                        const totalCoupon = subtractTotal(
-                                                                            totalRand.toString(),
-                                                                            (couponData?.discount || 0).toString()
-                                                                        )
                                                                         return {
                                                                             ...prevState,
                                                                             ongkir,
-                                                                            total: totalCoupon,
+                                                                            total: totalRand,
                                                                         }
                                                                     })
                                                                     if (event) {
@@ -477,6 +531,7 @@ export default function IFormCheckout({
         <>
             <div className="px-12 pt-4 pb-24">
                 <form onSubmit={(event) => {
+                    onHandleSubmit(event)
                     if (event) {
                         if (typeof event.preventDefault === "function") {
                             event.preventDefault();
@@ -522,15 +577,11 @@ export default function IFormCheckout({
                                                     totalOngkir.toString(),
                                                     prevState.randCode.toString()
                                                 )
-                                                const totalCoupon = subtractTotal(
-                                                    totalRand.toString(),
-                                                    (couponData?.discount || 0).toString()
-                                                )
                                                 return {
                                                     ...prevState,
                                                     qty: qty,
                                                     subTotal: subtotal,
-                                                    total: totalCoupon,
+                                                    total: totalRand,
                                                 }
                                             })
                                         }}
@@ -594,9 +645,9 @@ export default function IFormCheckout({
                                             </Dialog.Title>
                                             {/* Address */}
                                             <IFormAddressArveoli
-                                                isFreeOngkir={false}
-                                                userId={"0"}
-                                                weight={"0"}
+                                                isFreeOngkir={product.isFreeOngkir}
+                                                userId={user.user_id ? user.user_id.toString() : ""}
+                                                weight={product.weight.toString()}
                                                 onSelected={(val) => {
                                                     setIsOpenAddress(false)
                                                     const ongkir = val.shipping?.price
@@ -614,14 +665,10 @@ export default function IFormCheckout({
                                                             totalOngkir.toString(),
                                                             prevState.randCode.toString()
                                                         )
-                                                        const totalCoupon = subtractTotal(
-                                                            totalRand.toString(),
-                                                            (couponData?.discount || 0).toString()
-                                                        )
                                                         return {
                                                             ...prevState,
                                                             ongkir,
-                                                            total: totalCoupon,
+                                                            total: totalRand,
                                                         }
                                                     })
                                                 }}

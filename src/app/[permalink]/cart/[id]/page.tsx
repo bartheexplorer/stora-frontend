@@ -112,6 +112,12 @@ export default async function CartId(props: CartIdProps) {
 
             {(!!user && !!user.setting) && (
                 <IFormCheckout
+                    product={{
+                        weight: 0,
+                        isFreeOngkir: false,
+                        isFree: false,
+                        total: 0,
+                    }}
                     user={{
                         name: user?.nama_lengkap,
                         no_hp: user?.setting?.no_hp_toko,
