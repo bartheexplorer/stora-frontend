@@ -91,7 +91,7 @@ export async function getCart(
         userId?: string
     }
 ) {
-    if (!params.cartId || !params.userId) return null 
+    if (!params.cartId || !params.userId) return null
     try {
         const result = await prisma.$transaction(async (tx) => {
             const carts = await tx.$queryRaw<CartsEntity[]>`SELECT id_keranjang
@@ -138,3 +138,45 @@ export async function getCart(
         return null
     }
 }
+
+export async function updateCart(prisma: PrismaClient, idKeranjang: string, qty: string) {
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            const product = await tx.$queryRaw<{ berat: number; potongan: number; total: number }[]>`SELECT 
+          ((berat / qty) * ${qty}) as berat,
+          ((potongan / qty) * ${qty}) as potongan,
+          ((harga_jual * ${qty}) - ((potongan / qty) * ${qty})) as total 
+          FROM t_keranjang WHERE id_keranjang = ${idKeranjang}`
+
+            const berat = product[0]?.berat || 0
+            const total = product[0]?.total || 0
+            const potongan = product[0]?.potongan || 0
+
+            const updateResult = await tx.$executeRaw`UPDATE t_keranjang SET berat = ${berat},
+          qty = ${qty},
+          potongan = ${potongan},
+          total = ${total}
+          WHERE id_keranjang = ${idKeranjang}`
+
+            return updateResult
+        })
+        return result
+    } catch (error) {
+        return null
+    }
+}
+
+export async function destroyCart(prisma: PrismaClient, idKeranjang: number) {
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        return await tx.t_keranjang.delete({
+          where: {
+            id_keranjang: idKeranjang,
+          },
+        })
+      })
+      return result
+    } catch (error) {
+      null
+    }
+  }

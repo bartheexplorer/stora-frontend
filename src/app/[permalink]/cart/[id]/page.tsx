@@ -1,16 +1,27 @@
 import { prisma } from "@/entry-server/config/db"
 import { getCart } from "@/entry-server/services/carts"
 import { getUser } from "@/entry-server/services/user"
-import { ArrowLeftIcon, TrashIcon } from "@radix-ui/react-icons"
-import { cookies } from "next/headers"
+import { toIDR } from "@/utils/to-idr"
+import { ArrowLeftIcon } from "@radix-ui/react-icons"
 import Link from "next/link"
 import PhotoProduct from "./components/photo-product"
-import { toIDR } from "@/utils/to-idr"
+import dynamic from "next/dynamic"
+import ILoading from "./components/loading"
 
-interface CartProps {
+const IFormCheckout = dynamic(() => import("./components/form-checkout"), {
+    ssr: false,
+    loading: () => (
+        <div className="px-8 sm:px-12">
+            <h3 className="mb-2">Checkout</h3>
+            <ILoading text="Loading..." />
+        </div>
+    )
+})
+
+interface CartIdProps {
     params: {
         permalink: string
-        page?: string
+        id: string
     }
     searchParams: { [key: string]: string | string[] | undefined }
 }
@@ -23,16 +34,15 @@ const toCarts = (carts: Awaited<ReturnType<typeof getCart>>) => {
     })
 }
 
-export default async function Cart(props: CartProps) {
-    const cookieStore = cookies()
-    const cartId = cookieStore.get("cartid")
+export default async function CartId(props: CartIdProps) {
     const user = await getUser(prisma, props.params.permalink)
     const cart = await getCart(prisma, {
         userId: user?.id_user.toString(),
-        cartId: cartId?.value,
+        cartId: props.params.id,
     })
     const carts = toCarts(cart)
-    console.log("props", props)
+
+    if (!cart?.carts) return null
 
     return (
         <div className="min-h-screen">
@@ -59,15 +69,19 @@ export default async function Cart(props: CartProps) {
                 </div>
             </div>
 
-            {(Array.isArray(carts) && carts.length > 0) ? (
+            <div className="py-4 px-12">
+                <h3 className="text-sm font-semibold text-slate-600">Checkout</h3>
+            </div>
+
+            {(Array.isArray(carts) && carts.length > 0) && (
                 <>
                     <div className="mt-8 px-8 sm:px-12">
                         <div className="flow-root">
-                            <ul role="list" className="-my-6 divide-y divide-gray-200 pb-32">
+                            <ul role="list" className="-my-6 divide-y divide-gray-200 pb-4">
                                 {carts.map((item) => {
                                     return (
                                         <li key={item.id_keranjang} className="flex py-6">
-                                            <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                                 <PhotoProduct
                                                     images={item.gambar_produk}
                                                     user_id={user?.id_user.toString() || ""}
@@ -85,15 +99,6 @@ export default async function Cart(props: CartProps) {
                                                 </div>
                                                 <div className="flex flex-1 items-end justify-between text-xs">
                                                     <p className="text-gray-500">Qty {item.qty}</p>
-
-                                                    <div className="flex">
-                                                        <button
-                                                            type="button"
-                                                            className="font-medium text-xs text-indigo-600 hover:text-indigo-500"
-                                                        >
-                                                            <TrashIcon className="text-red-500 w-4 h-4" />
-                                                        </button>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </li>
@@ -102,28 +107,47 @@ export default async function Cart(props: CartProps) {
                             </ul>
                         </div>
                     </div>
-
-                    <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
-                        <div className="w-full max-w-lg mx-auto px-3">
-                            <div className="h-12 flex items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
-                                <span className="text-sm tracking-wide text-white">
-                                    {toIDR(carts.reduce((item, i) => (i.total + item), 0).toString())}
-                                </span>
-                                <Link
-                                    href={`/${props.params.permalink}/cart/${cartId?.value}`}
-                                    className="inline-flex items-center justify-center rounded-lg px-4 text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default"
-                                >
-                                    Checkout
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                    
                 </>
-            ) : (
-                <p className="text-center mt-12">Data tidak ditemukan.</p>
             )}
 
+            {(!!user && !!user.setting) && (
+                <IFormCheckout
+                    user={{
+                        name: user?.nama_lengkap,
+                        no_hp: user?.setting?.no_hp_toko,
+                        user_id: user?.id_user.toString(),
+                        member_id: user?.user_id.toString(),
+                    }}
+                    permalink={props.params.permalink}
+                    payment={{
+                        transfer: user?.banks ? user.banks.map((item) => ({
+                            id_bank: item.id_bank.toString(), // 21,
+                            bank: item.bank, // "BANK CENTRAL ASIA",
+                            rekening: item.rekening, // "799199191",
+                            pemilik: item.pemilik, // "Klikdigital Indonesia",
+                            is_active: Boolean(item.is_active === "SATU"), // "SATU",
+                        })) : [],
+                        va: user?.xendits_va ? user.xendits_va.map((item) => ({
+                            id_bank_va_xendit: item.id_bank_va_xendit.toString(), // 35,
+                            bank_code: item.bank_code, // "BCA",
+                            is_active: Boolean(item.is_active === "SATU"), // "SATU"
+                        })) : [],
+                        settings: user?.xendits ? user.xendits.map((item) => ({
+                            id_setting_xendit: item.id_setting_xendit.toString(), // 19,
+                            business_name: item.business_name, // "admin",
+                            country: item.country, // "ID",
+                            is_active: Boolean(item.is_active === "SATU"), // "SATU",
+                            is_blocked: Boolean(item.is_blocked === "SATU"), // "NOL",
+                            status_qris: Boolean(item.status_qris === "SATU"), // "SATU",
+                            status_va: Boolean(item.status_va === "SATU"), // "SATU",
+                            fee: item.fee, // "seller"
+                        })) : [],
+                    }}
+                />
+            )}
+            
+
+            {JSON.stringify(props, undefined, 2)}
         </div>
     )
 }

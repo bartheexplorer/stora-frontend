@@ -20,7 +20,7 @@ const CountdownTimer = dynamic(() => import("./components/countdown/countdown-ti
     )
 })
 
-const IFormCheckout = dynamic(() => import("./components/form-checkout/form-checkout"), {
+const IFormCheckout = dynamic(() => import("./components/form-checkout"), {
     ssr: false,
     loading: () => (
         <div className="px-8 sm:px-12">

@@ -13,49 +13,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const params = {
         session: body.cartId
-            ? body.cartId as string
+            ? body.cartId
             : "", // string
-        productId: !Number.isNaN(parseInt(body.product.productId))
+        productId: !Number.isNaN(parseInt(body.product?.productId))
             ? Number(body.product.productId)
             : 0, // number
         productName: body.product.productName
-            ? body.product.productName as string
+            ? body.product.productName
             : "", // string
-        price: !Number.isNaN(parseInt(body.checkout.afterPrice))
+        price: !Number.isNaN(parseInt(body.checkout?.afterPrice))
             ? Number(body.checkout.afterPrice)
             : 0, // number
-        weight: !Number.isNaN(parseInt(body.product.weight)) ? Number(body.product.weight) : 0, // number
-        productImage: body.product.productImg
-            ? body.product.productImg as string
+        weight: !Number.isNaN(parseInt(body.product?.weight))
+            ? Number(body.product.weight)
+            : 0, // number
+        productImage: body.product?.productImg
+            ? body.product.productImg
             : "", // string
         typeProduct: body.product.typeProduct
-            ? body.product.typeProduct as string
+            ? body.product.typeProduct
             : "", // string
         qty: !Number.isNaN(parseInt(body.qty))
             ? Number(body.qty)
             : 0, // number
         variant: body.variation
-            ? body.variation as string
+            ? body.variation
             : "", // string
         size: body.size
-            ? body.size as string
+            ? body.size
             : "", // string
         coupon: body.couponData
-            ? body.couponData.coupon as string
+            ? body.couponData.coupon
             : "", // string
         discount: body.couponData
-            ? !Number.isNaN(parseInt(body.couponData.discount))
+            ? !Number.isNaN(parseInt(body.couponData?.discount))
                 ? Number(body.couponData.discount)
                 : 0
             : 0, // number
-        total: !Number.isNaN(parseInt(body.checkout.subTotal))
-            ? Number(body.checkout.subTotal)
+        total: !Number.isNaN(parseInt(body.checkout?.total))
+            ? Number(body.checkout.total)
             : 0, // number
-        userId: !Number.isNaN(parseInt(body.product.userId))
+        userId: !Number.isNaN(parseInt(body.product?.userId))
             ? Number(body.product.userId)
             : 0, // number
-        freeShipping: Boolean(body.product.isFreeOngkir), // boolean
-        productFree: Boolean(body.product.isFree), // boolean
+        freeShipping: Boolean(body.product?.isFreeOngkir), // boolean
+        productFree: Boolean(body.product?.isFree), // boolean
     }
 
     const result = await createCarts(prisma, params)

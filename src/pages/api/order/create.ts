@@ -63,12 +63,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         estimasi: body.address?.shipping?.etd,
         kupon: body.couponData ? body.couponData.coupon : null,
         // Total
-        potongan: !Number.isNaN(parseInt(body.couponData?.discount)) ? Number(body.couponData.discount) : 0,
-        total: !Number.isNaN(parseInt(body.checkout?.total)) ? Number(body.checkout.total) : 0,
-        totalbayar: !Number.isNaN(parseInt(body.checkout?.total)) ? Number(body.checkout.total) : 0,
+        potongan: !Number.isNaN(parseInt(body.couponData?.discount))
+            ? Number(body.couponData.discount)
+            : 0,
+        total: !Number.isNaN(parseInt(body.checkout?.total))
+            ? Number(body.checkout.total)
+            : 0,
+        totalbayar: !Number.isNaN(parseInt(body.checkout?.total))
+            ? Number(body.checkout.total)
+            : 0,
         // Product
         productName: body.nama_produk ? body.nama_produk : "",
-        productPrice: !Number.isNaN(parseInt(body.checkout?.afterPrice)) ? Number(body.checkout.afterPrice) : 0,
+        productPrice: !Number.isNaN(parseInt(body.checkout?.afterPrice))
+            ? Number(body.checkout.afterPrice)
+            : 0,
         productImage: body.product_img ? body.product_img : "",
         typeProduct: body.type_product ? body.type_product : "",
         // produk
