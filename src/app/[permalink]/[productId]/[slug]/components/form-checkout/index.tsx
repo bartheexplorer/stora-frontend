@@ -322,7 +322,7 @@ export default function IFormCheckout({
                 address.province,
                 address.zip_code ? `Kode Pos: ${address.zip_code}` : "",
             ])
-            
+
             if (!product.isFree) {
                 if (!currentPayment) {
                     window.clearTimeout(timerRef.current);
@@ -332,7 +332,7 @@ export default function IFormCheckout({
                     }, 100)
                     return
                 }
-    
+
                 if (!currentPayment.id && typeof currentPayment.id !== "string") {
                     window.clearTimeout(timerRef.current);
                     timerRef.current = window.setTimeout(() => {
@@ -352,7 +352,7 @@ export default function IFormCheckout({
                     }, 100)
                     return
                 }
-    
+
                 if (!currentPayment.id && typeof currentPayment.id !== "string") {
                     window.clearTimeout(timerRef.current);
                     timerRef.current = window.setTimeout(() => {
@@ -361,7 +361,7 @@ export default function IFormCheckout({
                     }, 100)
                     return
                 }
-            } 
+            }
         } else {
             if (!product.isFree) {
                 if (!currentPayment) {
@@ -372,7 +372,7 @@ export default function IFormCheckout({
                     }, 100)
                     return
                 }
-    
+
                 if (!currentPayment.id && typeof currentPayment.id !== "string") {
                     window.clearTimeout(timerRef.current);
                     timerRef.current = window.setTimeout(() => {
@@ -1003,10 +1003,6 @@ export default function IFormCheckout({
                                                             : 0
                                                     }
                                                 }
-                                                // let ongkir = address?.shipping?.price
-                                                //     ? Number(address.shipping.price)
-                                                //     : 0
-                                                // set_checkout
                                                 setCheckout((prevState) => {
                                                     const qty = Number(event.target.value)
                                                     const subtotal = multiplySubTotal(

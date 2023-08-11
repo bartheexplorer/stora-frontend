@@ -1,12 +1,12 @@
 import useSWR from "swr"
 import useSWRMutation from "swr/mutation"
-// import {
-//     validateResponseProvinceArveoli,
-//     validateResponseRegencyArveoli,
-//     validateResponseShippingArveoli,
-//     validateResponseSubDistrictArveoli,
-//     validateResponseUrbanVillageArveoli,
-// } from "./arveoli-schema"
+import {
+    validateResponseProvinceArveoli,
+    validateResponseRegencyArveoli,
+    validateResponseShippingArveoli,
+    validateResponseSubDistrictArveoli,
+    validateResponseUrbanVillageArveoli,
+} from "./arveoli-schema"
 
 // Province arveoli
 const provinceFetcher = async (url: string) => {
@@ -14,8 +14,8 @@ const provinceFetcher = async (url: string) => {
         method: "GET",
     })
 
-    // return validateResponseProvinceArveoli(await result.json())
-    return await result.json()
+    return validateResponseProvinceArveoli(await result.json())
+    // return await result.json()
 }
 
 export function useProvinceArveoli() {
@@ -42,8 +42,8 @@ const regencyFetcher = async (url: string, {
         method: 'GET',
     })
 
-    // return validateResponseRegencyArveoli(await result.json())
-    return await result.json()
+    return validateResponseRegencyArveoli(await result.json())
+    // return await result.json()
 }
 
 export function useRegencyArveoli() {
@@ -70,8 +70,8 @@ const subDistrictFetcher = async (url: string, {
         method: 'GET',
     })
 
-    // return validateResponseSubDistrictArveoli(await result.json())
-    return await result.json()
+    return validateResponseSubDistrictArveoli(await result.json())
+    // return await result.json()
 }
 
 export function useSubDistrictArveoli() {
@@ -98,8 +98,8 @@ const urbanVillageFetcher = async (url: string, {
         method: 'GET',
     })
 
-    // return validateResponseUrbanVillageArveoli(await result.json())
-    return await result.json()
+    return validateResponseUrbanVillageArveoli(await result.json())
+    // return await result.json()
 }
 
 export function useUrbanVillageArveoli() {
@@ -133,8 +133,8 @@ const shippingFetcher = async (url: string, {
         }
     )
 
-    // return validateResponseShippingArveoli(await result.json())
-    return await result.json()
+    return validateResponseShippingArveoli(await result.json())
+    // return await result.json()
 }
 
 export function useShippingArveoli() {
