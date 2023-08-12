@@ -282,7 +282,6 @@ export default function IFormCheckout({
 
                                                                     // set_address
                                                                     setAddress((prevState) => {
-                                                                        if (!prevState) return prevState
                                                                         return {
                                                                             ...prevState,
                                                                             shipping: {

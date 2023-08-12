@@ -73,7 +73,7 @@ const Data = z.object({
     service_name: z.string(), // "JTR",
     price: z.string()
         .or(z.number()), // "13500000",
-    etd: z.string(), // "30 - null hari",
+    etd: z.string().nullable().optional(), // "30 - null hari",
     discount_price: z.string()
         .or(z.number()), // 13162500,
     cashless_discount_price: z.string()

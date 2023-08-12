@@ -57,11 +57,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         variant: body.variasi ? body.variasi : null,
         size: body.ukuran ? body.ukuran : null,
         // expedisi
-        expedisi: body.address?.shipping?.s_name ? body.address?.shipping?.s_name : "",
-        paket: body.address?.shipping?.service_code ? body.address?.shipping?.service_code : "",
-        ongkir: !Number.isNaN(parseInt(body.address?.shipping?.price)) ? Number(body.address?.shipping?.price) : 0,
-        estimasi: body.address?.shipping?.etd,
-        kupon: body.couponData ? body.couponData.coupon : null,
+        expedisi: body.currentShipping?.s_name ? body.currentShipping.s_name : "",
+        paket: body.currentShipping?.service_code ? body.currentShipping.service_code : "",
+        ongkir: body.currentShipping?.price
+            ? !Number.isNaN(parseInt(body.currentShipping.price))
+                ? Number(body.currentShipping.price)
+                : 0
+            : 0,
+        estimasi: body.currentShipping?.etd
+            ? body.currentShipping.etd
+            : "",
+        kupon: body.couponData
+            ? body.couponData.coupon
+            : null,
         // Total
         potongan: !Number.isNaN(parseInt(body.couponData?.discount))
             ? Number(body.couponData.discount)

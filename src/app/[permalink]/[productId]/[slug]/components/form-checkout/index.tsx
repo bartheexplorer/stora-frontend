@@ -95,6 +95,26 @@ interface IFormCheckoutProps {
     codeUnique: boolean
 }
 
+type AddressType = {
+    province: string
+    regency: string
+    id_mapping: string
+    sub_district: string
+    urban_village: string
+    zip_code: string
+    address: string
+}
+
+type ShippingType = {
+    service_code: string
+    service_name: string
+    price: number
+    etd: string
+    discount_price: number
+    cashless_discount_price: number
+    s_name: string
+}
+
 export default function IFormCheckout({
     permalink,
     variations,
@@ -145,7 +165,6 @@ export default function IFormCheckout({
     } else {
         if (!product.isFree) {
             total = totalUniqueCode
-            ranCodeUnique = 0
         }
     }
 
@@ -166,24 +185,9 @@ export default function IFormCheckout({
         randCode: ranCodeUnique,
         ongkir: 0,
     })
-    const [address, setAddress] = useState<{
-        province: string
-        regency: string
-        id_mapping: string
-        sub_district: string
-        urban_village: string
-        zip_code: string
-        address: string
-        shipping: {
-            service_code: string
-            service_name: string
-            price: string | number
-            etd: string
-            discount_price: string | number
-            cashless_discount_price: string | number
-            s_name: any
-        } | null
-    } | null>(null)
+    const [address, setAddress] = useState<AddressType | null>(null)
+    const [currentShipping, setCurrentShipping] = useState<ShippingType | null>(null)
+    const [selectedShipping, setSelectedShipping] = useState<ShippingType | null>(null)
     const [openAlert, setAlertOpen] = useState(false)
     const eventAlertRef = useRef<string | null>(null)
     const timerRef = useRef(0)
@@ -391,6 +395,7 @@ export default function IFormCheckout({
                 address,
                 currentPayment,
                 couponData,
+                currentShipping,
                 permalink,
                 user,
                 alamat,
@@ -499,6 +504,11 @@ export default function IFormCheckout({
             }
         }
 
+        const serviceCode = selectedShipping
+            ? selectedShipping.service_code.toString()
+            : null
+        console.log("serviceCode", serviceCode)
+
         return (Array.isArray(shipping) && shipping.length > 0)
             ? (
                 <>
@@ -516,9 +526,9 @@ export default function IFormCheckout({
                                                         <li
                                                             key={item.service_code}
                                                             className={clsx(
-                                                                "relative p-2 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                                item.service_code === address?.shipping?.service_code
-                                                                    ? "border-stora-500"
+                                                                "relative p-2 bg-gray-100 rounded-lg shadow border-2 hover:shadow-lg",
+                                                                item.service_code === serviceCode
+                                                                    ? "border-stora-500 bg-slate-200"
                                                                     : "border-transparent"
                                                             )}
                                                         >
@@ -531,70 +541,28 @@ export default function IFormCheckout({
                                                                 type="button"
                                                                 className="absolute inset-0"
                                                                 onClick={(event) => {
-                                                                    const ongkir = Number(item.price)
-                                                                    // set_address
-                                                                    setAddress((prevState) => {
-                                                                        if (!prevState) return prevState
+                                                                    const ongkir = !Number.isNaN(parseInt(item.price.toString()))
+                                                                        ? Number(item.price)
+                                                                        : 0
+                                                                    // set_selected_address
+                                                                    setSelectedShipping((prevState) => {
                                                                         return {
-                                                                            ...prevState,
-                                                                            shipping: {
-                                                                                ...(prevState?.shipping ? prevState.shipping : {}),
-                                                                                s_name,
-                                                                                service_code: item.service_code,
-                                                                                service_name: item.service_name,
-                                                                                price: ongkir,
-                                                                                etd: item.etd,
-                                                                                discount_price: Number(item.discount_price),
-                                                                                cashless_discount_price: Number(item.cashless_discount_price),
-                                                                            }
+                                                                            ...(prevState ? prevState : {}),
+                                                                            s_name,
+                                                                            service_code: item.service_code.toString(),
+                                                                            service_name: item.service_name,
+                                                                            price: ongkir,
+                                                                            etd: item.etd
+                                                                                ? item.etd
+                                                                                : "",
+                                                                            discount_price: !Number.isNaN(parseInt(item.discount_price.toString()))
+                                                                                ? Number(item.discount_price)
+                                                                                : 0,
+                                                                            cashless_discount_price: !Number.isNaN(parseInt(item.cashless_discount_price.toString()))
+                                                                                ? Number(item.cashless_discount_price)
+                                                                                : 0,
                                                                         }
                                                                     })
-                                                                    if (product.typeProduct === "fisik") {
-                                                                        if (!product.isFree || !product.isFreeOngkir) {
-                                                                            setCheckout((prevState) => {
-                                                                                const totalOngkir = sumTotal(
-                                                                                    prevState.subTotal.toString(),
-                                                                                    ongkir.toString()
-                                                                                )
-                                                                                const totalRand = sumTotal(
-                                                                                    totalOngkir.toString(),
-                                                                                    prevState.randCode.toString()
-                                                                                )
-                                                                                const totalCoupon = subtractTotal(
-                                                                                    totalRand.toString(),
-                                                                                    (couponData?.discount || 0).toString()
-                                                                                )
-                                                                                return {
-                                                                                    ...prevState,
-                                                                                    ongkir,
-                                                                                    total: totalCoupon,
-                                                                                }
-                                                                            })
-                                                                        }
-                                                                    } else {
-                                                                        if (!product.isFree) {
-                                                                            setCheckout((prevState) => {
-                                                                                const totalOngkir = sumTotal(
-                                                                                    prevState.subTotal.toString(),
-                                                                                    ongkir.toString()
-                                                                                )
-                                                                                const totalRand = sumTotal(
-                                                                                    totalOngkir.toString(),
-                                                                                    prevState.randCode.toString()
-                                                                                )
-                                                                                const totalCoupon = subtractTotal(
-                                                                                    totalRand.toString(),
-                                                                                    (couponData?.discount || 0).toString()
-                                                                                )
-                                                                                return {
-                                                                                    ...prevState,
-                                                                                    ongkir,
-                                                                                    total: totalCoupon,
-                                                                                }
-                                                                            })
-                                                                        }
-                                                                    }
-                                                                    // set_checkout
                                                                     if (event) {
                                                                         if (typeof event.preventDefault === "function") {
                                                                             event.preventDefault()
@@ -621,8 +589,33 @@ export default function IFormCheckout({
                             type="button"
                             className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
                             onClick={() => {
-                                if (address?.id_mapping) {
+                                if (selectedShipping) {
+                                    const ongkir = selectedShipping.price
                                     setIsOpenShipping(false)
+                                    setCurrentShipping((prevState) => ({
+                                        ...prevState,
+                                        ...selectedShipping,
+                                    }))
+                                    // set_checkout
+                                    setCheckout((prevState) => {
+                                        const totalOngkir = sumTotal(
+                                            prevState.subTotal.toString(),
+                                            ongkir.toString()
+                                        )
+                                        const totalRand = sumTotal(
+                                            totalOngkir.toString(),
+                                            prevState.randCode.toString()
+                                        )
+                                        const totalCoupon = subtractTotal(
+                                            totalRand.toString(),
+                                            (couponData?.discount || 0).toString()
+                                        )
+                                        return {
+                                            ...prevState,
+                                            ongkir,
+                                            total: totalCoupon,
+                                        }
+                                    })
                                 }
                             }}
                         >Simpan</button>
@@ -647,14 +640,13 @@ export default function IFormCheckout({
                                         <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
                                         <ul className="flex flex-wrap gap-3">
                                             {payment.transfer.map((item) => {
+                                                const classActive = item.id_bank === value?.id
                                                 return item.is_active ? (
                                                     <li
                                                         key={item.id_bank}
                                                         className={clsx(
                                                             "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                            Boolean(item.id_bank.toString() === value?.id.toString())
-                                                                ? "border-stora-500"
-                                                                : "border-transparent"
+                                                            classActive ? "border-stora-500" : "border-transparent"
                                                         )}
                                                     >
                                                         <p className="text-xs">{item.bank}</p>
@@ -811,9 +803,6 @@ export default function IFormCheckout({
         )
     }
 
-    const totalStr = checkout.total.toString()
-    totalStr.split(",")[0]
-
     return (
         <>
             <div className="">
@@ -824,11 +813,11 @@ export default function IFormCheckout({
                 <form onSubmit={(event) => {
                     submitAction(event)
                     if (event) {
-                        if (typeof event.preventDefault === 'function') {
-                            event.preventDefault();
+                        if (typeof event.preventDefault === "function") {
+                            event.preventDefault()
                         }
-                        if (typeof event.stopPropagation === 'function') {
-                            event.stopPropagation();
+                        if (typeof event.stopPropagation === "function") {
+                            event.stopPropagation()
                         }
                     }
                 }}>
@@ -852,8 +841,8 @@ export default function IFormCheckout({
                                                             <li
                                                                 key={item.id}
                                                                 className={clsx(
-                                                                    "relative px-4 py-3 shadow rounded-lg border hover:border-stora-500",
-                                                                    value === item.name ? "border-stora-500" : "border-transparent"
+                                                                    "relative px-4 py-3 shadow rounded-lg border-2 bg-slate-50 hover:shadow-lg",
+                                                                    value === item.name ? "border-stora-400/50 bg-slate-300/40" : "border-transparent"
                                                                 )}
                                                             >
                                                                 <span className="text-xs">{item.name}</span>
@@ -897,8 +886,8 @@ export default function IFormCheckout({
                                                             <li
                                                                 key={item.id}
                                                                 className={clsx(
-                                                                    "relative px-4 py-3 shadow rounded-lg border hover:border-stora-500",
-                                                                    item.name === value ? "border-stora-500" : "border-transparent"
+                                                                    "relative px-4 py-3 shadow rounded-lg border-2 bg-slate-50 hover:shadow-lg",
+                                                                    item.name === value ? "border-stora-400/50 bg-slate-300/40" : "border-transparent"
                                                                 )}
                                                             >
                                                                 <span className="text-xs">{item.name}</span>
@@ -908,61 +897,30 @@ export default function IFormCheckout({
                                                                     onClick={() => {
                                                                         onChange(item.name)
                                                                         // set_checkout
-                                                                        if (product.typeProduct === "fisik") {
-                                                                            if (!product.isFree || !product.isFreeOngkir) {
-                                                                                setCheckout((prevState) => {
-                                                                                    const subTotal = multiplySubTotal(
-                                                                                        prevState.qty.toString(),
-                                                                                        afterPrice.toString()
-                                                                                    )
-                                                                                    const totalOngkir = sumTotal(
-                                                                                        subTotal.toString(),
-                                                                                        prevState.ongkir.toString()
-                                                                                    )
-                                                                                    const totalRand = sumTotal(
-                                                                                        totalOngkir.toString(),
-                                                                                        prevState.randCode.toString(),
-                                                                                    )
-                                                                                    const totalCoupon = subtractTotal(
-                                                                                        totalRand.toString(),
-                                                                                        (couponData?.discount || 0).toString()
-                                                                                    )
-                                                                                    return {
-                                                                                        ...prevState,
-                                                                                        subTotal,
-                                                                                        afterPrice,
-                                                                                        total: totalCoupon,
-                                                                                    }
-                                                                                })
+                                                                        setCheckout((prevState) => {
+                                                                            const subTotal = multiplySubTotal(
+                                                                                prevState.qty.toString(),
+                                                                                afterPrice.toString()
+                                                                            )
+                                                                            const totalOngkir = sumTotal(
+                                                                                subTotal.toString(),
+                                                                                prevState.ongkir.toString()
+                                                                            )
+                                                                            const totalRand = sumTotal(
+                                                                                totalOngkir.toString(),
+                                                                                prevState.randCode.toString(),
+                                                                            )
+                                                                            const totalCoupon = subtractTotal(
+                                                                                totalRand.toString(),
+                                                                                (couponData?.discount || 0).toString()
+                                                                            )
+                                                                            return {
+                                                                                ...prevState,
+                                                                                subTotal,
+                                                                                afterPrice,
+                                                                                total: totalCoupon,
                                                                             }
-                                                                        } else {
-                                                                            if (!product.isFree) {
-                                                                                setCheckout((prevState) => {
-                                                                                    const subTotal = multiplySubTotal(
-                                                                                        prevState.qty.toString(),
-                                                                                        afterPrice.toString()
-                                                                                    )
-                                                                                    const totalOngkir = sumTotal(
-                                                                                        subTotal.toString(),
-                                                                                        prevState.ongkir.toString()
-                                                                                    )
-                                                                                    const totalRand = sumTotal(
-                                                                                        totalOngkir.toString(),
-                                                                                        prevState.randCode.toString(),
-                                                                                    )
-                                                                                    const totalCoupon = subtractTotal(
-                                                                                        totalRand.toString(),
-                                                                                        (couponData?.discount || 0).toString()
-                                                                                    )
-                                                                                    return {
-                                                                                        ...prevState,
-                                                                                        subTotal,
-                                                                                        afterPrice,
-                                                                                        total: totalCoupon,
-                                                                                    }
-                                                                                })
-                                                                            }
-                                                                        }
+                                                                        })
                                                                     }}
                                                                 >&nbsp;</button>
                                                             </li>
@@ -986,7 +944,7 @@ export default function IFormCheckout({
                                 const { onChange, ref, ...rest } = field
                                 return (
                                     <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                                        <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="jumlah">
+                                        <label className="text-[13px] leading-none mb-2.5 block" htmlFor="jumlah">
                                             Jumlah
                                         </label>
                                         <select
@@ -995,16 +953,22 @@ export default function IFormCheckout({
                                             onChange={(event) => {
                                                 onChange(event)
                                                 // address?.shipping?.price
-                                                let ongkir = 0
-                                                if (address) {
-                                                    if (address.shipping) {
-                                                        ongkir = !Number.isNaN(parseInt(address.shipping.price.toString()))
-                                                            ? Number(address.shipping.price)
-                                                            : 0
-                                                    }
-                                                }
                                                 setCheckout((prevState) => {
-                                                    const qty = Number(event.target.value)
+                                                    let ongkir = 0
+                                                    if (currentShipping) {
+                                                        if (!product.isFreeOngkir) {
+                                                            ongkir = !Number.isNaN(parseInt(currentShipping.price.toString()))
+                                                                ? Number(currentShipping.price)
+                                                                : 0
+                                                        }
+                                                    }
+                                                    const qty = !Number.isNaN(parseInt(event.target.value))
+                                                        ? Number(event.target.value)
+                                                        : 0
+                                                    let randCodeStr = ""
+                                                    if (!product.isFree) {
+                                                        randCodeStr = prevState.randCode.toString()
+                                                    }
                                                     const subtotal = multiplySubTotal(
                                                         qty.toString(),
                                                         prevState.afterPrice.toString()
@@ -1013,28 +977,10 @@ export default function IFormCheckout({
                                                         subtotal.toString(),
                                                         ongkir.toString()
                                                     )
-                                                    let totalRand = 0
-                                                    if (product.typeProduct === "fisik") {
-                                                        if (!product.isFree) {
-                                                            totalRand = sumTotal(
-                                                                totalOngkir.toString(),
-                                                                prevState.randCode.toString()
-                                                            )
-                                                        }
-                                                        if (!product.isFreeOngkir) {
-                                                            totalRand = sumTotal(
-                                                                totalOngkir.toString(),
-                                                                prevState.randCode.toString()
-                                                            )
-                                                        }
-                                                    } else {
-                                                        if (!product.isFree) {
-                                                            totalRand = sumTotal(
-                                                                totalOngkir.toString(),
-                                                                prevState.randCode.toString()
-                                                            )
-                                                        }
-                                                    }
+                                                    const totalRand = sumTotal(
+                                                        totalOngkir.toString(),
+                                                        randCodeStr
+                                                    )
                                                     const totalCoupon = subtractTotal(
                                                         totalRand.toString(),
                                                         (couponData?.discount || 0).toString()
@@ -1057,7 +1003,7 @@ export default function IFormCheckout({
                         />
 
                         <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                            <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="nama_lengkap">
+                            <label className="text-[13px] leading-none mb-2.5 block" htmlFor="nama_lengkap">
                                 Nama Lengkap
                             </label>
                             <input
@@ -1068,7 +1014,7 @@ export default function IFormCheckout({
                         </fieldset>
 
                         <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                            <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="nomor_whatsapp">
+                            <label className="text-[13px] leading-none mb-2.5 block" htmlFor="nomor_whatsapp">
                                 Nomor WhatsApp
                             </label>
                             <input
@@ -1169,57 +1115,65 @@ export default function IFormCheckout({
                                                             weight={product.weight}
                                                             onSelected={(val) => {
                                                                 onOpenAddressChange(false)
-                                                                const ongkir = val.shipping?.price
-                                                                    ? Number(val.shipping.price)
-                                                                    : 0
-                                                                // set_address
-                                                                setAddress(() => val)
-                                                                // set_checkout
-                                                                if (product.typeProduct === "fisik") {
-                                                                    if (!product.isFree || !product.isFreeOngkir) {
-                                                                        setCheckout((prevState) => {
-                                                                            const totalOngkir = sumTotal(
-                                                                                prevState.subTotal.toString(),
-                                                                                (ongkir || 0).toString()
-                                                                            )
-                                                                            const totalRand = sumTotal(
-                                                                                totalOngkir.toString(),
-                                                                                prevState.randCode.toString()
-                                                                            )
-                                                                            const totalCoupon = subtractTotal(
-                                                                                totalRand.toString(),
-                                                                                (couponData?.discount || 0).toString()
-                                                                            )
-                                                                            return {
-                                                                                ...prevState,
-                                                                                ongkir,
-                                                                                total: totalCoupon,
-                                                                            }
-                                                                        })
+                                                                let ongkir = 0
+                                                                if (val.shipping) {
+                                                                    const price = !Number.isNaN(parseInt(val.shipping.price.toString()))
+                                                                        ? Number(val.shipping.price)
+                                                                        : 0
+                                                                    ongkir = price
+                                                                    const shipping: ShippingType = {
+                                                                        service_code: val.shipping.service_code,
+                                                                        service_name: val.shipping.service_name,
+                                                                        price: val.shipping.price,
+                                                                        etd: val.shipping.etd
+                                                                            ? val.shipping.etd
+                                                                            : "",
+                                                                        discount_price: val.shipping.discount_price,
+                                                                        cashless_discount_price: val.shipping.cashless_discount_price,
+                                                                        s_name: val.shipping.s_name
+                                                                            ? val.shipping.s_name
+                                                                            : "",
                                                                     }
-                                                                } else {
-                                                                    if (!product.isFree) {
-                                                                        setCheckout((prevState) => {
-                                                                            const totalOngkir = sumTotal(
-                                                                                prevState.subTotal.toString(),
-                                                                                (ongkir || 0).toString()
-                                                                            )
-                                                                            const totalRand = sumTotal(
-                                                                                totalOngkir.toString(),
-                                                                                prevState.randCode.toString()
-                                                                            )
-                                                                            const totalCoupon = subtractTotal(
-                                                                                totalRand.toString(),
-                                                                                (couponData?.discount || 0).toString()
-                                                                            )
-                                                                            return {
-                                                                                ...prevState,
-                                                                                ongkir,
-                                                                                total: totalCoupon,
-                                                                            }
-                                                                        })
-                                                                    }
+                                                                    setCurrentShipping((prevState) => {
+                                                                        return {
+                                                                            ...(prevState ? prevState : {}),
+                                                                            ...shipping,
+                                                                        }
+                                                                    })
                                                                 }
+                                                                // set_address
+                                                                setAddress((prevState) => {
+                                                                    return {
+                                                                        ...(prevState ? prevState : {}),
+                                                                        province: val.province,
+                                                                        regency: val.regency,
+                                                                        id_mapping: val.id_mapping,
+                                                                        sub_district: val.sub_district,
+                                                                        urban_village: val.urban_village,
+                                                                        zip_code: val.zip_code,
+                                                                        address: val.address,
+                                                                    }
+                                                                })
+                                                                // set_checkout
+                                                                setCheckout((prevState) => {
+                                                                    const totalOngkir = sumTotal(
+                                                                        prevState.subTotal.toString(),
+                                                                        (ongkir || 0).toString()
+                                                                    )
+                                                                    const totalRand = sumTotal(
+                                                                        totalOngkir.toString(),
+                                                                        prevState.randCode.toString()
+                                                                    )
+                                                                    const totalCoupon = subtractTotal(
+                                                                        totalRand.toString(),
+                                                                        (couponData?.discount || 0).toString()
+                                                                    )
+                                                                    return {
+                                                                        ...prevState,
+                                                                        ongkir,
+                                                                        total: totalCoupon,
+                                                                    }
+                                                                })
                                                             }}
                                                         />
                                                     </div>
@@ -1254,7 +1208,7 @@ export default function IFormCheckout({
                                         </div>
                                     )}
 
-                                    {!!address?.shipping && (
+                                    {!!currentShipping && (
                                         <>
                                             <div className="flex items-center justify-between my-2">
                                                 <div className="text-xs">Informasi Pengiriman:</div>
@@ -1298,14 +1252,14 @@ export default function IFormCheckout({
 
                                             <div>
                                                 <p className="text-xs">
-                                                    <span className="uppercase">{address.shipping?.s_name}</span>{", "}
-                                                    {address.shipping.service_name}{" "}
-                                                    {address.shipping.price
-                                                        ? toIDR(address.shipping.price.toString())
-                                                        : ""}
+                                                    <span className="uppercase">{currentShipping.s_name}</span>{", "}
+                                                    {currentShipping.service_name}{" "}
+                                                    {currentShipping.price
+                                                        ? toIDR(currentShipping.price.toString())
+                                                        : toIDR("0")}
                                                 </p>
-                                                {!!address.shipping.etd && (
-                                                    <p className="text-xs italic">{address.shipping.etd}</p>
+                                                {!!currentShipping.etd && (
+                                                    <p className="text-xs italic">{currentShipping.etd}</p>
                                                 )}
                                             </div>
                                         </>
@@ -1350,49 +1304,24 @@ export default function IFormCheckout({
                                                                     coupon: data.coupon,
                                                                 })
                                                                 // set_checkout
-                                                                if (product.typeProduct === "fisik") {
-                                                                    if (!product.isFree || !product.isFreeOngkir) {
-                                                                        setCheckout((prevState) => {
-                                                                            const totalOngkir = sumTotal(
-                                                                                prevState.subTotal.toString(),
-                                                                                prevState.ongkir.toString()
-                                                                            )
-                                                                            const totalRand = sumTotal(
-                                                                                totalOngkir.toString(),
-                                                                                prevState.randCode.toString()
-                                                                            )
-                                                                            const totalCoupon = subtractTotal(
-                                                                                totalRand.toString(),
-                                                                                discount.toString(),
-                                                                            )
-                                                                            return {
-                                                                                ...prevState,
-                                                                                total: totalCoupon,
-                                                                            }
-                                                                        })
+                                                                setCheckout((prevState) => {
+                                                                    const totalOngkir = sumTotal(
+                                                                        prevState.subTotal.toString(),
+                                                                        prevState.ongkir.toString()
+                                                                    )
+                                                                    const totalRand = sumTotal(
+                                                                        totalOngkir.toString(),
+                                                                        prevState.randCode.toString()
+                                                                    )
+                                                                    const totalCoupon = subtractTotal(
+                                                                        totalRand.toString(),
+                                                                        discount.toString(),
+                                                                    )
+                                                                    return {
+                                                                        ...prevState,
+                                                                        total: totalCoupon,
                                                                     }
-                                                                } else {
-                                                                    if (!product.isFree) {
-                                                                        setCheckout((prevState) => {
-                                                                            const totalOngkir = sumTotal(
-                                                                                prevState.subTotal.toString(),
-                                                                                prevState.ongkir.toString()
-                                                                            )
-                                                                            const totalRand = sumTotal(
-                                                                                totalOngkir.toString(),
-                                                                                prevState.randCode.toString()
-                                                                            )
-                                                                            const totalCoupon = subtractTotal(
-                                                                                totalRand.toString(),
-                                                                                discount.toString(),
-                                                                            )
-                                                                            return {
-                                                                                ...prevState,
-                                                                                total: totalCoupon,
-                                                                            }
-                                                                        })
-                                                                    }
-                                                                }
+                                                                })
                                                                 // close coupon modal
                                                                 setIsOpenCoupon(false)
                                                             }}
@@ -1595,12 +1524,9 @@ export default function IFormCheckout({
                                         <div className="flex items-center justify-between border-b border-gray-100 mb-1">
                                             <span className="text-gray-800 text-[13px] font-medium tracking-wide">Pengiriman</span>
                                             <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                                {!!address?.shipping
-                                                    ? (
-                                                        <>
-                                                            {toIDR(address.shipping.price.toString())}
-                                                        </>
-                                                    ) : toIDR("0")}
+                                                {!!currentShipping
+                                                    ? toIDR(currentShipping.price.toString())
+                                                    : toIDR("0")}
                                             </span>
                                         </div>
                                     )}
