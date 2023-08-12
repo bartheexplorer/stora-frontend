@@ -153,7 +153,10 @@ export default function IFormCheckout({
     } | null>(null)
 
     let total = 0
-    let ranCodeUnique = codeUnique ? RAND_CODE : 0
+    let ranCodeUnique = 0
+    if (!product.isFree || !product.isFreeOngkir) {
+        ranCodeUnique = codeUnique ? RAND_CODE : 0
+    }
     const totalUniqueCode = Math.round(Number(product.price + ranCodeUnique))
     if (product.typeProduct === "fisik") {
         if (!product.isFree) {
@@ -598,13 +601,17 @@ export default function IFormCheckout({
                                     }))
                                     // set_checkout
                                     setCheckout((prevState) => {
+                                        const subTotal = multiplySubTotal(
+                                            prevState.qty.toString(),
+                                            prevState.afterPrice.toString()
+                                        )
                                         const totalOngkir = sumTotal(
-                                            prevState.subTotal.toString(),
+                                            subTotal.toString(),
                                             ongkir.toString()
                                         )
                                         const totalRand = sumTotal(
                                             totalOngkir.toString(),
-                                            prevState.randCode.toString()
+                                            prevState.randCode.toString(),
                                         )
                                         const totalCoupon = subtractTotal(
                                             totalRand.toString(),
@@ -941,7 +948,16 @@ export default function IFormCheckout({
                                 required: true,
                             }}
                             render={({ field }) => {
-                                const { onChange, ref, ...rest } = field
+                                const { onChange, ref, value, ...rest } = field
+                                let ongkir = 0
+                                if (currentShipping) {
+                                    if (!product.isFreeOngkir) {
+                                        ongkir = !Number.isNaN(parseInt(currentShipping.price.toString()))
+                                            ? Number(currentShipping.price)
+                                            : 0
+                                    }
+                                }
+
                                 return (
                                     <fieldset className="mb-[15px] w-full flex flex-col justify-start">
                                         <label className="text-[13px] leading-none mb-2.5 block" htmlFor="jumlah">
@@ -951,24 +967,11 @@ export default function IFormCheckout({
                                             {...rest}
                                             ref={ref}
                                             onChange={(event) => {
-                                                onChange(event)
-                                                // address?.shipping?.price
-                                                setCheckout((prevState) => {
-                                                    let ongkir = 0
-                                                    if (currentShipping) {
-                                                        if (!product.isFreeOngkir) {
-                                                            ongkir = !Number.isNaN(parseInt(currentShipping.price.toString()))
-                                                                ? Number(currentShipping.price)
-                                                                : 0
-                                                        }
-                                                    }
-                                                    const qty = !Number.isNaN(parseInt(event.target.value))
-                                                        ? Number(event.target.value)
-                                                        : 0
-                                                    let randCodeStr = ""
-                                                    if (!product.isFree) {
-                                                        randCodeStr = prevState.randCode.toString()
-                                                    }
+                                                const qty = !Number.isNaN(parseInt(event.target.value))
+                                                    ? Number(event.target.value)
+                                                    : 0
+                                                // set_checkout
+                                                setCheckout((prevState) => {                                                    
                                                     const subtotal = multiplySubTotal(
                                                         qty.toString(),
                                                         prevState.afterPrice.toString()
@@ -979,12 +982,18 @@ export default function IFormCheckout({
                                                     )
                                                     const totalRand = sumTotal(
                                                         totalOngkir.toString(),
-                                                        randCodeStr
+                                                        prevState.randCode.toString()
                                                     )
                                                     const totalCoupon = subtractTotal(
                                                         totalRand.toString(),
                                                         (couponData?.discount || 0).toString()
                                                     )
+                                                    console.log({
+                                                        ...prevState,
+                                                        qty: qty,
+                                                        subTotal: subtotal,
+                                                        total: totalCoupon,
+                                                    })
                                                     return {
                                                         ...prevState,
                                                         qty: qty,
@@ -992,6 +1001,7 @@ export default function IFormCheckout({
                                                         total: totalCoupon,
                                                     }
                                                 })
+                                                onChange(event)
                                             }}
                                             className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
                                         >
@@ -1156,18 +1166,23 @@ export default function IFormCheckout({
                                                                 })
                                                                 // set_checkout
                                                                 setCheckout((prevState) => {
+                                                                    const subTotal = multiplySubTotal(
+                                                                        prevState.qty.toString(),
+                                                                        prevState.afterPrice.toString()
+                                                                    )
                                                                     const totalOngkir = sumTotal(
-                                                                        prevState.subTotal.toString(),
+                                                                        subTotal.toString(),
                                                                         (ongkir || 0).toString()
                                                                     )
                                                                     const totalRand = sumTotal(
                                                                         totalOngkir.toString(),
-                                                                        prevState.randCode.toString()
+                                                                        prevState.randCode.toString(),
                                                                     )
                                                                     const totalCoupon = subtractTotal(
                                                                         totalRand.toString(),
                                                                         (couponData?.discount || 0).toString()
                                                                     )
+
                                                                     return {
                                                                         ...prevState,
                                                                         ongkir,
@@ -1305,18 +1320,23 @@ export default function IFormCheckout({
                                                                 })
                                                                 // set_checkout
                                                                 setCheckout((prevState) => {
+                                                                    const subTotal = multiplySubTotal(
+                                                                        prevState.qty.toString(),
+                                                                        prevState.afterPrice.toString()
+                                                                    )
                                                                     const totalOngkir = sumTotal(
-                                                                        prevState.subTotal.toString(),
+                                                                        subTotal.toString(),
                                                                         prevState.ongkir.toString()
                                                                     )
                                                                     const totalRand = sumTotal(
                                                                         totalOngkir.toString(),
-                                                                        prevState.randCode.toString()
+                                                                        prevState.randCode.toString(),
                                                                     )
                                                                     const totalCoupon = subtractTotal(
                                                                         totalRand.toString(),
-                                                                        discount.toString(),
+                                                                        discount.toString()
                                                                     )
+                                                                    
                                                                     return {
                                                                         ...prevState,
                                                                         total: totalCoupon,
