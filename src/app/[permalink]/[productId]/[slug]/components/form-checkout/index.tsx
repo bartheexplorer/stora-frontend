@@ -127,7 +127,6 @@ export default function IFormCheckout({
     cartId,
 }: IFormCheckoutProps) {
     const router = useRouter()
-    const isProductFisik = product.typeProduct === "fisik"
     const {
         sendRequest: createCart,
     } = useCreateCart()
