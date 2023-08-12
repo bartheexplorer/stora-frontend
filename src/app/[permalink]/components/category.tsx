@@ -4,8 +4,10 @@ import "swiper/css"
 import "swiper/css/scrollbar"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Scrollbar } from "swiper/modules"
+import Link from "next/link"
 
 interface CategoryProps {
+    permalink: string
     categories: {
         id_kategori_produk: string
         kategori: string
@@ -18,30 +20,51 @@ interface CategoryProps {
 export default function Category({
     categories,
     swipe,
+    permalink,
 }: CategoryProps) {
     if (swipe) {
         return (
-            <Swiper
-                scrollbar={{
-                    hide: true,
-                }}
-                modules={[Scrollbar]}
-                className="mySwiper"
-                spaceBetween={20}
-                slidesPerView={3}
-                slidesOffsetAfter={20}
-                slidesOffsetBefore={20}
-                style={{ paddingBottom: "20px", paddingTop: "15px" }}
-            >
-                {categories.map((item) => (
-                    <SwiperSlide key={item.id_kategori_produk} className="relative h-28">
-                        <div className="shadow p-6 rounded-lg bg-stora-500">
-                            <h3 className="text-xs truncate text-white">{item.kategori}</h3>
-                        </div>
-                        <div className="absolute top-2.5 right-2.5 w-4 h-4 text-center bg-gray-300 rounded-full text-[10px] flex items-center justify-center tracking-wide">{item.count}</div>
-                    </SwiperSlide>
-                ))}
-            </Swiper>
+            <>
+                <div className="px-6 pt-6">
+                    <h3 className="text-sm font-semibold tracking-wide text-gray-800">Kategori</h3>
+                </div>
+
+                <div className="relative w-full max-w-full">
+                    <Swiper
+                        scrollbar={{
+                            hide: true,
+                        }}
+                        modules={[Scrollbar]}
+                        className="mySwiper"
+                        spaceBetween={15}
+                        slidesPerView={3}
+                        slidesOffsetAfter={25}
+                        slidesOffsetBefore={25}
+                        style={{ paddingBottom: "15px", paddingTop: "15px" }}
+                    >
+                        {categories.map((item) => (
+                            <SwiperSlide key={item.id_kategori_produk}>
+                                <div className="relative shadow rounded-lg bg-stora-500 h-12 px-4 py-3">
+                                    <h3 className="text-xs truncate text-white">{item.kategori}</h3>
+                                    <Link
+                                        href={`/${permalink}?category=${item.id_kategori_produk}`}
+                                        className="absolute inset-0"
+                                    >&nbsp;</Link>
+                                </div>
+                            </SwiperSlide>
+                        ))}
+                        <SwiperSlide>
+                            <div className="relative shadow rounded-lg bg-stora-500 h-12 px-4 py-3">
+                                <h3 className="text-xs truncate text-white">Semua kategori</h3>
+                                <Link
+                                    href={`/${permalink}?categories=all`}
+                                    className="absolute inset-0"
+                                >&nbsp;</Link>
+                            </div>
+                        </SwiperSlide>
+                    </Swiper>
+                </div>
+            </>
         )
     }
 

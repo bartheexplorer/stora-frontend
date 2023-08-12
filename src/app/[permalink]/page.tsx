@@ -55,8 +55,8 @@ const toCategories = (categories: Awaited<ReturnType<typeof getCategories>>) => 
 
 export default async function Permalink({ params, searchParams }: PermalinkProps) {
     const permalink = params.permalink
-    const categoryProductId = !Number.isNaN(Number(searchParams?.id_category?.toString()))
-        ? Number(searchParams?.id_category?.toString())
+    const categoryProductId = !Number.isNaN(Number(searchParams?.category?.toString()))
+        ? Number(searchParams?.category?.toString())
         : null
     // Service
     const user = await getUser(prisma, permalink)
@@ -207,21 +207,17 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
             </Suspense>
 
             {/* Categories */}
-            <div className="px-6 pt-6">
-                <h3 className="text-sm font-normal tracking-wide">Kategori</h3>
-            </div>
-
-            <div className="relative w-full max-w-full">
-                <Category categories={categoryArray} swipe />
-            </div>
+            <Category
+                permalink={permalink}
+                categories={categoryArray}
+                swipe
+            />
 
             {/* Product */}
             <Product
                 products={productArray}
                 permalink={permalink}
             />
-
-            <pre>{JSON.stringify(user, undefined, 2)}</pre>
         </>
     )
 }

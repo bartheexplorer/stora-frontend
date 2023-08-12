@@ -52,67 +52,76 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             let paymentId: string | null = null
             let accountBank: string = ''
 
+            async function paymentData() {
+                textOrder3 += `Ongkir: *${formatCurrency(params.ongkir)}*`
+                // Payment method
+                if (params.paymentMethodCode === 'bank') {
+                    const cekBank = await tx.t_bank.findFirst({
+                        where: {
+                            id_bank: { equals: params.paymentMethodId },
+                            id_user: { equals: params.userId },
+                        },
+                    })
+                    if (!cekBank) throw new Error('Bank tidak ditemukan')
+
+                    accountBank = [cekBank.bank, cekBank.rekening].join(' - ')
+                    paymentId = null
+
+                    textOrder2 = `Bank tujuan pembayaran: ${[cekBank.bank, cekBank.rekening].join(' ')} (${cekBank.pemilik})`
+                } else if (params.paymentMethodCode === 'virtual') {
+                    const dbVa = await tx.t_bank_va_xendit.findFirst({
+                        where: {
+                            id_user: { equals: params.userId },
+                            id_bank_va_xendit: { equals: params.paymentMethodId },
+                        },
+                    })
+                    if (!dbVa) throw new Error('Va tidak ditemukan')
+                    const virtualData = await createVaRequest({
+                        id_user: params.userId.toString(),
+                        totalbayar: params.totalbayar.toString(),
+                        bank: dbVa.bank_code,
+                        order_id: params.orderId,
+                    })
+                    accountBank = virtualData?.data ? virtualData.data : ''
+                    paymentId = virtualData?.id ? virtualData.id : null
+
+                    textOrder2 = `Virtual Akun tujuan pembayaran: ${virtualData?.data}`
+                } else if (params.paymentMethodCode === 'qris') {
+                    const cekSettingXendit = await tx.t_setting_xendit.findFirst({
+                        where: {
+                            id_user: { equals: params.userId },
+                            status_qris: { equals: 'SATU' },
+                        },
+                    })
+                    if (!cekSettingXendit) throw new Error('Setting xendit')
+
+                    const dataCod = await createQrisRequest({
+                        userId: cekSettingXendit.id.toString(),
+                        amount: params.totalbayar.toString(),
+                        permalink: params.permalink,
+                        orderId: params.orderId,
+                    })
+
+                    accountBank = dataCod?.qr_string ? dataCod.qr_string : null
+                    paymentId = dataCod?.id ? dataCod.id : null
+                    textOrder2 = `link Qris tujan pembayaran: ${process.env.url}/${params.permalink}/order/qris?id=${params.orderId}`
+                } else if (params.paymentMethodCode === 'cod') {
+                    if (params.typeProduct !== "fisik") throw new Error("payment not found");
+                    accountBank = ''
+                    paymentId = null
+                    textOrder2 = `COD`
+                } else {
+                    throw new Error('payment not found')
+                }
+            }
+
             if (params.typeProduct === 'fisik') {
+                if (!params.isFree || !params.isFreeOngkir) {
+                    await paymentData()
+                }
+            } else {
                 if (!params.isFree) {
-                    textOrder3 += `Ongkir: *${formatCurrency(params.ongkir)}*`
-                    // Payment method
-                    if (params.paymentMethodCode === 'bank') {
-                        const cekBank = await tx.t_bank.findFirst({
-                            where: {
-                                id_bank: { equals: params.paymentMethodId },
-                                id_user: { equals: params.userId },
-                            },
-                        })
-                        if (!cekBank) throw new Error('Bank tidak ditemukan')
-
-                        accountBank = [cekBank.bank, cekBank.rekening].join(' - ')
-                        paymentId = null
-
-                        textOrder2 = `Bank tujuan pembayaran: ${[cekBank.bank, cekBank.rekening].join(' ')} (${cekBank.pemilik})`
-                    } else if (params.paymentMethodCode === 'virtual') {
-                        const dbVa = await tx.t_bank_va_xendit.findFirst({
-                            where: {
-                                id_user: { equals: params.userId },
-                                id_bank_va_xendit: { equals: params.paymentMethodId },
-                            },
-                        })
-                        if (!dbVa) throw new Error('Va tidak ditemukan')
-                        const virtualData = await createVaRequest({
-                            id_user: params.userId.toString(),
-                            totalbayar: params.totalbayar.toString(),
-                            bank: dbVa.bank_code,
-                            order_id: params.orderId,
-                        })
-                        accountBank = virtualData?.data ? virtualData.data : ''
-                        paymentId = virtualData?.id ? virtualData.id : null
-
-                        textOrder2 = `Virtual Akun tujuan pembayaran: ${virtualData?.data}`
-                    } else if (params.paymentMethodCode === 'qris') {
-                        const cekSettingXendit = await tx.t_setting_xendit.findFirst({
-                            where: {
-                                id_user: { equals: params.userId },
-                                status_qris: { equals: 'SATU' },
-                            },
-                        })
-                        if (!cekSettingXendit) throw new Error('Setting xendit')
-
-                        const dataCod = await createQrisRequest({
-                            userId: cekSettingXendit.id.toString(),
-                            amount: params.totalbayar.toString(),
-                            permalink: params.permalink,
-                            orderId: params.orderId,
-                        })
-
-                        accountBank = dataCod?.qr_string ? dataCod.qr_string : null
-                        paymentId = dataCod?.id ? dataCod.id : null
-                        textOrder2 = `link Qris tujan pembayaran: ${process.env.url}/${params.permalink}/order/qris?id=${params.orderId}`
-                    } else if (params.paymentMethodCode === 'cod') {
-                        accountBank = ''
-                        paymentId = null
-                        textOrder2 = `COD`
-                    } else {
-                        throw new Error('payment not found')
-                    }
+                    await paymentData()
                 }
             }
             const order = await tx.$executeRaw`
@@ -399,7 +408,7 @@ export function getOrderId() {
 
 // get order
 export async function findOrderById(prisma: PrismaClient, orderId?: string) {
-    if (!orderId) return null 
+    if (!orderId) return null
     try {
         const result = await prisma.$transaction(async (tx) => {
             const order = await tx.$queryRaw<TOrder[]>`SELECT t_order.order_id,

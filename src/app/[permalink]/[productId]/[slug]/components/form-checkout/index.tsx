@@ -153,20 +153,21 @@ export default function IFormCheckout({
 
     let total = 0
     let ranCodeUnique = 0
-    if (!product.isFree || !product.isFreeOngkir) {
-        ranCodeUnique = codeUnique ? RAND_CODE : 0
-    }
-    const totalUniqueCode = Math.round(Number(product.price + ranCodeUnique))
+    const cunik = codeUnique ? RAND_CODE : 0
+    const totalUniqueCode = Math.round(Number(product.price + cunik))
     if (product.typeProduct === "fisik") {
         if (!product.isFree) {
+            ranCodeUnique = cunik
             total = totalUniqueCode
         }
         if (!product.isFreeOngkir) {
+            ranCodeUnique = cunik
             total = totalUniqueCode
         }
     } else {
         if (!product.isFree) {
             total = totalUniqueCode
+            ranCodeUnique = cunik
         }
     }
 
@@ -639,20 +640,28 @@ export default function IFormCheckout({
                     render={({ field }) => {
                         const { onChange, value } = field
 
+                        const isQris = (Array.isArray(payment.settings) && payment.settings.length > 0)
+                            ? payment.settings[0].status_qris
+                            : false
+
+                        const isVa = (Array.isArray(payment.settings) && payment.settings.length > 0)
+                            ? payment.settings[0].status_va
+                            : false
+
                         return (
                             <>
                                 {(Array.isArray(payment.transfer) && payment.transfer.length > 0) && (
                                     <div className="py-2">
                                         <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
-                                        <ul className="flex flex-wrap gap-3">
+                                        <ul className="flex flex-col gap-3">
                                             {payment.transfer.map((item) => {
                                                 const classActive = item.id_bank === value?.id
                                                 return item.is_active ? (
                                                     <li
                                                         key={item.id_bank}
                                                         className={clsx(
-                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                            classActive ? "border-stora-500" : "border-transparent"
+                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border-2 hover:shadow-lg",
+                                                            classActive ? "border-stora-400/50 bg-slate-300/40" : "border-transparent"
                                                         )}
                                                     >
                                                         <p className="text-xs">{item.bank}</p>
@@ -676,97 +685,112 @@ export default function IFormCheckout({
                                     </div>
                                 )}
 
-                                {(Array.isArray(payment.va) && payment.va.length > 0) && (
-                                    <div className="py-2">
-                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
-                                        <ul className="flex flex-wrap gap-3">
-                                            {payment.va.map((item) => {
-                                                const account = item.bank_code.replaceAll("_", " ").toString()
-                                                return item.is_active ? (
-                                                    <li
-                                                        key={item.id_bank_va_xendit}
-                                                        className={clsx(
-                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                            Boolean(item.id_bank_va_xendit.toString() === value?.id.toString())
-                                                                ? "border-stora-500"
-                                                                : "border-transparent"
-                                                        )}
-                                                    >
-                                                        <p className="text-xs uppercase">Bank {account}</p>
-                                                        <button
-                                                            type="button"
-                                                            className="absolute inset-0"
-                                                            onClick={() => {
-                                                                onChange({
-                                                                    id: item.id_bank_va_xendit,
-                                                                    account: account,
-                                                                    payment_method: "va",
+                                {isVa && (
+                                    <>
+                                        {(Array.isArray(payment.va) && payment.va.length > 0) && (
+                                            <div className="py-2">
+                                                <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
+                                                <ul className="flex flex-col gap-3">
+                                                    {payment.va.map((item) => {
+                                                        const account = item.bank_code.replaceAll("_", " ").toString()
+                                                        return item.is_active ? (
+                                                            <li
+                                                                key={item.id_bank_va_xendit}
+                                                                className={clsx(
+                                                                    "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border-2 hover:shadow-lg",
+                                                                    Boolean(item.id_bank_va_xendit.toString() === value?.id.toString())
+                                                                        ? "border-stora-400/50 bg-slate-300/40"
+                                                                        : "border-transparent"
+                                                                )}
+                                                            >
+                                                                <p className="text-xs uppercase">Bank {account}</p>
+                                                                <button
+                                                                    type="button"
+                                                                    className="absolute inset-0"
+                                                                    onClick={() => {
+                                                                        onChange({
+                                                                            id: item.id_bank_va_xendit,
+                                                                            account: account,
+                                                                            payment_method: "va",
 
-                                                                })
-                                                            }}
-                                                        >&nbsp;</button>
-                                                    </li>
-                                                ) : null
-                                            })}
-                                        </ul>
-                                    </div>
+                                                                        })
+                                                                    }}
+                                                                >&nbsp;</button>
+                                                            </li>
+                                                        ) : null
+                                                    })}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
 
-                                {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
-                                    <div className="py-2">
-                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya</h3>
-                                        <ul className="flex flex-col gap-3">
-                                            {payment.settings.map((item) => {
-                                                return item.status_qris ? (
+                                {(isQris || (product.typeProduct === "fisik")) && (
+                                    <>
+                                        <div className="py-2">
+                                            <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya</h3>
+
+                                            {isQris && (
+                                                <>
+                                                    {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
+                                                        <ul className="flex gap-3 mb-3">
+                                                            {payment.settings.map((item) => {
+                                                                return item.status_qris ? (
+                                                                    <li
+                                                                        key={item.id_setting_xendit}
+                                                                        className={clsx(
+                                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
+                                                                            Boolean(item.id_setting_xendit.toString() === value?.id.toString())
+                                                                                ? "border-stora-500"
+                                                                                : "border-transparent"
+                                                                        )}
+                                                                    >
+                                                                        <p className="text-xs uppercase">{`QRIS`}</p>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="absolute inset-0"
+                                                                            onClick={() => {
+                                                                                onChange({
+                                                                                    id: item.id_setting_xendit,
+                                                                                    name: item.business_name,
+                                                                                    payment_method: "QRIS",
+                                                                                })
+                                                                            }}
+                                                                        >&nbsp;</button>
+                                                                    </li>
+                                                                ) : null
+                                                            })}
+                                                        </ul>
+                                                    )}
+                                                </>
+                                            )}
+
+                                            {product.typeProduct === "fisik" && (
+                                                <ul className="flex flex-col gap-3">
                                                     <li
-                                                        key={item.id_setting_xendit}
                                                         className={clsx(
                                                             "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                            Boolean(item.id_setting_xendit.toString() === value?.id.toString())
+                                                            Boolean("COD" === value?.id.toString())
                                                                 ? "border-stora-500"
                                                                 : "border-transparent"
                                                         )}
                                                     >
-                                                        <p className="text-xs uppercase">{`QRIS`}</p>
+                                                        <p className="text-xs uppercase">{`COD (Cash On Delivery)`}</p>
                                                         <button
                                                             type="button"
                                                             className="absolute inset-0"
                                                             onClick={() => {
                                                                 onChange({
-                                                                    id: item.id_setting_xendit,
-                                                                    name: item.business_name,
-                                                                    payment_method: "QRIS",
+                                                                    id: "COD",
+                                                                    payment_method: "COD"
                                                                 })
                                                             }}
                                                         >&nbsp;</button>
                                                     </li>
-                                                ) : null
-                                            })}
-
-                                            {product.typeProduct === "fisik" && (
-                                                <li
-                                                    className={clsx(
-                                                        "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                        Boolean("COD" === value?.id.toString())
-                                                            ? "border-stora-500"
-                                                            : "border-transparent"
-                                                    )}
-                                                >
-                                                    <p className="text-xs uppercase">{`COD (Cash On Delivery)`}</p>
-                                                    <button
-                                                        type="button"
-                                                        className="absolute inset-0"
-                                                        onClick={() => {
-                                                            onChange({
-                                                                id: "COD",
-                                                                payment_method: "COD"
-                                                            })
-                                                        }}
-                                                    >&nbsp;</button>
-                                                </li>
+                                                </ul>
                                             )}
-                                        </ul>
-                                    </div>
+                                        </div>
+                                    </>
                                 )}
 
                                 <div className="py-6 flex flex-col">
@@ -806,6 +830,60 @@ export default function IFormCheckout({
                     }}
                 />
             </div>
+        )
+    }
+
+    const selectPaymentMethod = () => {
+        return (
+            <>
+                {/* Pembayaran */}
+                <div className="flex justify-between my-4">
+                    <div>
+                        <label className="text-[13px]">
+                            Metode pembayaran
+                        </label>
+                    </div>
+                    <div>
+                        <Dialog.Root
+                            open={isOpenPayment}
+                            onOpenChange={setIsOpenPayment}
+                        >
+                            <Dialog.Trigger asChild>
+                                <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                    <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
+                                    <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                </button>
+                            </Dialog.Trigger>
+                            <Dialog.Portal>
+                                <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                    <div className="py-8">
+                                        <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
+                                            Metode pembayaran
+                                        </Dialog.Title>
+                                        {/* Form shipping data */}
+                                        {paymentComponent()}
+                                    </div>
+                                    <Dialog.Close asChild>
+                                        <button
+                                            className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                            aria-label="Close"
+                                        >
+                                            <Cross2Icon className="w-5 h-5" />
+                                        </button>
+                                    </Dialog.Close>
+                                </Dialog.Content>
+                            </Dialog.Portal>
+                        </Dialog.Root>
+                    </div>
+                </div>
+
+                {!!currentPayment && (
+                    <div className="mb-3">
+                        {getPaymentMethod(currentPayment)}
+                    </div>
+                )}
+            </>
         )
     }
 
@@ -970,7 +1048,7 @@ export default function IFormCheckout({
                                                     ? Number(event.target.value)
                                                     : 0
                                                 // set_checkout
-                                                setCheckout((prevState) => {                                                    
+                                                setCheckout((prevState) => {
                                                     const subtotal = multiplySubTotal(
                                                         qty.toString(),
                                                         prevState.afterPrice.toString()
@@ -1335,7 +1413,7 @@ export default function IFormCheckout({
                                                                         totalRand.toString(),
                                                                         discount.toString()
                                                                     )
-                                                                    
+
                                                                     return {
                                                                         ...prevState,
                                                                         total: totalCoupon,
@@ -1382,113 +1460,13 @@ export default function IFormCheckout({
                                     </div>
                                 )}
 
-                                {(!product.isFree || !product.isFreeOngkir) && (
-                                    <>
-                                        {/* Pembayaran */}
-                                        <div className="flex justify-between my-4">
-                                            <div>
-                                                <label className="text-[13px]">
-                                                    Metode pembayaran
-                                                </label>
-                                            </div>
-                                            <div>
-                                                <Dialog.Root
-                                                    open={isOpenPayment}
-                                                    onOpenChange={setIsOpenPayment}
-                                                >
-                                                    <Dialog.Trigger asChild>
-                                                        <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                            <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
-                                                            <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                                        </button>
-                                                    </Dialog.Trigger>
-                                                    <Dialog.Portal>
-                                                        <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                                        <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                            <div className="py-8">
-                                                                <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
-                                                                    Metode pembayaran
-                                                                </Dialog.Title>
-                                                                {/* Form shipping data */}
-                                                                {paymentComponent()}
-                                                            </div>
-                                                            <Dialog.Close asChild>
-                                                                <button
-                                                                    className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                                                                    aria-label="Close"
-                                                                >
-                                                                    <Cross2Icon className="w-5 h-5" />
-                                                                </button>
-                                                            </Dialog.Close>
-                                                        </Dialog.Content>
-                                                    </Dialog.Portal>
-                                                </Dialog.Root>
-                                            </div>
-                                        </div>
-
-                                        {!!currentPayment && (
-                                            <div className="mb-3">
-                                                {getPaymentMethod(currentPayment)}
-                                            </div>
-                                        )}
-                                    </>
-                                )}
+                                {(!product.isFree || !product.isFreeOngkir) && selectPaymentMethod()}
                             </>
                         )}
 
                         {Boolean(product.typeProduct === "digital") && (
                             <>
-                                {!product.isFree && (
-                                    <>
-                                        {/* Pembayaran */}
-                                        <div className="flex justify-between my-4">
-                                            <div>
-                                                <label className="text-[13px]">
-                                                    Metode pembayaran
-                                                </label>
-                                            </div>
-                                            <div>
-                                                <Dialog.Root
-                                                    open={isOpenPayment}
-                                                    onOpenChange={setIsOpenPayment}
-                                                >
-                                                    <Dialog.Trigger asChild>
-                                                        <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                            <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
-                                                            <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                                        </button>
-                                                    </Dialog.Trigger>
-                                                    <Dialog.Portal>
-                                                        <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                                        <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                            <div className="py-8">
-                                                                <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
-                                                                    Metode pembayaran
-                                                                </Dialog.Title>
-                                                                {/* Form shipping data */}
-                                                                {paymentComponent()}
-                                                            </div>
-                                                            <Dialog.Close asChild>
-                                                                <button
-                                                                    className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                                                                    aria-label="Close"
-                                                                >
-                                                                    <Cross2Icon className="w-5 h-5" />
-                                                                </button>
-                                                            </Dialog.Close>
-                                                        </Dialog.Content>
-                                                    </Dialog.Portal>
-                                                </Dialog.Root>
-                                            </div>
-                                        </div>
-
-                                        {!!currentPayment && (
-                                            <div className="mb-3">
-                                                {getPaymentMethod(currentPayment)}
-                                            </div>
-                                        )}
-                                    </>
-                                )}
+                                {!product.isFree && selectPaymentMethod()}
                             </>
                         )}
 
@@ -1521,15 +1499,34 @@ export default function IFormCheckout({
                                 </div>
 
                                 <div className="flex flex-col">
-                                    {(!product.isFree || !product.isFreeOngkir) && (
+                                    {product.typeProduct === "fisik" ? (
                                         <>
-                                            {codeUnique && (
-                                                <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                                    <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
-                                                    <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                                        {getLastThreeWords(checkout.total.toString())}
-                                                    </span>
-                                                </div>
+                                            {(!product.isFree || !product.isFreeOngkir) && (
+                                                <>
+                                                    {codeUnique && (
+                                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
+                                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                                {getLastThreeWords(checkout.total.toString())}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {!product.isFree && (
+                                                <>
+                                                    {codeUnique && (
+                                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
+                                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                                {getLastThreeWords(checkout.total.toString())}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </>
                                     )}

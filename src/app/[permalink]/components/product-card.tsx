@@ -47,10 +47,9 @@ export default function ProductCard(props: ProductCardProps) {
                 >
                     <div className="p-4">
                         <div className={clsx(
-                            "min-h-80 aspect-w-1 aspect-h-1 overflow-hidden rounded-3xl",
                             isList
-                                ? "h-auto w-24 border-r border-gray-100"
-                                : "w-full h-auto border-b border-gray-100",
+                                ? "h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200"
+                                : "aspect-h-1 aspect-w-1 overflow-hidden rounded-lg bg-gray-100 group-hover:opacity-75 h-28 sm:h-44"
                         )}>
                             {photoProduct ? (
                                 <Image
@@ -59,13 +58,11 @@ export default function ProductCard(props: ProductCardProps) {
                                     loader={({ src, width }) => `${src}?width=${width}`}
                                     width={700}
                                     height={475}
-                                    placeholder="blur"
-                                    blurDataURL={`data:image/svg+xml;base64,${toBase64(shimmer(700, 475))}`}
-                                    className="h-full w-full border-0 object-center lg:h-full lg:w-full"
-                                    style={{
-                                        maxWidth: '100%',
-                                        height: 'auto',
-                                    }}
+                                    className={clsx(
+                                        isList
+                                            ? "h-full w-full object-cover object-center"
+                                            : "h-full w-full object-cover object-center group-hover:opacity-75"
+                                    )}
                                 />
                             ) : (
                                 <Image
@@ -75,7 +72,11 @@ export default function ProductCard(props: ProductCardProps) {
                                     height={475}
                                     placeholder="blur"
                                     blurDataURL={`data:image/svg+xml;base64,${toBase64(shimmer(700, 475))}`}
-                                    className="h-full w-full border-0 object-center lg:h-full lg:w-full"
+                                    className={clsx(
+                                        isList
+                                            ? "h-full w-full object-cover object-center"
+                                            : "h-full w-full object-cover object-center group-hover:opacity-75"
+                                    )}
                                 />
                             )}
                         </div>
@@ -87,13 +88,13 @@ export default function ProductCard(props: ProductCardProps) {
                         )}
                     >
                         <div className={clsx(
-                            'w-full py-4 h-full group-hover:opacity-80',
-                            isList ? 'pr-3' : 'px-4'
+                            'w-full h-full group-hover:opacity-80',
+                            isList ? 'pr-3 py-4' : 'px-4 px-4 pb-4 pt-0'
                         )}>
                             <div>
                                 <div>
                                     <h3 className={clsx(
-                                        'wbslink-product__name font-medium text-gray-600  normal-case text-sm',
+                                        'font-medium text-gray-600 normal-case text-sm',
                                         isList ? '!leading-5' : '!leading-4'
                                     )}>
                                         {product.jenis_produk === 'link' ? (

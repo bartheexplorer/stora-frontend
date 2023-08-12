@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         customFields: custom,
         paymentMethodCode: metode_pembayaran,
         isFree: Boolean(body.is_free),
+        isFreeOngkir: Boolean(body.is_free_ongkir),
         paymentMethodId: !Number.isNaN(parseInt(body.currentPayment?.id))
             ? Number(body.currentPayment.id)
             : 0,

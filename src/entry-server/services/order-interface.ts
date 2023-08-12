@@ -13,6 +13,7 @@ export type OrderParams = {
     customFields: OrderCustomField[]
     paymentMethodCode: ("bank" | "virtual" | "qris" | "cod") | null
     isFree: boolean
+    isFreeOngkir: boolean
     paymentMethodId: number
     name: string
     phone: string
