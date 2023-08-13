@@ -281,21 +281,21 @@ export default function IFormCheckout({
                                                                     const ongkir = Number(item.price)
 
                                                                     // set_address
-                                                                    setAddress((prevState) => {
-                                                                        return {
-                                                                            ...prevState,
-                                                                            shipping: {
-                                                                                ...(prevState?.shipping ? prevState.shipping : {}),
-                                                                                s_name,
-                                                                                service_code: item.service_code,
-                                                                                service_name: item.service_name,
-                                                                                price: ongkir,
-                                                                                etd: item.etd,
-                                                                                discount_price: Number(item.discount_price),
-                                                                                cashless_discount_price: Number(item.cashless_discount_price),
-                                                                            }
-                                                                        }
-                                                                    })
+                                                                    // setAddress((prevState) => {
+                                                                    //     return {
+                                                                    //         ...prevState,
+                                                                    //         shipping: {
+                                                                    //             ...(prevState?.shipping ? prevState.shipping : {}),
+                                                                    //             s_name,
+                                                                    //             service_code: item.service_code,
+                                                                    //             service_name: item.service_name,
+                                                                    //             price: ongkir,
+                                                                    //             etd: item.etd,
+                                                                    //             discount_price: Number(item.discount_price),
+                                                                    //             cashless_discount_price: Number(item.cashless_discount_price),
+                                                                    //         }
+                                                                    //     }
+                                                                    // })
                                                                     // set_checkout
                                                                     setCheckout((prevState) => {
                                                                         const totalOngkir = sumTotal(

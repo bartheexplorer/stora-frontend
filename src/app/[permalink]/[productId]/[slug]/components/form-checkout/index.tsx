@@ -20,6 +20,12 @@ import ILoading from "../loading"
 import { useCreateCart } from "@/hooks/cart"
 import { useRouter } from "next/navigation"
 import { validateAndConvertToString } from "@/utils/to-string-converter"
+// Bang bang
+import bca from "@/app/assets/logo-bang-bang/bca.png"
+import bri from "@/app/assets/logo-bang-bang/bri.png"
+import bsi from "@/app/assets/logo-bang-bang/bsi.png"
+import mandiri from "@/app/assets/logo-bang-bang/mandiri.png"
+import Image from "next/image"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
@@ -631,9 +637,53 @@ export default function IFormCheckout({
             ) : null
     }
 
+    const bankLogo = (id: string) => {
+        if (id === "21") {
+            return <Image
+                src={bca}
+                alt="BCA"
+                width={500}
+                height={500}
+            />
+        }
+
+        if (id === "171") {
+            return <Image
+                src={mandiri}
+                alt="Mandiri"
+                width={500}
+                height={500}
+            />
+        }
+
+        if (id === "172") {
+            return <Image
+                src={bsi}
+                alt="BSI"
+                width={500}
+                height={500}
+            />
+        }
+
+        if (id === "174") {
+            return null
+        }
+
+        if (id === "738") {
+            return <Image
+                src={bri}
+                alt="BRI"
+                width={500}
+                height={500}
+            />
+        }
+
+        return null
+    }
+
     const paymentComponent = () => {
         return (
-            <div className="px-6">
+            <div className="">
                 <Controller
                     name="payment"
                     control={control}
@@ -652,35 +702,42 @@ export default function IFormCheckout({
                             <>
                                 {(Array.isArray(payment.transfer) && payment.transfer.length > 0) && (
                                     <div className="py-2">
-                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
-                                        <ul className="flex flex-col gap-3">
-                                            {payment.transfer.map((item) => {
-                                                const classActive = item.id_bank === value?.id
-                                                return item.is_active ? (
-                                                    <li
-                                                        key={item.id_bank}
-                                                        className={clsx(
-                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border-2 hover:shadow-lg",
-                                                            classActive ? "border-stora-400/50 bg-slate-300/40" : "border-transparent"
-                                                        )}
-                                                    >
-                                                        <p className="text-xs">{item.bank}</p>
-                                                        <button
-                                                            type="button"
-                                                            className="absolute inset-0"
-                                                            onClick={() => {
-                                                                onChange({
-                                                                    id: item.id_bank,
-                                                                    bank: item.bank.toString(),
-                                                                    account: item.rekening,
-                                                                    name: item.pemilik,
-                                                                    payment_method: "tf"
-                                                                })
-                                                            }}
-                                                        >&nbsp;</button>
-                                                    </li>
-                                                ) : null
-                                            })}
+                                        <div className="bg-slate-300 py-2 px-8">
+                                            <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
+                                        </div>
+                                        <ul className="flex flex-col">
+                                                {payment.transfer.map((item) => {
+                                                    const classActive = item.id_bank === value?.id
+                                                    return item.is_active ? (
+                                                        <li
+                                                            key={item.id_bank}
+                                                            className={clsx(
+                                                                "relative overflow-hidden py-3 bg-gray-100 border-b",
+                                                                classActive ? "bg-slate-300/40" : "border-transparent"
+                                                            )}
+                                                        >
+                                                            <div className="flex gap-2">
+                                                                <div>
+                                                                    {bankLogo(item.id_bank.toString())}
+                                                                </div>
+                                                                <p className="text-xs">{item.bank} {item.id_bank}</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                className="absolute inset-0"
+                                                                onClick={() => {
+                                                                    onChange({
+                                                                        id: item.id_bank,
+                                                                        bank: item.bank.toString(),
+                                                                        account: item.rekening,
+                                                                        name: item.pemilik,
+                                                                        payment_method: "tf"
+                                                                    })
+                                                                }}
+                                                            >&nbsp;</button>
+                                                        </li>
+                                                    ) : null
+                                                })}
                                         </ul>
                                     </div>
                                 )}
@@ -856,9 +913,9 @@ export default function IFormCheckout({
                             </Dialog.Trigger>
                             <Dialog.Portal>
                                 <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                    <div className="py-8">
-                                        <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
+                                <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white shadow focus:outline-none">
+                                    <div className="py-16">
+                                        <Dialog.Title className="m-0 text-sm font-medium px-8">
                                             Metode pembayaran
                                         </Dialog.Title>
                                         {/* Form shipping data */}
@@ -866,7 +923,7 @@ export default function IFormCheckout({
                                     </div>
                                     <Dialog.Close asChild>
                                         <button
-                                            className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                            className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
                                             aria-label="Close"
                                         >
                                             <Cross2Icon className="w-5 h-5" />
@@ -1191,7 +1248,7 @@ export default function IFormCheckout({
                                             <Dialog.Portal>
                                                 <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
                                                 <Dialog.Content className="overflow-y-scroll z-40 data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                    <div className="py-6 py-8">
+                                                    <div className="py-8">
                                                         <Dialog.Title className="m-0 text-sm font-medium">
                                                             Alamat Penerima
                                                         </Dialog.Title>
@@ -1317,7 +1374,7 @@ export default function IFormCheckout({
                                                     <Dialog.Portal>
                                                         <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
                                                         <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                            <div className="py-6 px-8">
+                                                            <div className="py-8">
                                                                 <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
                                                                     Pengiriman
                                                                 </Dialog.Title>
@@ -1567,7 +1624,7 @@ export default function IFormCheckout({
 
                     <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
                         <div className="w-full max-w-lg mx-auto px-3">
-                            <div className="h-12 flex items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
+                            <div className="h-12 flex gap-3 items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
                                 <span className="text-sm tracking-wide text-white">
                                     {toIDR(checkout.total.toString())}
                                 </span>
@@ -1626,7 +1683,7 @@ export default function IFormCheckout({
                         </button>
                     </Toast.Action>
                 </Toast.Root>
-                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-20 flex flex-col px-3 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
+                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-24 sm:bottom-20 flex flex-col px-3 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
             </Toast.Provider>
         </>
     )

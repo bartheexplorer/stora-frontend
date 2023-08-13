@@ -100,7 +100,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                     address: data.address,
                     id_mapping: mapping.id_mapping,
                     zip_code: mapping.zip_code,
-                    shipping: shippingArray,
+                    shipping: null,
                 })
             }
         } else {

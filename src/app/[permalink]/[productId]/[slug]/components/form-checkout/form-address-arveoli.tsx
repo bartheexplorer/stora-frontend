@@ -145,7 +145,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
     })
 
     return (
-        <div className="py-4 px-8 w-full">
+        <div className="py-4 px-4 sm:px-8 w-full">
             <form onSubmit={(event) => {
                 onSubmitAction(event)
                 if (event) {
