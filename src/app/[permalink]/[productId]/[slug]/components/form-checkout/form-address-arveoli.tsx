@@ -145,7 +145,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
     })
 
     return (
-        <div className="py-4 px-4 sm:px-8 w-full">
+        <div className="px-4 sm:px-8 w-full">
             <form onSubmit={(event) => {
                 onSubmitAction(event)
                 if (event) {
@@ -186,7 +186,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                     }}
                                 >
                                     <option value="">Pilih</option>
-                                    {provinsi?.data.province.map((item) => {
+                                    {provinsi?.data?.province.map((item) => {
                                         return <option key={item.name}>{item.name}</option>
                                     })}
                                 </select>
@@ -228,7 +228,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                     }}
                                 >
                                     <option value="">Pilih</option>
-                                    {regencies?.data.city.map((item) => {
+                                    {regencies?.data?.city.map((item) => {
                                         return <option key={item.name}>{item.name}</option>
                                     })}
                                 </select>
@@ -269,7 +269,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                     }}
                                 >
                                     <option value="">Pilih</option>
-                                    {subDistrict?.data.district.map((item) => {
+                                    {subDistrict?.data?.district.map((item) => {
                                         return <option key={item.name}>{item.name}</option>
                                     })}
                                 </select>
@@ -317,7 +317,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                     }}
                                 >
                                     <option value="">Pilih</option>
-                                    {urbanVillages?.data.sub_district.map((item) => {
+                                    {urbanVillages?.data?.sub_district.map((item) => {
                                         return <option
                                             key={item.id_mapping}
                                             value={`${JSON.stringify({

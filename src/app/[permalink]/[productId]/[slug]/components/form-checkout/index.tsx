@@ -25,6 +25,12 @@ import bca from "@/app/assets/logo-bang-bang/bca.png"
 import bri from "@/app/assets/logo-bang-bang/bri.png"
 import bsi from "@/app/assets/logo-bang-bang/bsi.png"
 import mandiri from "@/app/assets/logo-bang-bang/mandiri.png"
+import bni from "@/app/assets/logo-bang-bang/bni.png"
+import permata from "@/app/assets/logo-bang-bang/permata.png"
+import bjb from "@/app/assets/logo-bang-bang/bjb.png"
+import qris from "@/app/assets/logo-bang-bang/qris.png"
+import sampoerna from "@/app/assets/logo-bang-bang/sahabat-sampoerna.png"
+import cod from "@/app/assets/logo-bang-bang/cod.png"
 import Image from "next/image"
 
 const RAND_CODE = getRandomThreeDigitNumber()
@@ -593,7 +599,7 @@ export default function IFormCheckout({
                         })}
                     </ul>
 
-                    <div className="py-6 flex flex-col">
+                    <div className="px-12 py-6 flex flex-col">
                         <button
                             type="button"
                             className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
@@ -638,43 +644,113 @@ export default function IFormCheckout({
     }
 
     const bankLogo = (id: string) => {
-        if (id === "21") {
+        if (id === "21" || id === "35") {
             return <Image
                 src={bca}
                 alt="BCA"
                 width={500}
                 height={500}
+                className="h-full w-full object-cover object-center"
             />
         }
 
-        if (id === "171") {
+        if (id === "171" || id === "40") {
             return <Image
                 src={mandiri}
                 alt="Mandiri"
                 width={500}
                 height={500}
+                className="h-full w-full object-cover object-center"
             />
         }
 
-        if (id === "172") {
+        if (id === "172" || id === "39") {
             return <Image
                 src={bsi}
                 alt="BSI"
                 width={500}
                 height={500}
+                className="h-full w-full object-cover object-center"
             />
         }
 
-        if (id === "174") {
-            return null
+        if (id === "174" || id === "36") {
+            return <Image
+                src={bni}
+                alt="BNI"
+                width={500}
+                height={500}
+                className="h-full w-full object-cover object-center"
+            />
         }
 
-        if (id === "738") {
+        if (id === "738" || id === "37") {
             return <Image
                 src={bri}
                 alt="BRI"
                 width={500}
                 height={500}
+                className="h-full w-full object-cover object-center"
+            />
+        }
+
+        if (id === "41") {
+            return <Image
+                src={permata}
+                alt="Permata"
+                width={500}
+                height={500}
+                className="h-full w-full object-cover object-center"
+            />
+        }
+
+        if (id === "38") {
+            return <Image
+                src={bjb}
+                alt="Bjb"
+                width={500}
+                height={500}
+                className="h-full w-full object-cover object-center"
+            />
+        }
+        
+        if (id === "qris") {
+            return <Image
+                src={qris}
+                alt="Qris"
+                width={500}
+                height={500}
+                className="h-full w-full object-cover object-center"
+            />
+        }
+
+        if (id === "42") {
+            return <Image
+                src={sampoerna}
+                alt="Sampoerna"
+                width={500}
+                height={500}
+                className="h-full w-full object-cover object-center"
+            />
+        }
+
+        if (id === "19") {
+            return <Image
+                src={qris}
+                alt="Qris"
+                width={500}
+                height={500}
+                className="h-full w-full object-cover object-center"
+            />
+        }
+
+        if (id === "cod") {
+            return <Image
+                src={cod}
+                alt="COD"
+                width={500}
+                height={500}
+                className="h-full w-full object-cover object-center"
             />
         }
 
@@ -712,15 +788,15 @@ export default function IFormCheckout({
                                                         <li
                                                             key={item.id_bank}
                                                             className={clsx(
-                                                                "relative overflow-hidden py-3 bg-gray-100 border-b",
-                                                                classActive ? "bg-slate-300/40" : "border-transparent"
+                                                                "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
                                                             )}
                                                         >
-                                                            <div className="flex gap-2">
-                                                                <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                                                     {bankLogo(item.id_bank.toString())}
                                                                 </div>
-                                                                <p className="text-xs">{item.bank} {item.id_bank}</p>
+                                                                <p className="text-xs text-gray-800 font-semibold">{item.bank}</p>
                                                             </div>
                                                             <button
                                                                 type="button"
@@ -746,21 +822,29 @@ export default function IFormCheckout({
                                     <>
                                         {(Array.isArray(payment.va) && payment.va.length > 0) && (
                                             <div className="py-2">
-                                                <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
-                                                <ul className="flex flex-col gap-3">
+                                                <div className="bg-slate-300 py-2 px-8">
+                                                    <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
+                                                </div>
+                                                <ul className="flex flex-col">
                                                     {payment.va.map((item) => {
                                                         const account = item.bank_code.replaceAll("_", " ").toString()
+                                                        const classActive = item.id_bank_va_xendit === value?.id
                                                         return item.is_active ? (
                                                             <li
                                                                 key={item.id_bank_va_xendit}
                                                                 className={clsx(
-                                                                    "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border-2 hover:shadow-lg",
-                                                                    Boolean(item.id_bank_va_xendit.toString() === value?.id.toString())
-                                                                        ? "border-stora-400/50 bg-slate-300/40"
-                                                                        : "border-transparent"
+                                                                    "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                    classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
                                                                 )}
                                                             >
-                                                                <p className="text-xs uppercase">Bank {account}</p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                        {bankLogo(item.id_bank_va_xendit.toString())}
+                                                                    </div>
+                                                                    <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                        {`Bank ${account}`}
+                                                                    </p>
+                                                                </div>
                                                                 <button
                                                                     type="button"
                                                                     className="absolute inset-0"
@@ -785,24 +869,32 @@ export default function IFormCheckout({
                                 {(isQris || (product.typeProduct === "fisik")) && (
                                     <>
                                         <div className="py-2">
-                                            <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya</h3>
+                                            <div className="bg-slate-300 py-2 px-8">
+                                                <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya {isQris.valueOf()}</h3>
+                                            </div>
 
                                             {isQris && (
                                                 <>
                                                     {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
-                                                        <ul className="flex gap-3 mb-3">
+                                                        <ul className="flex flex-col">
                                                             {payment.settings.map((item) => {
+                                                                const classActive = item.id_setting_xendit === value?.id
                                                                 return item.status_qris ? (
                                                                     <li
                                                                         key={item.id_setting_xendit}
                                                                         className={clsx(
-                                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                                            Boolean(item.id_setting_xendit.toString() === value?.id.toString())
-                                                                                ? "border-stora-500"
-                                                                                : "border-transparent"
+                                                                            "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                            classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
                                                                         )}
                                                                     >
-                                                                        <p className="text-xs uppercase">{`QRIS`}</p>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                                {bankLogo(item.id_setting_xendit.toString())}
+                                                                            </div>
+                                                                            <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                                {`QRIS`}
+                                                                            </p>
+                                                                        </div>
                                                                         <button
                                                                             type="button"
                                                                             className="absolute inset-0"
@@ -826,13 +918,18 @@ export default function IFormCheckout({
                                                 <ul className="flex flex-col gap-3">
                                                     <li
                                                         className={clsx(
-                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                            Boolean("COD" === value?.id.toString())
-                                                                ? "border-stora-500"
-                                                                : "border-transparent"
+                                                            "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                            "COD" === value?.id.toString() ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
                                                         )}
                                                     >
-                                                        <p className="text-xs uppercase">{`COD (Cash On Delivery)`}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                {bankLogo("cod")}
+                                                            </div>
+                                                            <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                {`COD (Cash On Delivery)`}
+                                                            </p>
+                                                        </div>
                                                         <button
                                                             type="button"
                                                             className="absolute inset-0"
@@ -850,7 +947,7 @@ export default function IFormCheckout({
                                     </>
                                 )}
 
-                                <div className="py-6 flex flex-col">
+                                <div className="px-12 py-6 flex flex-col">
                                     <button
                                         type="button"
                                         className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
@@ -914,8 +1011,8 @@ export default function IFormCheckout({
                             <Dialog.Portal>
                                 <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
                                 <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white shadow focus:outline-none">
-                                    <div className="py-16">
-                                        <Dialog.Title className="m-0 text-sm font-medium px-8">
+                                    <div className="py-20">
+                                        <Dialog.Title className="m-0 text-sm font-medium px-8 py-2">
                                             Metode pembayaran
                                         </Dialog.Title>
                                         {/* Form shipping data */}
@@ -1248,8 +1345,8 @@ export default function IFormCheckout({
                                             <Dialog.Portal>
                                                 <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
                                                 <Dialog.Content className="overflow-y-scroll z-40 data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                    <div className="py-8">
-                                                        <Dialog.Title className="m-0 text-sm font-medium">
+                                                    <div className="py-20">
+                                                        <Dialog.Title className="text-sm font-medium mb-6">
                                                             Alamat Penerima
                                                         </Dialog.Title>
                                                         {/* Address */}
@@ -1328,7 +1425,7 @@ export default function IFormCheckout({
                                                     </div>
                                                     <Dialog.Close asChild>
                                                         <button
-                                                            className="text-stora-800 hover:bg-stora-200 focus:shadow-stora-200 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                            className="text-stora-800 hover:bg-stora-200 focus:shadow-stora-200 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
                                                             aria-label="Close"
                                                         >
                                                             <Cross2Icon className="w-5 h-5" />
@@ -1374,8 +1471,8 @@ export default function IFormCheckout({
                                                     <Dialog.Portal>
                                                         <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
                                                         <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                            <div className="py-8">
-                                                                <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
+                                                            <div className="py-20">
+                                                                <Dialog.Title className="mb-6 text-sm font-medium">
                                                                     Pengiriman
                                                                 </Dialog.Title>
                                                                 {/* Form shipping data */}
@@ -1388,7 +1485,7 @@ export default function IFormCheckout({
 
                                                             <Dialog.Close asChild>
                                                                 <button
-                                                                    className="hover:bg-stora-200 focus:shadow-stora-300 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                                    className="hover:bg-stora-200 focus:shadow-stora-300 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
                                                                     aria-label="Close"
                                                                 >
                                                                     <Cross2Icon className="w-5 h-5" />

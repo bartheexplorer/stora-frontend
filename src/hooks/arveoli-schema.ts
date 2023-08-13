@@ -6,7 +6,7 @@ export const ProvinceArveoliSchema = z.object({
         province: z.object({
             name: z.string(),
         }).array(),
-    }),
+    }).nullable(),
 })
 
 export type ProvinceArveoli = z.infer<typeof ProvinceArveoliSchema>
@@ -21,7 +21,7 @@ export const RegencyArveoliSchema = z.object({
         city: z.object({
             name: z.string(),
         }).array(),
-    }),
+    }).nullable(),
 })
 
 export type RegencyArveoli = z.infer<typeof RegencyArveoliSchema>
@@ -36,7 +36,7 @@ export const SubDistrictArveoliSchema = z.object({
         district: z.object({
             name: z.string(),
         }).array(),
-    }),
+    }).nullable(),
 })
 
 export type SubDistrictArveoli = z.infer<typeof SubDistrictArveoliSchema>
@@ -58,7 +58,7 @@ export const UrbanVillageArveoliSchema = z.object({
             dest_code_sap: z.string(),
             dest_code_idx: z.string()
         }).array(),
-    }),
+    }).nullable(),
 })
 
 export type UrbanVillageArveoli = z.infer<typeof UrbanVillageArveoliSchema>
