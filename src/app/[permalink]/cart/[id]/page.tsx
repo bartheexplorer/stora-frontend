@@ -7,6 +7,7 @@ import Link from "next/link"
 import PhotoProduct from "./components/photo-product"
 import dynamic from "next/dynamic"
 import ILoading from "./components/loading"
+import { sumTotal } from "@/utils/add-decimal"
 
 const IFormCheckout = dynamic(() => import("./components/form-checkout"), {
     ssr: false,
@@ -46,7 +47,7 @@ export default async function CartId(props: CartIdProps) {
 
     return (
         <div className="min-h-screen">
-            <div className="w-full px-4 py-3">
+            <div className="w-full px-6 py-4 shadow mb-2">
                 <div className="flex items-center justify-between gap-4">
                     <Link
                         href={`/${props.params.permalink}`}
@@ -75,7 +76,7 @@ export default async function CartId(props: CartIdProps) {
 
             {(Array.isArray(carts) && carts.length > 0) && (
                 <>
-                    <div className="mt-8 px-8 sm:px-12">
+                    <div className="px-8 sm:px-12">
                         <div className="flow-root">
                             <ul role="list" className="-my-6 divide-y divide-gray-200 pb-4">
                                 {carts.map((item) => {
@@ -112,8 +113,11 @@ export default async function CartId(props: CartIdProps) {
 
             {(!!user && !!user.setting) && (
                 <IFormCheckout
+                    cartId={props.params.id}
                     product={{
-                        weight: 0,
+                        weight: carts
+                            ? carts.reduce((sum, item) => (sumTotal(sum.toString(), item.berat.toString())), 0)
+                            : 0,
                         isFreeOngkir: false,
                         isFree: false,
                         total: 0,
@@ -127,33 +131,30 @@ export default async function CartId(props: CartIdProps) {
                     permalink={props.params.permalink}
                     payment={{
                         transfer: user?.banks ? user.banks.map((item) => ({
-                            id_bank: item.id_bank.toString(), // 21,
-                            bank: item.bank, // "BANK CENTRAL ASIA",
-                            rekening: item.rekening, // "799199191",
-                            pemilik: item.pemilik, // "Klikdigital Indonesia",
-                            is_active: Boolean(item.is_active === "SATU"), // "SATU",
+                            id_bank: item.id_bank.toString(),
+                            bank: item.bank,
+                            rekening: item.rekening,
+                            pemilik: item.pemilik,
+                            is_active: Boolean(item.is_active === "SATU"),
                         })) : [],
                         va: user?.xendits_va ? user.xendits_va.map((item) => ({
-                            id_bank_va_xendit: item.id_bank_va_xendit.toString(), // 35,
-                            bank_code: item.bank_code, // "BCA",
-                            is_active: Boolean(item.is_active === "SATU"), // "SATU"
+                            id_bank_va_xendit: item.id_bank_va_xendit.toString(),
+                            bank_code: item.bank_code,
+                            is_active: Boolean(item.is_active === "SATU"),
                         })) : [],
                         settings: user?.xendits ? user.xendits.map((item) => ({
-                            id_setting_xendit: item.id_setting_xendit.toString(), // 19,
-                            business_name: item.business_name, // "admin",
-                            country: item.country, // "ID",
-                            is_active: Boolean(item.is_active === "SATU"), // "SATU",
-                            is_blocked: Boolean(item.is_blocked === "SATU"), // "NOL",
-                            status_qris: Boolean(item.status_qris === "SATU"), // "SATU",
-                            status_va: Boolean(item.status_va === "SATU"), // "SATU",
-                            fee: item.fee, // "seller"
+                            id_setting_xendit: item.id_setting_xendit.toString(),
+                            business_name: item.business_name,
+                            country: item.country,
+                            is_active: Boolean(item.is_active === "SATU"),
+                            is_blocked: Boolean(item.is_blocked === "SATU"),
+                            status_qris: Boolean(item.status_qris === "SATU"),
+                            status_va: Boolean(item.status_va === "SATU"),
+                            fee: item.fee,
                         })) : [],
                     }}
                 />
             )}
-            
-
-            {JSON.stringify(props, undefined, 2)}
         </div>
     )
 }

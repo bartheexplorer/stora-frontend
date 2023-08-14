@@ -38,3 +38,44 @@ export type CartsEntity = {
 export type Free1Entity = {
     kode_keranjang: string
 }
+
+export type CreateOrderByCartParams = {
+    cartId: string
+    nama: string
+    hp: string
+    email: string
+    alamat: string
+    provinsi: string
+    kota: string
+    kecamatan: string
+    expedisi: string
+    paket: string
+    ongkir: number
+    estimasi: string
+    totalbayar: number
+    // bank: string
+    // nama_toko: string
+    id_user: number
+    // metode: string
+    permalink: string
+    payment_id: string
+    account_id: number
+    paymentMethodCode?: string
+}
+
+export type QueryRawTf = {
+    id_keranjang: string
+    id_produk: string
+    harga_jual: number
+    nama_produk: string
+    berat: number
+    gambar_produk: string
+    jenis_produk: string
+    qty: number
+    varian: string
+    ukuran: string
+    kupon: string
+    potongan: string
+    total: number
+    b: number
+}

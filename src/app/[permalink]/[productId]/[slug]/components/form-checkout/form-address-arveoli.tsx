@@ -85,6 +85,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                     weight: props.weight,
                     destination: mapping.id_mapping,
                 })
+                if (!shipper) return
                 const shippingArray = toShipping(shipper.data)
     
                 setOrderState(() => ({

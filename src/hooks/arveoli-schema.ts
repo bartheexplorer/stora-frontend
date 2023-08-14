@@ -88,7 +88,7 @@ export const ShippingArveoliSchema = z.object({
             sicepat: z.array(Data),
             idx: z.array(Data),
         }),
-    }),
+    }).nullable(),
 })
 
 export type ShippingArveoli = z.infer<typeof ShippingArveoliSchema>

@@ -107,15 +107,15 @@ export default async function handler(request: NextApiRequest, response: NextApi
             }
 
             return response.json({
-                data: [],
+                data: null,
             })
         }
 
         return response.json({
-            data: []
+            data: null
         })
     } catch (error) {
         console.log(error)
-        return response.json({ data: [] })
+        return response.json({ data: null })
     }
 }

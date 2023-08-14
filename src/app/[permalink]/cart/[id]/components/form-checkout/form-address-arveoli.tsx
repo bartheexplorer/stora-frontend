@@ -24,14 +24,14 @@ interface IFormAddressArveoliProps {
         urban_village: string
         zip_code: string
         address: string
-        shipping: {
-            service_code: string // "CTC23",
-            service_name: string // "CTC",
-            price: string | number // "960000",
-            etd: string // "2 - 3 hari",
-            discount_price: string | number // 960000,
-            cashless_discount_price: string | number // 960000,
-            s_name: any // "jne"
+        shipping?: {
+            service_code: string
+            service_name: string
+            price: number
+            etd?: string | null
+            discount_price: number
+            cashless_discount_price: number
+            s_name: string
         } | null
     }) => void
 }
@@ -78,7 +78,6 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
     })
 
     const onSubmitAction = handleSubmit(async (data) => {
-        console.log(data)
         if (!props.isFreeOngkir) {
             if (mapping) {
                 const { data: shipper } = await getShipping({
@@ -86,6 +85,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                     weight: props.weight,
                     destination: mapping.id_mapping,
                 })
+                if (!shipper) return
                 const shippingArray = toShipping(shipper.data)
     
                 setOrderState(() => ({
@@ -100,7 +100,35 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                     address: data.address,
                     id_mapping: mapping.id_mapping,
                     zip_code: mapping.zip_code,
-                    shipping: null,
+                    shipping: {
+                        service_code: shippingArray?.service_code
+                            ? shippingArray.service_code
+                            : "",
+                        service_name: shippingArray?.service_name
+                            ? shippingArray.service_name
+                            : "",
+                        price: shippingArray?.price
+                            ? !Number.isNaN(parseInt(shippingArray.price.toString()))
+                                ? Number(shippingArray.price)
+                                : 0
+                            : 0,
+                        etd: shippingArray?.etd
+                            ? shippingArray.etd
+                            : null,
+                        discount_price: shippingArray?.discount_price
+                            ? !Number.isNaN(parseInt(shippingArray.discount_price.toString()))
+                                ? Number(shippingArray?.discount_price)
+                                : 0
+                            : 0,
+                        cashless_discount_price: shippingArray?.cashless_discount_price
+                            ? !Number.isNaN(parseInt(shippingArray.cashless_discount_price.toString()))
+                                ? Number(shippingArray.cashless_discount_price)
+                                : 0
+                            : 0,
+                        s_name: shippingArray?.s_name
+                            ? shippingArray.s_name
+                            : ""
+                    },
                 })
             }
         } else {
@@ -118,7 +146,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
     })
 
     return (
-        <div className="py-4 px-8 w-full">
+        <div className="px-4 sm:px-8 w-full">
             <form onSubmit={(event) => {
                 onSubmitAction(event)
                 if (event) {
@@ -159,7 +187,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                     }}
                                 >
                                     <option value="">Pilih</option>
-                                    {provinsi?.data.province.map((item) => {
+                                    {provinsi?.data?.province.map((item) => {
                                         return <option key={item.name}>{item.name}</option>
                                     })}
                                 </select>
@@ -201,7 +229,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                     }}
                                 >
                                     <option value="">Pilih</option>
-                                    {regencies?.data.city.map((item) => {
+                                    {regencies?.data?.city.map((item) => {
                                         return <option key={item.name}>{item.name}</option>
                                     })}
                                 </select>
@@ -242,7 +270,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                     }}
                                 >
                                     <option value="">Pilih</option>
-                                    {subDistrict?.data.district.map((item) => {
+                                    {subDistrict?.data?.district.map((item) => {
                                         return <option key={item.name}>{item.name}</option>
                                     })}
                                 </select>
@@ -290,7 +318,7 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                     }}
                                 >
                                     <option value="">Pilih</option>
-                                    {urbanVillages?.data.sub_district.map((item) => {
+                                    {urbanVillages?.data?.sub_district.map((item) => {
                                         return <option
                                             key={item.id_mapping}
                                             value={`${JSON.stringify({

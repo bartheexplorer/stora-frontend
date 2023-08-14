@@ -1,11 +1,13 @@
 import { prisma } from "@/entry-server/config/db"
 import { getCart } from "@/entry-server/services/carts"
 import { getUser } from "@/entry-server/services/user"
-import { ArrowLeftIcon, TrashIcon } from "@radix-ui/react-icons"
+import { ArrowLeftIcon } from "@radix-ui/react-icons"
 import { cookies } from "next/headers"
 import Link from "next/link"
 import PhotoProduct from "./components/photo-product"
 import { toIDR } from "@/utils/to-idr"
+import IFormQty from "./components/form-qty"
+import BtnRemoveProduct from "./components/btn-remove-product"
 
 interface CartProps {
     params: {
@@ -36,7 +38,7 @@ export default async function Cart(props: CartProps) {
 
     return (
         <div className="min-h-screen">
-            <div className="w-full px-4 py-3">
+            <div className="w-full px-6 py-4 shadow mb-2">
                 <div className="flex items-center justify-between gap-4">
                     <Link
                         href={`/${props.params.permalink}`}
@@ -81,18 +83,22 @@ export default async function Cart(props: CartProps) {
                                                         </h3>
                                                         <p className="ml-4">{toIDR(item.total.toString())}</p>
                                                     </div>
-                                                    <p className="mt-1 text-xs text-gray-500">{item.varian} {item.ukuran}</p>
+                                                    <p className="mt-1 text-xs text-gray-500">
+                                                        {item.varian.length > 0 ? `${item.varian} ` : ""}
+                                                        {item.ukuran.length > 0 ? `${item.ukuran}` : ""}
+                                                    </p>
                                                 </div>
                                                 <div className="flex flex-1 items-end justify-between text-xs">
                                                     <p className="text-gray-500">Qty {item.qty}</p>
 
-                                                    <div className="flex">
-                                                        <button
-                                                            type="button"
-                                                            className="font-medium text-xs text-indigo-600 hover:text-indigo-500"
-                                                        >
-                                                            <TrashIcon className="text-red-500 w-4 h-4" />
-                                                        </button>
+                                                    <div className="flex gap-3">
+                                                        <IFormQty
+                                                            cartId={item.id_keranjang.toString()}
+                                                            qty={item.qty.toString()}
+                                                        />
+                                                        <BtnRemoveProduct
+                                                            cartId={item.id_keranjang.toString()}
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -104,13 +110,13 @@ export default async function Cart(props: CartProps) {
                     </div>
 
                     <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
-                        <div className="w-full max-w-lg mx-auto px-3">
+                        <div className="w-full max-w-lg mx-auto px-6 sm:px-8">
                             <div className="h-12 flex items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
                                 <span className="text-sm tracking-wide text-white">
                                     {toIDR(carts.reduce((item, i) => (i.total + item), 0).toString())}
                                 </span>
                                 <Link
-                                    href={`/${props.params.permalink}/cart/${cartId?.value}`}
+                                    href={`/${props.params.permalink}/cart/${cartId?.value}?_id=${(Math.floor(Math.random() * 900) + 100).toString()}`}
                                     className="inline-flex items-center justify-center rounded-lg px-4 text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default"
                                 >
                                     Checkout
@@ -123,7 +129,6 @@ export default async function Cart(props: CartProps) {
             ) : (
                 <p className="text-center mt-12">Data tidak ditemukan.</p>
             )}
-
         </div>
     )
 }

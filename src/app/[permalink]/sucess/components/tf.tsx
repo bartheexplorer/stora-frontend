@@ -8,7 +8,7 @@ interface TfProps {
 export default function Tf(props: TfProps) {
     return (
         <div>
-            <div className="mt-8 bg-gray-50/25 my-3 shadow px-5">
+            <div className="mt-8 bg-gray-50/25 my-3 shadow px-12">
                 <p className="text-sm text-gray-800 font-semibold">Transfer Bank</p>
                 <div className="py-2">
                     <div className="text-xs font-normal">No. Rekening:</div>
@@ -26,7 +26,7 @@ export default function Tf(props: TfProps) {
                 </div>
             </div>
 
-            <div className="bg-blue-50 py-4 px-5 mb-4">
+            <div className="bg-blue-50 py-4 px-12 mb-4">
                 <div className="flex flex-col">
                     <p className="text-gray-800 font-semibold text-sm">Penting</p>
                     <div className="px-8 text-xs">
@@ -37,7 +37,7 @@ export default function Tf(props: TfProps) {
                     </div>
                 </div>
             </div>
-            <div className="bg-blue-50 py-4 px-5">
+            <div className="bg-blue-50 py-4 px-12">
                 <div>
                     <div className="py-3 px-8">
                         <ul className="list-decimal list-outside text-slate-900 text-xs text-justify">

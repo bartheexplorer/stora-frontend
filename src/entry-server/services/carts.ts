@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client"
-import type { CartsEntity, Free1Entity, ParamsCreateCart } from "./carts-interface"
+import type { CartsEntity, CreateOrderByCartParams, Free1Entity, ParamsCreateCart, QueryRawTf } from "./carts-interface"
 
 const generateNumberID = (length: number): string => {
     let result = ''
@@ -168,15 +168,186 @@ export async function updateCart(prisma: PrismaClient, idKeranjang: string, qty:
 
 export async function destroyCart(prisma: PrismaClient, idKeranjang: number) {
     try {
-      const result = await prisma.$transaction(async (tx) => {
-        return await tx.t_keranjang.delete({
-          where: {
-            id_keranjang: idKeranjang,
-          },
+        const result = await prisma.$transaction(async (tx) => {
+            return await tx.t_keranjang.delete({
+                where: {
+                    id_keranjang: idKeranjang,
+                },
+            })
         })
-      })
-      return result
+        return result
     } catch (error) {
-      null
+        null
     }
-  }
+}
+
+// Create order
+export async function createOrderByCart(prisma: PrismaClient, params: CreateOrderByCartParams) {
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            const tglOrder = new Date()
+            // Text order
+            let textOrder1: string
+            let textOrder2: string
+            // let textOrder3: string
+            let textOrder4: string
+
+            const cartTemp = await tx.$queryRaw<{ kode_keranjang: string }[]>`SELECT kode_keranjang FROM t_keranjang_temp WHERE session = ${params.cartId}`
+            const cartId = cartTemp.find((_item, i) => i === 0)
+            if (!cartId) throw new Error('Carti id tidak ditemukan')
+
+            const carts = await tx.t_keranjang.findMany({
+                where: {
+                    kode_keranjang: { equals: cartId.kode_keranjang },
+                },
+            })
+
+            const total = carts.reduce((accumulate, item) => {
+                const total = Number(accumulate + item.total)
+                return Math.round(Number(total * item.qty))
+            }, 0)
+            const totalBayar = Math.round(Number(total + params.ongkir))
+            const orderId = generateNumberID(16)
+            const now = new Date()
+
+            let accountBank = ''
+            let paymentId = '0'
+            textOrder2 = '-'
+
+            const createOrder = await tx.$executeRaw`INSERT INTO t_multi_order(
+          order_id,
+          kode_keranjang,
+          nama_pembeli,
+          no_hp_pembeli,
+          email_pembeli,
+          alamat_pembeli,
+          prov,
+          kab,
+          kec,
+          expedisi,
+          paket,
+          ongkir,
+          estimasi,
+          totalbayar,
+          bank,
+          payment,
+          status_bayar,
+          order_status,
+          tgl_order,
+          is_created,
+          id_user,
+          id_payment
+        )
+        VALUES (
+          ${orderId},
+          ${cartId.kode_keranjang},
+          ${params.nama},
+          ${params.hp},
+          ${params.email},
+          ${params.alamat},
+          ${params.provinsi},
+          ${params.kota},
+          ${params.kecamatan},
+          ${params.expedisi},
+          ${params.paket},
+          ${params.ongkir},
+          ${params.estimasi},
+          ${totalBayar},
+          ${accountBank},
+          ${params.paymentMethodCode},
+          ${'0'},
+          ${'1'},
+          ${now},
+          ${now},
+          ${params.id_user},
+          ${paymentId}
+        )`
+
+            if (createOrder === 0) throw new Error('Gagal insert data')
+
+            const product = await tx.$queryRaw<QueryRawTf[]>`SELECT 
+          id_keranjang,
+          id_produk,
+          harga_jual,
+          nama_produk,
+          if(berat = '0','',CONCAT('Berat : ',berat)) as berat,
+          gambar_produk,
+          jenis_produk,
+          qty,
+          varian,
+          ukuran,
+          kupon,
+          potongan,
+          total,
+          berat b
+          FROM t_keranjang 
+          WHERE kode_keranjang IN (SELECT kode_keranjang FROM t_keranjang_temp WHERE session = ${params.cartId}) 
+          AND id_user = ${params.id_user}`
+
+            let textOrder: string
+            textOrder = ''
+
+            for (let index = 0; index < product.length; index++) {
+                const element = product[index];
+                textOrder += `\nProduk yang dibeli *${element.nama_produk}*`
+                if (element.varian.length !== 0) {
+                    textOrder += `\nVariant: *${element.varian}*`
+                }
+
+                if (element.ukuran.length !== 0) {
+                    textOrder += `\nUkuran: *${element.ukuran}*`
+                }
+
+                textOrder += `\nHarga: ${formatCurrency(element.harga_jual)}\nJumlah: *${element.qty}*`
+            }
+
+
+            const pesanStr = await tx.t_teks_pesan.findFirst({
+                where: {
+                    id_user: { equals: params.id_user },
+                    status_order: { equals: 'order' },
+                },
+            })
+
+            if (pesanStr) {
+                const message = pesanStr.teks_pesan.replaceAll('{{ORDER_ID}}', orderId)
+                    .replaceAll('{{DETAIL_PRODUK}}', textOrder)
+                    .replaceAll('{{TOTAL_BAYAR}}', formatCurrency(totalBayar))
+                    .replaceAll('{{METODE_PEMBAYARAN}}', textOrder2)
+                    .replaceAll('{{NAMA_TOKO}}', params.permalink)
+                    .replaceAll('{{EKSPEDISI}}', params.expedisi)
+                    .replaceAll('{{TANGGAL_ORDER}}', tglOrder.toDateString())
+                    .replaceAll('{{NAMA_PEMBELI}}', params.nama)
+                    .replaceAll('{{ALAMAT_PEMBELI}}', params.alamat)
+                    .replaceAll('{{WHATSAPP_PEMBELI}}', params.hp)
+                textOrder4 = message
+            } else {
+                const message = `Halo kak, saya baru saja melakukan pemesanan produk di *{{Nama_toko}}* dengan status pembayaran masih *TERTUNDA*\n\nBerikut detail pemesanan saya:\nNomor Invoice: {{Order_id}}\nNama: {{Nama_pembeli}}\nNomor Hp/WA: {{Nomor_pembeli}}\nAlamat: {{Alamat_pembeli}}\n\n{{Text_order}}\n\nSubTotal: *{{Sub_total}}*\n{{Text_order_ongkir}}\nPotongan: *{{Discount}}*\nTotal Bayar: *{{Total_bayar}}*\n\nTerima Kasih *{{Nama_pembeli}}*`
+                textOrder4 = message.replaceAll('Nama_toko', params.permalink)
+                    .replaceAll('Order_id', orderId)
+                    .replaceAll('Nama_pembeli', params.nama)
+                    .replaceAll('Nomor_pembeli', params.hp)
+                    .replaceAll('Alamat_pembeli', params.alamat)
+                    .replaceAll('Text_order', textOrder)
+                    .replaceAll('Sub_total', formatCurrency(total))
+                    .replaceAll('Text_order_ongkir', textOrder2)
+                    .replaceAll('Discount', formatCurrency(0))
+                    .replaceAll('Total_bayar', formatCurrency(totalBayar))
+            }
+
+            const clearCart = await tx.$executeRaw`DELETE FROM t_keranjang_temp WHERE session = ${params.cartId}`
+            if (clearCart === 0) throw new Error('Gagal hapus data')
+
+            return { textOrder: textOrder4 }
+        })
+        return result
+    } catch (error) {
+        return null
+    }
+}
+
+function formatCurrency(amount: number): string {
+    const formattedAmount = new Intl.NumberFormat('id-ID').format(amount)
+
+    return formattedAmount
+}

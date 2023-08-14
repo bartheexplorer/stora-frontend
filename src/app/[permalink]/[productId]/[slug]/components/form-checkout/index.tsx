@@ -20,18 +20,7 @@ import ILoading from "../loading"
 import { useCreateCart } from "@/hooks/cart"
 import { useRouter } from "next/navigation"
 import { validateAndConvertToString } from "@/utils/to-string-converter"
-// Bang bang
-import bca from "@/app/assets/logo-bang-bang/bca.png"
-import bri from "@/app/assets/logo-bang-bang/bri.png"
-import bsi from "@/app/assets/logo-bang-bang/bsi.png"
-import mandiri from "@/app/assets/logo-bang-bang/mandiri.png"
-import bni from "@/app/assets/logo-bang-bang/bni.png"
-import permata from "@/app/assets/logo-bang-bang/permata.png"
-import bjb from "@/app/assets/logo-bang-bang/bjb.png"
-import qris from "@/app/assets/logo-bang-bang/qris.png"
-import sampoerna from "@/app/assets/logo-bang-bang/sahabat-sampoerna.png"
-import cod from "@/app/assets/logo-bang-bang/cod.png"
-import Image from "next/image"
+import BankLogo from "./bank-logo"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
@@ -167,18 +156,19 @@ export default function IFormCheckout({
     let ranCodeUnique = 0
     const cunik = codeUnique ? RAND_CODE : 0
     const totalUniqueCode = Math.round(Number(product.price + cunik))
+    const price = product.price > 0
     if (product.typeProduct === "fisik") {
         if (!product.isFree) {
             ranCodeUnique = cunik
-            total = totalUniqueCode
+            total = price ? totalUniqueCode : 0
         }
         if (!product.isFreeOngkir) {
             ranCodeUnique = cunik
-            total = totalUniqueCode
+            total = price ? totalUniqueCode : 0
         }
     } else {
         if (!product.isFree) {
-            total = totalUniqueCode
+            total = price ? totalUniqueCode : 0
             ranCodeUnique = cunik
         }
     }
@@ -270,7 +260,9 @@ export default function IFormCheckout({
 
         const ckUniqueCode = sumTotal(
             ck.toString(),
-            checkout.randCode.toString()
+            checkout.afterPrice > 0
+                ? checkout.randCode.toString()
+                : "0"
         )
 
         const params = {
@@ -297,6 +289,7 @@ export default function IFormCheckout({
         reset()
         router.replace(`/${permalink}/cart?id=${(Math.floor(Math.random() * 900) + 100).toString()}`)
     }
+
     const submitAction = handleSubmit(async (data) => {
         console.log("FORM UTAMA RENDER", data)
         setAlertOpen(false)
@@ -643,120 +636,6 @@ export default function IFormCheckout({
             ) : null
     }
 
-    const bankLogo = (id: string) => {
-        if (id === "21" || id === "35") {
-            return <Image
-                src={bca}
-                alt="BCA"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "171" || id === "40") {
-            return <Image
-                src={mandiri}
-                alt="Mandiri"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "172" || id === "39") {
-            return <Image
-                src={bsi}
-                alt="BSI"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "174" || id === "36") {
-            return <Image
-                src={bni}
-                alt="BNI"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "738" || id === "37") {
-            return <Image
-                src={bri}
-                alt="BRI"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "41") {
-            return <Image
-                src={permata}
-                alt="Permata"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "38") {
-            return <Image
-                src={bjb}
-                alt="Bjb"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-        
-        if (id === "qris") {
-            return <Image
-                src={qris}
-                alt="Qris"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "42") {
-            return <Image
-                src={sampoerna}
-                alt="Sampoerna"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "19") {
-            return <Image
-                src={qris}
-                alt="Qris"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        if (id === "cod") {
-            return <Image
-                src={cod}
-                alt="COD"
-                width={500}
-                height={500}
-                className="h-full w-full object-cover object-center"
-            />
-        }
-
-        return null
-    }
-
     const paymentComponent = () => {
         return (
             <div className="">
@@ -794,7 +673,7 @@ export default function IFormCheckout({
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                    {bankLogo(item.id_bank.toString())}
+                                                                    <BankLogo id={item.id_bank.toString()} />
                                                                 </div>
                                                                 <p className="text-xs text-gray-800 font-semibold">{item.bank}</p>
                                                             </div>
@@ -839,7 +718,7 @@ export default function IFormCheckout({
                                                             >
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                        {bankLogo(item.id_bank_va_xendit.toString())}
+                                                                        <BankLogo id={item.id_bank_va_xendit.toString()} />
                                                                     </div>
                                                                     <p className="text-xs text-gray-800 font-semibold uppercase">
                                                                         {`Bank ${account}`}
@@ -889,7 +768,7 @@ export default function IFormCheckout({
                                                                     >
                                                                         <div className="flex items-center gap-2">
                                                                             <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                                {bankLogo(item.id_setting_xendit.toString())}
+                                                                                <BankLogo id={item.id_setting_xendit.toString()} />
                                                                             </div>
                                                                             <p className="text-xs text-gray-800 font-semibold uppercase">
                                                                                 {`QRIS`}
@@ -924,7 +803,7 @@ export default function IFormCheckout({
                                                     >
                                                         <div className="flex items-center gap-2">
                                                             <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                {bankLogo("cod")}
+                                                                <BankLogo id="cod" />
                                                             </div>
                                                             <p className="text-xs text-gray-800 font-semibold uppercase">
                                                                 {`COD (Cash On Delivery)`}
@@ -1136,6 +1015,7 @@ export default function IFormCheckout({
                                                                         onChange(item.name)
                                                                         // set_checkout
                                                                         setCheckout((prevState) => {
+                                                                            const cekRandCode = afterPrice > 0 || prevState.ongkir > 0
                                                                             const subTotal = multiplySubTotal(
                                                                                 prevState.qty.toString(),
                                                                                 afterPrice.toString()
@@ -1146,7 +1026,7 @@ export default function IFormCheckout({
                                                                             )
                                                                             const totalRand = sumTotal(
                                                                                 totalOngkir.toString(),
-                                                                                prevState.randCode.toString(),
+                                                                                cekRandCode ? prevState.randCode.toString() : "0"
                                                                             )
                                                                             const totalCoupon = subtractTotal(
                                                                                 totalRand.toString(),
@@ -1203,6 +1083,7 @@ export default function IFormCheckout({
                                                     : 0
                                                 // set_checkout
                                                 setCheckout((prevState) => {
+                                                    const cekRandCode = prevState.afterPrice > 0 || prevState.ongkir > 0
                                                     const subtotal = multiplySubTotal(
                                                         qty.toString(),
                                                         prevState.afterPrice.toString()
@@ -1213,7 +1094,7 @@ export default function IFormCheckout({
                                                     )
                                                     const totalRand = sumTotal(
                                                         totalOngkir.toString(),
-                                                        prevState.randCode.toString()
+                                                        cekRandCode ? prevState.randCode.toString() : "0"
                                                     )
                                                     const totalCoupon = subtractTotal(
                                                         totalRand.toString(),
@@ -1439,16 +1320,19 @@ export default function IFormCheckout({
                                     {!!address && (
                                         <div className="my-3">
                                             <p className="text-xs">
-                                                {`${address.address ? `${address.address},` : ""} 
-                                                    ${address.urban_village.length > 1 ? `${address.urban_village},` : ""} 
-                                                    ${address.sub_district.length > 1 ? `${address.sub_district},` : ""}
-                                                    ${address.regency.length > 1 ? `${address.regency},` : ""}
-                                                    ${address.province ? address.province : ""}
-                                                `}
+                                                {validateAndConvertToString([
+                                                    address.address,
+                                                    address.urban_village,
+                                                    address.sub_district,
+                                                    address.regency,
+                                                    address.province
+                                                ])}
                                             </p>
                                             {address.zip_code ? (
                                                 <p className="text-xs">
-                                                    {`Kode Pos: ${address.zip_code}`}
+                                                    {validateAndConvertToString([
+                                                        `Kode Pos: ${address.zip_code}`
+                                                    ])}
                                                 </p>
                                             ) : null}
                                         </div>
@@ -1720,7 +1604,7 @@ export default function IFormCheckout({
                     </div>
 
                     <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
-                        <div className="w-full max-w-lg mx-auto px-3">
+                        <div className="w-full max-w-lg mx-auto px-8">
                             <div className="h-12 flex gap-3 items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
                                 <span className="text-sm tracking-wide text-white">
                                     {toIDR(checkout.total.toString())}
@@ -1780,7 +1664,7 @@ export default function IFormCheckout({
                         </button>
                     </Toast.Action>
                 </Toast.Root>
-                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-24 sm:bottom-20 flex flex-col px-3 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
+                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-24 sm:bottom-20 flex flex-col px-8 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
             </Toast.Provider>
         </>
     )

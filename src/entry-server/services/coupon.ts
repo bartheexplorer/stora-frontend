@@ -37,7 +37,6 @@ export async function getCoupon(prisma: PrismaClient, params: {
         const [item] = result.filter((_item, i) => i === 0)
         return item ? item : null
     } catch (error) {
-        console.log("error", error)
         return null
     }
 }

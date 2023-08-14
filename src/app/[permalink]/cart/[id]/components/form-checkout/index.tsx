@@ -1,20 +1,23 @@
 "use client"
 
-import { Controller, useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { type IFormValueCheckout, IFormValueCheckoutSchema } from "./form-checkout-type"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useContext, useRef, useState } from "react"
-import { multiplySubTotal, sumTotal } from "@/utils/add-decimal"
-import * as Dialog from "@radix-ui/react-dialog"
-import { CaretRightIcon, Cross2Icon } from "@radix-ui/react-icons"
-import IFormAddressArveoli from "./form-address-arveoli"
 import * as Toast from "@radix-ui/react-toast"
 import { toIDR } from "@/utils/to-idr"
-import { OrderContext } from "@/context/order"
-import clsx from "clsx"
+import { useCreateOrderCart } from "@/hooks/cart"
+import * as Dialog from "@radix-ui/react-dialog"
+import { CaretRightIcon, Cross2Icon } from "@radix-ui/react-icons"
 import { validateAndConvertToString } from "@/utils/to-string-converter"
+import { multiplySubTotal, subtractTotal, sumTotal } from "@/utils/add-decimal"
+import clsx from "clsx"
+import BankLogo from "./bank-logo"
+import IFormAddressArveoli from "./form-address-arveoli"
+import { OrderContext } from "@/context/order"
 
 interface IFormCheckoutProps {
+    cartId: string
     user: {
         name?: string | null
         no_hp?: string | null
@@ -54,13 +57,37 @@ interface IFormCheckoutProps {
     }
 }
 
+type AddressType = {
+    province: string
+    regency: string
+    id_mapping: string
+    sub_district: string
+    urban_village: string
+    zip_code: string
+    address: string
+}
+
+type ShippingType = {
+    service_code: string
+    service_name: string
+    price: number
+    etd: string
+    discount_price: number
+    cashless_discount_price: number
+    s_name: string
+}
+
 export default function IFormCheckout({
     permalink,
     payment,
     user,
     product,
+    cartId,
 }: IFormCheckoutProps) {
     const { shippingArveoli } = useContext(OrderContext)
+    const {
+        sendRequest: createOrder,
+    } = useCreateOrderCart()
     const [isOpenAddress, setIsOpenAddress] = useState<boolean>(false)
     const [isOpenShipping, setIsOpenShipping] = useState<boolean>(false)
     const [isOpenPayment, setIsOpenPayment] = useState<boolean>(false)
@@ -84,28 +111,13 @@ export default function IFormCheckout({
         subTotal: 0,
         price: 0,
         afterPrice: 0,
-        qty: 1,
+        qty: 0,
         randCode: 0,
         ongkir: 0,
     })
-    const [address, setAddress] = useState<{
-        province: string
-        regency: string
-        id_mapping: string
-        sub_district: string
-        urban_village: string
-        zip_code: string
-        address: string
-        shipping: {
-            service_code: string
-            service_name: string
-            price: string | number
-            etd: string
-            discount_price: string | number
-            cashless_discount_price: string | number
-            s_name: any
-        } | null
-    } | null>(null)
+    const [address, setAddress] = useState<AddressType | null>(null)
+    const [currentShipping, setCurrentShipping] = useState<ShippingType | null>(null)
+    const [selectedShipping, setSelectedShipping] = useState<ShippingType | null>(null)
     const [openAlert, setAlertOpen] = useState(false)
     const eventAlertRef = useRef<string | null>(null)
     const timerRef = useRef(0)
@@ -115,70 +127,297 @@ export default function IFormCheckout({
         control,
     } = useForm<IFormValueCheckout>({
         resolver: zodResolver(IFormValueCheckoutSchema),
-        defaultValues: {
-            jumlah: "1",
-        }
     })
 
-    const onHandleSubmit = handleSubmit((data) => {
+    const onHandleSubmit = handleSubmit(async (data) => {
         setAlertOpen(false)
-        if (!address) {
-            window.clearTimeout(timerRef.current);
-            timerRef.current = window.setTimeout(() => {
-                eventAlertRef.current = "Belum mengisi alamat"
-                setAlertOpen(true)
-            }, 100)
-            return
-        }
-
-        if (!product.isFree) {
-            if (!currentPayment) {
-                window.clearTimeout(timerRef.current);
-                timerRef.current = window.setTimeout(() => {
-                    eventAlertRef.current = "Belum memilih metode pembayaran"
-                    setAlertOpen(true)
-                }, 100)
-                return
-            }
-
-            if (!currentPayment.id && typeof currentPayment.id !== "string") {
-                window.clearTimeout(timerRef.current);
-                timerRef.current = window.setTimeout(() => {
-                    eventAlertRef.current = "Belum memilih metode pembayaran"
-                    setAlertOpen(true)
-                }, 100)
-                return
-            }
-        }
-
-        const addressStr = validateAndConvertToString([
-            address.address,
-            address.urban_village,
-            address.sub_district,
-            address.regency,
-            address.province,
-            address.zip_code ? `Kode Pos: ${address.zip_code}` : "",
-        ])
-
         const body = {
             ...data,
-            checkout,
-            address,
-            currentPayment,
+            permalink,
+            user,
             product,
-            addressStr,
+            cartId,
         }
-
+        await createOrder(body)
         console.log(body)
     })
 
-    const num = (length: number = 50) => {
-        const array: number[] = []
-        for (let index = 1; index <= length; index++) {
-            array.push(index);
-        }
+    const paymentComponent = () => {
+        return (
+            <div className="">
+                <Controller
+                    name="payment"
+                    control={control}
+                    render={({ field }) => {
+                        const { onChange, value } = field
 
-        return array.map((item) => (<option key={item} value={item}>{item}</option>))
+                        const isQris = (Array.isArray(payment.settings) && payment.settings.length > 0)
+                            ? payment.settings[0].status_qris
+                            : false
+
+                        const isVa = (Array.isArray(payment.settings) && payment.settings.length > 0)
+                            ? payment.settings[0].status_va
+                            : false
+
+                        return (
+                            <>
+                                {(Array.isArray(payment.transfer) && payment.transfer.length > 0) && (
+                                    <div className="py-2">
+                                        <div className="bg-slate-300 py-2 px-8">
+                                            <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
+                                        </div>
+                                        <ul className="flex flex-col">
+                                            {payment.transfer.map((item) => {
+                                                const classActive = item.id_bank === value?.id
+                                                return item.is_active ? (
+                                                    <li
+                                                        key={item.id_bank}
+                                                        className={clsx(
+                                                            "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                            classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                <BankLogo id={item.id_bank.toString()} />
+                                                            </div>
+                                                            <p className="text-xs text-gray-800 font-semibold">{item.bank}</p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            className="absolute inset-0"
+                                                            onClick={() => {
+                                                                onChange({
+                                                                    id: item.id_bank,
+                                                                    bank: item.bank.toString(),
+                                                                    account: item.rekening,
+                                                                    name: item.pemilik,
+                                                                    payment_method: "tf"
+                                                                })
+                                                            }}
+                                                        >&nbsp;</button>
+                                                    </li>
+                                                ) : null
+                                            })}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {isVa && (
+                                    <>
+                                        {(Array.isArray(payment.va) && payment.va.length > 0) && (
+                                            <div className="py-2">
+                                                <div className="bg-slate-300 py-2 px-8">
+                                                    <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
+                                                </div>
+                                                <ul className="flex flex-col">
+                                                    {payment.va.map((item) => {
+                                                        const account = item.bank_code.replaceAll("_", " ").toString()
+                                                        const classActive = item.id_bank_va_xendit === value?.id
+                                                        return item.is_active ? (
+                                                            <li
+                                                                key={item.id_bank_va_xendit}
+                                                                className={clsx(
+                                                                    "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                    classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                                )}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                        <BankLogo id={item.id_bank_va_xendit.toString()} />
+                                                                    </div>
+                                                                    <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                        {`Bank ${account}`}
+                                                                    </p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="absolute inset-0"
+                                                                    onClick={() => {
+                                                                        onChange({
+                                                                            id: item.id_bank_va_xendit,
+                                                                            account: account,
+                                                                            payment_method: "va",
+
+                                                                        })
+                                                                    }}
+                                                                >&nbsp;</button>
+                                                            </li>
+                                                        ) : null
+                                                    })}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                <div className="py-2">
+                                    <div className="bg-slate-300 py-2 px-8">
+                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya {isQris.valueOf()}</h3>
+                                    </div>
+
+                                    {isQris && (
+                                        <>
+                                            {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
+                                                <ul className="flex flex-col">
+                                                    {payment.settings.map((item) => {
+                                                        const classActive = item.id_setting_xendit === value?.id
+                                                        return item.status_qris ? (
+                                                            <li
+                                                                key={item.id_setting_xendit}
+                                                                className={clsx(
+                                                                    "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                    classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                                )}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                        <BankLogo id={item.id_setting_xendit.toString()}/>
+                                                                    </div>
+                                                                    <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                        {`QRIS`}
+                                                                    </p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="absolute inset-0"
+                                                                    onClick={() => {
+                                                                        onChange({
+                                                                            id: item.id_setting_xendit,
+                                                                            name: item.business_name,
+                                                                            payment_method: "QRIS",
+                                                                        })
+                                                                    }}
+                                                                >&nbsp;</button>
+                                                            </li>
+                                                        ) : null
+                                                    })}
+                                                </ul>
+                                            )}
+                                        </>
+                                    )}
+
+                                    <ul className="flex flex-col gap-3">
+                                        <li
+                                            className={clsx(
+                                                "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                "COD" === value?.id.toString() ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                    <BankLogo id="cod" />
+                                                </div>
+                                                <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                    {`COD (Cash On Delivery)`}
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="absolute inset-0"
+                                                onClick={() => {
+                                                    onChange({
+                                                        id: "COD",
+                                                        payment_method: "COD"
+                                                    })
+                                                }}
+                                            >&nbsp;</button>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div className="px-12 py-6 flex flex-col">
+                                    <button
+                                        type="button"
+                                        className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
+                                        onClick={(event) => {
+                                            setAlertOpen(false)
+                                            if (value) {
+                                                setIsOpenPayment(false)
+                                                setCurrentPayment({
+                                                    ...value,
+                                                    id: value.id,
+                                                    account: value.account,
+                                                    payment_method: value.payment_method,
+                                                })
+                                            } else {
+                                                window.clearTimeout(timerRef.current);
+                                                timerRef.current = window.setTimeout(() => {
+                                                    eventAlertRef.current = "Belum memilih metode pembayaran"
+                                                    setAlertOpen(true)
+                                                }, 100)
+                                            }
+                                            if (event) {
+                                                if (typeof event.preventDefault === "function") {
+                                                    event.preventDefault();
+                                                }
+                                                if (typeof event.stopPropagation === "function") {
+                                                    event.stopPropagation();
+                                                }
+                                            }
+                                        }}
+                                    >Simpan</button>
+                                </div>
+                            </>
+                        )
+                    }}
+                />
+            </div>
+        )
+    }
+
+    const selectPaymentMethod = () => {
+        return (
+            <>
+                {/* Pembayaran */}
+                <div className="flex justify-between my-4">
+                    <div>
+                        <label className="text-[13px]">
+                            Metode pembayaran
+                        </label>
+                    </div>
+                    <div>
+                        <Dialog.Root
+                            open={isOpenPayment}
+                            onOpenChange={setIsOpenPayment}
+                        >
+                            <Dialog.Trigger asChild>
+                                <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                    <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
+                                    <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                </button>
+                            </Dialog.Trigger>
+                            <Dialog.Portal>
+                                <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white shadow focus:outline-none">
+                                    <div className="py-20">
+                                        <Dialog.Title className="m-0 text-sm font-medium px-8 py-2">
+                                            Metode pembayaran
+                                        </Dialog.Title>
+                                        {/* Form shipping data */}
+                                        {paymentComponent()}
+                                    </div>
+                                    <Dialog.Close asChild>
+                                        <button
+                                            className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                            aria-label="Close"
+                                        >
+                                            <Cross2Icon className="w-5 h-5" />
+                                        </button>
+                                    </Dialog.Close>
+                                </Dialog.Content>
+                            </Dialog.Portal>
+                        </Dialog.Root>
+                    </div>
+                </div>
+
+                {!!currentPayment && (
+                    <div className="mb-3">
+                        {getPaymentMethod(currentPayment)}
+                    </div>
+                )}
+            </>
+        )
     }
 
     const getPaymentMethod = (currentPayment: {
@@ -246,6 +485,11 @@ export default function IFormCheckout({
             }
         }
 
+        const serviceCode = selectedShipping
+            ? selectedShipping.service_code.toString()
+            : null
+        console.log("serviceCode", serviceCode)
+
         return (Array.isArray(shipping) && shipping.length > 0)
             ? (
                 <>
@@ -263,9 +507,9 @@ export default function IFormCheckout({
                                                         <li
                                                             key={item.service_code}
                                                             className={clsx(
-                                                                "relative p-2 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                                item.service_code === address?.shipping?.service_code
-                                                                    ? "border-stora-500"
+                                                                "relative p-2 bg-gray-100 rounded-lg shadow border-2 hover:shadow-lg",
+                                                                item.service_code === serviceCode
+                                                                    ? "border-stora-500 bg-slate-200"
                                                                     : "border-transparent"
                                                             )}
                                                         >
@@ -278,38 +522,26 @@ export default function IFormCheckout({
                                                                 type="button"
                                                                 className="absolute inset-0"
                                                                 onClick={(event) => {
-                                                                    const ongkir = Number(item.price)
-
-                                                                    // set_address
-                                                                    // setAddress((prevState) => {
-                                                                    //     return {
-                                                                    //         ...prevState,
-                                                                    //         shipping: {
-                                                                    //             ...(prevState?.shipping ? prevState.shipping : {}),
-                                                                    //             s_name,
-                                                                    //             service_code: item.service_code,
-                                                                    //             service_name: item.service_name,
-                                                                    //             price: ongkir,
-                                                                    //             etd: item.etd,
-                                                                    //             discount_price: Number(item.discount_price),
-                                                                    //             cashless_discount_price: Number(item.cashless_discount_price),
-                                                                    //         }
-                                                                    //     }
-                                                                    // })
-                                                                    // set_checkout
-                                                                    setCheckout((prevState) => {
-                                                                        const totalOngkir = sumTotal(
-                                                                            prevState.subTotal.toString(),
-                                                                            ongkir.toString()
-                                                                        )
-                                                                        const totalRand = sumTotal(
-                                                                            totalOngkir.toString(),
-                                                                            prevState.randCode.toString()
-                                                                        )
+                                                                    const ongkir = !Number.isNaN(parseInt(item.price.toString()))
+                                                                        ? Number(item.price)
+                                                                        : 0
+                                                                    // set_selected_address
+                                                                    setSelectedShipping((prevState) => {
                                                                         return {
-                                                                            ...prevState,
-                                                                            ongkir,
-                                                                            total: totalRand,
+                                                                            ...(prevState ? prevState : {}),
+                                                                            s_name,
+                                                                            service_code: item.service_code.toString(),
+                                                                            service_name: item.service_name,
+                                                                            price: ongkir,
+                                                                            etd: item.etd
+                                                                                ? item.etd
+                                                                                : "",
+                                                                            discount_price: !Number.isNaN(parseInt(item.discount_price.toString()))
+                                                                                ? Number(item.discount_price)
+                                                                                : 0,
+                                                                            cashless_discount_price: !Number.isNaN(parseInt(item.cashless_discount_price.toString()))
+                                                                                ? Number(item.cashless_discount_price)
+                                                                                : 0,
                                                                         }
                                                                     })
                                                                     if (event) {
@@ -333,13 +565,42 @@ export default function IFormCheckout({
                         })}
                     </ul>
 
-                    <div className="py-6 flex flex-col">
+                    <div className="px-12 py-6 flex flex-col">
                         <button
                             type="button"
                             className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
                             onClick={() => {
-                                if (address?.id_mapping) {
+                                if (selectedShipping) {
+                                    const ongkir = selectedShipping.price
                                     setIsOpenShipping(false)
+                                    setCurrentShipping((prevState) => ({
+                                        ...prevState,
+                                        ...selectedShipping,
+                                    }))
+                                    // set_checkout
+                                    setCheckout((prevState) => {
+                                        const subTotal = multiplySubTotal(
+                                            prevState.qty.toString(),
+                                            prevState.afterPrice.toString()
+                                        )
+                                        const totalOngkir = sumTotal(
+                                            subTotal.toString(),
+                                            ongkir.toString()
+                                        )
+                                        const totalRand = sumTotal(
+                                            totalOngkir.toString(),
+                                            prevState.randCode.toString(),
+                                        )
+                                        const totalCoupon = subtractTotal(
+                                            totalRand.toString(),
+                                            "0"
+                                        )
+                                        return {
+                                            ...prevState,
+                                            ongkir,
+                                            total: totalCoupon,
+                                        }
+                                    })
                                 }
                             }}
                         >Simpan</button>
@@ -348,187 +609,9 @@ export default function IFormCheckout({
             ) : null
     }
 
-    const paymentComponent = () => {
-        return (
-            <div className="px-6">
-                <Controller
-                    name="payment"
-                    control={control}
-                    render={({ field }) => {
-                        const { onChange, value } = field
-
-                        return (
-                            <>
-                                {(Array.isArray(payment.transfer) && payment.transfer.length > 0) && (
-                                    <div className="py-2">
-                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
-                                        <ul className="flex flex-wrap gap-3">
-                                            {payment.transfer.map((item) => {
-                                                return item.is_active ? (
-                                                    <li
-                                                        key={item.id_bank}
-                                                        className={clsx(
-                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                            Boolean(item.id_bank.toString() === value?.id.toString())
-                                                                ? "border-stora-500"
-                                                                : "border-transparent"
-                                                        )}
-                                                    >
-                                                        <p className="text-xs">{item.bank}</p>
-                                                        <button
-                                                            type="button"
-                                                            className="absolute inset-0"
-                                                            onClick={() => {
-                                                                onChange({
-                                                                    id: item.id_bank,
-                                                                    bank: item.bank.toString(),
-                                                                    account: item.rekening,
-                                                                    name: item.pemilik,
-                                                                    payment_method: "tf"
-                                                                })
-                                                            }}
-                                                        >&nbsp;</button>
-                                                    </li>
-                                                ) : null
-                                            })}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                {(Array.isArray(payment.va) && payment.va.length > 0) && (
-                                    <div className="py-2">
-                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
-                                        <ul className="flex flex-wrap gap-3">
-                                            {payment.va.map((item) => {
-                                                const account = item.bank_code.replaceAll("_", " ").toString()
-                                                return item.is_active ? (
-                                                    <li
-                                                        key={item.id_bank_va_xendit}
-                                                        className={clsx(
-                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                            Boolean(item.id_bank_va_xendit.toString() === value?.id.toString())
-                                                                ? "border-stora-500"
-                                                                : "border-transparent"
-                                                        )}
-                                                    >
-                                                        <p className="text-xs uppercase">Bank {account}</p>
-                                                        <button
-                                                            type="button"
-                                                            className="absolute inset-0"
-                                                            onClick={() => {
-                                                                onChange({
-                                                                    id: item.id_bank_va_xendit,
-                                                                    account: account,
-                                                                    payment_method: "va",
-
-                                                                })
-                                                            }}
-                                                        >&nbsp;</button>
-                                                    </li>
-                                                ) : null
-                                            })}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
-                                    <div className="py-2">
-                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya</h3>
-                                        <ul className="flex flex-col gap-3">
-                                            {payment.settings.map((item) => {
-                                                return item.status_qris ? (
-                                                    <li
-                                                        key={item.id_setting_xendit}
-                                                        className={clsx(
-                                                            "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                            Boolean(item.id_setting_xendit.toString() === value?.id.toString())
-                                                                ? "border-stora-500"
-                                                                : "border-transparent"
-                                                        )}
-                                                    >
-                                                        <p className="text-xs uppercase">{`QRIS`}</p>
-                                                        <button
-                                                            type="button"
-                                                            className="absolute inset-0"
-                                                            onClick={() => {
-                                                                onChange({
-                                                                    id: item.id_setting_xendit,
-                                                                    name: item.business_name,
-                                                                    payment_method: "QRIS",
-                                                                })
-                                                            }}
-                                                        >&nbsp;</button>
-                                                    </li>
-                                                ) : null
-                                            })}
-
-                                            <li
-                                                className={clsx(
-                                                    "relative overflow-hidden p-3 bg-gray-100 rounded-lg shadow border hover:border-stora-500",
-                                                    Boolean("COD" === value?.id.toString())
-                                                        ? "border-stora-500"
-                                                        : "border-transparent"
-                                                )}
-                                            >
-                                                <p className="text-xs uppercase">{`COD (Cash On Delivery)`}</p>
-                                                <button
-                                                    type="button"
-                                                    className="absolute inset-0"
-                                                    onClick={() => {
-                                                        onChange({
-                                                            id: "COD",
-                                                            payment_method: "COD"
-                                                        })
-                                                    }}
-                                                >&nbsp;</button>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                )}
-
-                                <div className="py-6 flex flex-col">
-                                    <button
-                                        type="button"
-                                        className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
-                                        onClick={(event) => {
-                                            setAlertOpen(false)
-                                            if (value) {
-                                                setIsOpenPayment(false)
-                                                setCurrentPayment({
-                                                    ...value,
-                                                    id: value.id,
-                                                    account: value.account,
-                                                    payment_method: value.payment_method,
-                                                })
-                                            } else {
-                                                window.clearTimeout(timerRef.current);
-                                                timerRef.current = window.setTimeout(() => {
-                                                    eventAlertRef.current = "Belum memilih metode pembayaran"
-                                                    setAlertOpen(true)
-                                                }, 100)
-                                            }
-                                            if (event) {
-                                                if (typeof event.preventDefault === "function") {
-                                                    event.preventDefault();
-                                                }
-                                                if (typeof event.stopPropagation === "function") {
-                                                    event.stopPropagation();
-                                                }
-                                            }
-                                        }}
-                                    >Simpan</button>
-                                </div>
-                            </>
-                        )
-                    }}
-                />
-            </div>
-        )
-    }
-
     return (
         <>
-            <div className="px-12 pt-4 pb-24">
+            <div className="px-12 pt-4 pb-36">
                 <form onSubmit={(event) => {
                     onHandleSubmit(event)
                     if (event) {
@@ -540,59 +623,6 @@ export default function IFormCheckout({
                         }
                     }
                 }}>
-                    <Controller
-                        control={control}
-                        name="jumlah"
-                        rules={{
-                            required: true,
-                        }}
-                        render={({ field }) => {
-                            const { onChange, ref, ...rest } = field
-                            return (
-                                <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                                    <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="jumlah">
-                                        Jumlah
-                                    </label>
-                                    <select
-                                        {...rest}
-                                        ref={ref}
-                                        onChange={(event) => {
-                                            const ongkir = address?.shipping?.price
-                                                ? Number(address.shipping.price)
-                                                : 0
-                                            onChange(event)
-                                            // set_checkout
-                                            setCheckout((prevState) => {
-                                                const qty = Number(event.target.value)
-                                                const subtotal = multiplySubTotal(
-                                                    qty.toString(),
-                                                    prevState.afterPrice.toString()
-                                                )
-                                                const totalOngkir = sumTotal(
-                                                    subtotal.toString(),
-                                                    ongkir.toString()
-                                                )
-                                                const totalRand = sumTotal(
-                                                    totalOngkir.toString(),
-                                                    prevState.randCode.toString()
-                                                )
-                                                return {
-                                                    ...prevState,
-                                                    qty: qty,
-                                                    subTotal: subtotal,
-                                                    total: totalRand,
-                                                }
-                                            })
-                                        }}
-                                        className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                                    >
-                                        {num()}
-                                    </select>
-                                </fieldset>
-                            )
-                        }}
-                    />
-
                     <fieldset className="mb-[15px] w-full flex flex-col justify-start">
                         <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor="nama_lengkap">
                             Nama Lengkap
@@ -615,6 +645,7 @@ export default function IFormCheckout({
                         />
                     </fieldset>
 
+                    {/* Addresses */}
                     <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
                         <div className="flex items-center justify-between">
                             <div className="text-xs">Alamat Pengiriman:</div>
@@ -638,36 +669,79 @@ export default function IFormCheckout({
                                 <Dialog.Portal>
                                     <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
                                     <Dialog.Content className="overflow-y-scroll z-40 data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                        <div className="py-6 py-8">
-                                            <Dialog.Title className="m-0 text-sm font-medium">
+                                        <div className="py-20">
+                                            <Dialog.Title className="text-sm font-medium mb-6">
                                                 Alamat Penerima
                                             </Dialog.Title>
                                             {/* Address */}
                                             <IFormAddressArveoli
                                                 isFreeOngkir={product.isFreeOngkir}
-                                                userId={user.user_id ? user.user_id.toString() : ""}
+                                                userId={user.user_id ? user.user_id.toString() : "01"}
                                                 weight={product.weight.toString()}
                                                 onSelected={(val) => {
                                                     setIsOpenAddress(false)
-                                                    const ongkir = val.shipping?.price
-                                                        ? Number(val.shipping.price)
-                                                        : 0
+                                                    let ongkir = 0
+                                                    if (val.shipping) {
+                                                        const price = !Number.isNaN(parseInt(val.shipping.price.toString()))
+                                                            ? Number(val.shipping.price)
+                                                            : 0
+                                                        ongkir = price
+                                                        const shipping: ShippingType = {
+                                                            service_code: val.shipping.service_code,
+                                                            service_name: val.shipping.service_name,
+                                                            price: val.shipping.price,
+                                                            etd: val.shipping.etd
+                                                                ? val.shipping.etd
+                                                                : "",
+                                                            discount_price: val.shipping.discount_price,
+                                                            cashless_discount_price: val.shipping.cashless_discount_price,
+                                                            s_name: val.shipping.s_name
+                                                                ? val.shipping.s_name
+                                                                : "",
+                                                        }
+                                                        setCurrentShipping((prevState) => {
+                                                            return {
+                                                                ...(prevState ? prevState : {}),
+                                                                ...shipping,
+                                                            }
+                                                        })
+                                                    }
                                                     // set_address
-                                                    setAddress(() => val)
+                                                    setAddress((prevState) => {
+                                                        return {
+                                                            ...(prevState ? prevState : {}),
+                                                            province: val.province,
+                                                            regency: val.regency,
+                                                            id_mapping: val.id_mapping,
+                                                            sub_district: val.sub_district,
+                                                            urban_village: val.urban_village,
+                                                            zip_code: val.zip_code,
+                                                            address: val.address,
+                                                        }
+                                                    })
                                                     // set_checkout
                                                     setCheckout((prevState) => {
+                                                        const subTotal = multiplySubTotal(
+                                                            prevState.qty.toString(),
+                                                            prevState.afterPrice.toString()
+                                                        )
                                                         const totalOngkir = sumTotal(
-                                                            prevState.subTotal.toString(),
+                                                            subTotal.toString(),
                                                             (ongkir || 0).toString()
                                                         )
                                                         const totalRand = sumTotal(
                                                             totalOngkir.toString(),
                                                             prevState.randCode.toString()
                                                         )
+                                                        const totalCoupon = subtractTotal(
+                                                            totalRand.toString(),
+                                                            "0"
+                                                        )
+
                                                         return {
                                                             ...prevState,
                                                             ongkir,
-                                                            total: totalRand,
+                                                            total: totalCoupon,
                                                         }
                                                     })
                                                 }}
@@ -675,7 +749,7 @@ export default function IFormCheckout({
                                         </div>
                                         <Dialog.Close asChild>
                                             <button
-                                                className="text-stora-800 hover:bg-stora-200 focus:shadow-stora-200 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                className="text-stora-800 hover:bg-stora-200 focus:shadow-stora-200 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
                                                 aria-label="Close"
                                             >
                                                 <Cross2Icon className="w-5 h-5" />
@@ -689,22 +763,25 @@ export default function IFormCheckout({
                         {!!address && (
                             <div className="my-3">
                                 <p className="text-xs">
-                                    {`${address.address ? `${address.address},` : ""} 
-                                                        ${address.urban_village.length > 1 ? `${address.urban_village},` : ""} 
-                                                        ${address.sub_district.length > 1 ? `${address.sub_district},` : ""}
-                                                        ${address.regency.length > 1 ? `${address.regency},` : ""}
-                                                        ${address.province ? address.province : ""}
-                                                    `}
+                                    {validateAndConvertToString([
+                                        address.address,
+                                        address.urban_village,
+                                        address.sub_district,
+                                        address.regency,
+                                        address.province
+                                    ])}
                                 </p>
                                 {address.zip_code ? (
                                     <p className="text-xs">
-                                        {`Kode Pos: ${address.zip_code}`}
+                                        {validateAndConvertToString([
+                                            `Kode Pos: ${address.zip_code}`
+                                        ])}
                                     </p>
                                 ) : null}
                             </div>
                         )}
 
-                        {!!address?.shipping && (
+                        {!!currentShipping && (
                             <>
                                 <div className="flex items-center justify-between my-2">
                                     <div className="text-xs">Informasi Pengiriman:</div>
@@ -721,8 +798,8 @@ export default function IFormCheckout({
                                         <Dialog.Portal>
                                             <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
                                             <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                <div className="py-6 px-8">
-                                                    <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
+                                                <div className="py-20">
+                                                    <Dialog.Title className="mb-6 text-sm font-medium">
                                                         Pengiriman
                                                     </Dialog.Title>
                                                     {/* Form shipping data */}
@@ -735,7 +812,7 @@ export default function IFormCheckout({
 
                                                 <Dialog.Close asChild>
                                                     <button
-                                                        className="hover:bg-stora-200 focus:shadow-stora-300 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                        className="hover:bg-stora-200 focus:shadow-stora-300 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
                                                         aria-label="Close"
                                                     >
                                                         <Cross2Icon className="w-5 h-5" />
@@ -748,70 +825,24 @@ export default function IFormCheckout({
 
                                 <div>
                                     <p className="text-xs">
-                                        <span className="uppercase">{address.shipping?.s_name}</span>{", "}
-                                        {address.shipping.service_name}{" "}
-                                        {address.shipping.price
-                                            ? toIDR(address.shipping.price.toString())
-                                            : ""}
+                                        <span className="uppercase">{currentShipping.s_name}</span>{", "}
+                                        {currentShipping.service_name}{" "}
+                                        {currentShipping.price
+                                            ? toIDR(currentShipping.price.toString())
+                                            : toIDR("0")}
                                     </p>
-                                    {!!address.shipping.etd && (
-                                        <p className="text-xs italic">{address.shipping.etd}</p>
+                                    {!!currentShipping.etd && (
+                                        <p className="text-xs italic">{currentShipping.etd}</p>
                                     )}
                                 </div>
                             </>
                         )}
                     </div>
 
-                    {/* Pembayaran */}
-                    <div className="flex justify-between my-4">
-                        <div>
-                            <label className="text-[13px]">
-                                Metode pembayaran
-                            </label>
-                        </div>
-                        <div>
-                            <Dialog.Root
-                                open={isOpenPayment}
-                                onOpenChange={setIsOpenPayment}
-                            >
-                                <Dialog.Trigger asChild>
-                                    <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                        <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
-                                        <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                    </button>
-                                </Dialog.Trigger>
-                                <Dialog.Portal>
-                                    <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                    <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                        <div className="py-8">
-                                            <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
-                                                Metode pembayaran
-                                            </Dialog.Title>
-                                            {/* Form shipping data */}
-                                            {paymentComponent()}
-                                        </div>
-                                        <Dialog.Close asChild>
-                                            <button
-                                                className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                                                aria-label="Close"
-                                            >
-                                                <Cross2Icon className="w-5 h-5" />
-                                            </button>
-                                        </Dialog.Close>
-                                    </Dialog.Content>
-                                </Dialog.Portal>
-                            </Dialog.Root>
-                        </div>
-                    </div>
-
-                    {!!currentPayment && (
-                        <div className="mb-3">
-                            {getPaymentMethod(currentPayment)}
-                        </div>
-                    )}
+                    {selectPaymentMethod()}
 
                     <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
-                        <div className="w-full max-w-lg mx-auto px-3">
+                        <div className="w-full max-w-lg mx-auto px-8">
                             <div className="h-12 flex items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
                                 <span className="text-sm tracking-wide text-white">
                                     {toIDR(checkout.total.toString())}
@@ -850,7 +881,7 @@ export default function IFormCheckout({
                         </button>
                     </Toast.Action>
                 </Toast.Root>
-                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-20 flex flex-col px-3 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
+                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-24 sm:bottom-20 flex flex-col px-8 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
             </Toast.Provider>
         </>
     )

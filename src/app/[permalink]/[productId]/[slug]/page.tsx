@@ -100,7 +100,7 @@ export default async function Slug(props: SlugProps) {
 
     return (
         <>
-            <div className="w-full px-4 py-3">
+            <div className="w-full px-6 py-4 shadow mb-2">
                 <div className="flex items-center justify-between gap-4">
                     <Link
                         href={`/${props.params.permalink}`}
