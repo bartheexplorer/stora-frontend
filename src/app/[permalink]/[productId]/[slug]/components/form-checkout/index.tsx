@@ -1614,7 +1614,7 @@ export default function IFormCheckout({
                                         <div>
                                             <button
                                                 type="button"
-                                                className="flex flex-col items-center justify-center rounded-lg px-2 text-[10px] sm:text-xs leading-none font-medium h-[35px] bg-green-400 text-white hover:bg-green-400/75 focus:shadow focus:shadow-green-400 outline-none cursor-default"
+                                                className="flex flex-col items-center justify-center rounded-lg px-2 text-[10px] sm:text-xs leading-none font-medium h-[35px] text-white border border-stora-50 hover:bg-stora-100/25 focus:shadow focus:shadow-green-400 outline-none cursor-default"
                                                 disabled={loadingCreateOrder}
                                                 onClick={(event) => {
                                                     event.preventDefault()

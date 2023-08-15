@@ -318,6 +318,8 @@ export async function createQrisRequest(params: {
         }
         const data = await res.json()
 
+        console.log(data)
+
         if (!data?.id) throw new Error('Data tidak ditemukan')
 
         return data

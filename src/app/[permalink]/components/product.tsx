@@ -37,7 +37,7 @@ export default function Product({
             {/* Product */}
             <div className="flex items-center px-6 pt-2 pb-4">
                 <div>
-                    <h3 className="text-sm font-semibold tracking-wide text-gray-800">Semua Produk</h3>
+                    <h3 className="text-sm font-semibold tracking-wide text-gray-700">Semua Produk</h3>
                 </div>
                 <div className="flex-1">
                     <div className="flex justify-end items-center gap-4">

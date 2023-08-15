@@ -71,7 +71,11 @@ export default async function Success(props: SuccessProps) {
                     )}
 
                     {order.payment === "qris" && (
-                        <Qris />
+                        <Qris
+                            bank={order.bank}
+                            no_pesanan={order.order_id}
+                            total_bayar={order.totalbayar.toString()}
+                        />
                     )}
 
                     {order.payment === "cod" && (
@@ -110,7 +114,11 @@ export default async function Success(props: SuccessProps) {
                             )}
 
                             {multiOrder.payment === "qris" && (
-                                <Qris />
+                                <Qris
+                                    bank={multiOrder.bank}
+                                    no_pesanan={multiOrder.order_id}
+                                    total_bayar={multiOrder.totalbayar.toString()}
+                                />
                             )}
 
                             {multiOrder.payment === "cod" && (

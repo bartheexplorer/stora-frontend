@@ -1,5 +1,6 @@
 import { usePhotoProduct } from "@/hooks/product"
 import Image from "next/image"
+import ILoading from "./loading"
 
 interface PhotoProductProps {
     fileName: string
@@ -19,10 +20,7 @@ export default function PhotoProduct({
         ? dataPhotoProduct.data
         : null
 
-    console.log("images", images)
-    console.log("fileName", fileName)
-
-    if (isLoading) return <p>Loading...</p>
+    if (isLoading) return <ILoading />
 
     return (
         <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden lg:aspect-none group-hover:opacity-75 lg:h-96 rounded-lg">

@@ -273,18 +273,6 @@ export default async function Slug(props: SlugProps) {
                     codeUnique={Boolean(user?.setting?.status_kode_unik === "SATU")}
                 />
             )}
-
-            {props.searchParams?.is_dev && (
-                <>
-                    <pre className="block">
-                        {JSON.stringify(product, undefined, 2)}
-                    </pre>
-
-                    <pre className="block">
-                        {JSON.stringify(user, undefined, 2)}
-                    </pre>
-                </>
-            )}
         </>
     )
 }

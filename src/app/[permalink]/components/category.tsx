@@ -26,7 +26,7 @@ export default function Category({
         return (
             <>
                 <div className="px-6 pt-6">
-                    <h3 className="text-sm font-semibold tracking-wide text-gray-800">Kategori</h3>
+                    <h3 className="text-sm font-semibold tracking-wide text-gray-700">Kategori</h3>
                 </div>
 
                 <div className="relative w-full max-w-full">
@@ -44,8 +44,8 @@ export default function Category({
                     >
                         {categories.map((item) => (
                             <SwiperSlide key={item.id_kategori_produk}>
-                                <div className="relative shadow rounded-lg bg-stora-500 h-12 px-4 py-3">
-                                    <h3 className="text-xs truncate text-white">{item.kategori}</h3>
+                                <div className="relative shadow rounded-xl hover:bg-stora-500/25 h-12 px-4 py-3">
+                                    <h3 className="text-xs truncate text-gray-800">{item.kategori}</h3>
                                     <Link
                                         href={`/${permalink}?category=${item.id_kategori_produk}`}
                                         className="absolute inset-0"
@@ -54,8 +54,8 @@ export default function Category({
                             </SwiperSlide>
                         ))}
                         <SwiperSlide>
-                            <div className="relative shadow rounded-lg bg-stora-500 h-12 px-4 py-3">
-                                <h3 className="text-xs truncate text-white">Semua kategori</h3>
+                            <div className="relative shadow rounded-xl hover:bg-stora-500/25 h-12 px-4 py-3">
+                                <h3 className="text-xs truncate text-gray-800">Semua kategori</h3>
                                 <Link
                                     href={`/${permalink}?categories=all`}
                                     className="absolute inset-0"

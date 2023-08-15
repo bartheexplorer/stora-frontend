@@ -1,4 +1,8 @@
+"use client"
+
+import { useCopyToClipboard } from "usehooks-ts"
 import { toIDR } from "@/utils/to-idr"
+import { CheckIcon } from "@radix-ui/react-icons"
 
 interface TfProps {
     bank: string
@@ -6,6 +10,9 @@ interface TfProps {
 }
 
 export default function Tf(props: TfProps) {
+    const [valueBank, copyBank] = useCopyToClipboard()
+    const [valueAmount, copyAmount] = useCopyToClipboard()
+
     return (
         <div>
             <div className="mt-8 bg-gray-50/25 my-3 shadow px-12">
@@ -14,14 +21,43 @@ export default function Tf(props: TfProps) {
                     <div className="text-xs font-normal">No. Rekening:</div>
                     <div className="flex justify-between">
                         <div className="text-sm text-gray-800 font-semibold">{props.bank}</div>
-                        <span className="text-xs font-normal text-green-500">Salin</span>
+                        <button
+                            type="button"
+                            className="text-xs font-normal text-stora-500 cursor-pointer"
+                            onClick={() => {
+                                if (props.bank) {
+                                    const bankStr = props.bank.split("-")
+                                    copyBank(`${bankStr[0]}\n${bankStr[1].trimStart()}`)
+                                }
+                            }}
+                        >
+                            {valueBank ? (
+                                <div className="flex gap-1">
+                                    <span>Salin</span>
+                                    <CheckIcon />
+                                </div>
+                            ) : "Salin"}
+                        </button>
                     </div>
                 </div>
                 <div className="pb-2">
                     <div className="text-xs font-normal">Total Pembayaran</div>
                     <div className="flex justify-between">
                         <div className="text-sm text-gray-800 font-semibold">{toIDR(props.total)}</div>
-                        <span className="text-xs font-normal text-green-500">Salin</span>
+                        <button
+                            type="button"
+                            className="text-xs font-normal text-stora-500 cursor-pointer"
+                            onClick={() => {
+                                copyAmount(props.total)
+                            }}
+                        >
+                            {valueAmount ? (
+                                <div className="flex gap-1">
+                                    <span>Salin</span>
+                                    <CheckIcon />
+                                </div>
+                            ) : "Salin"}
+                        </button>
                     </div>
                 </div>
             </div>
