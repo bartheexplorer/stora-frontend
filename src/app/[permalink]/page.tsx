@@ -16,6 +16,7 @@ import instagram from "@/app/assets/medsos/Instagram-Logo.wine.svg"
 import youtube from "@/app/assets/medsos/YouTube.svg"
 import Search from "./components/search"
 import ImageProfile from "./components/image-profile"
+import LoaderUi from "../components/loader-ui"
 
 interface PermalinkProps {
     params: {
@@ -76,7 +77,7 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
 
     console.log("User", user)
 
-    if (!user) return null
+    if (!user) return <LoaderUi />
 
     return (
         <>

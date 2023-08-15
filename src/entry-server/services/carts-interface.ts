@@ -24,11 +24,14 @@ export type CartsEntity = {
     id_produk: t_keranjang['id_produk']
     nama_produk: t_keranjang['nama_produk']
     berat: string
+    berat_str: string
     gambar_produk: t_keranjang['gambar_produk']
     jenis_produk: t_keranjang['jenis_produk']
     qty: t_keranjang['qty']
     varian: string
+    varian_str: string
     ukuran: string
+    ukuran_str: string
     kupon: t_keranjang['kupon']
     potongan: t_keranjang['potongan']
     total: t_keranjang['total']
@@ -61,6 +64,7 @@ export type CreateOrderByCartParams = {
     payment_id: string
     account_id: number
     paymentMethodCode?: string
+    no_hp_toko: string
 }
 
 export type QueryRawTf = {

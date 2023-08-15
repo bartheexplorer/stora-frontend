@@ -1,4 +1,4 @@
-import type { PrismaClient, t_order as TOrder } from "@prisma/client"
+import type { PrismaClient, t_order as TOrder, t_multi_order } from "@prisma/client"
 import { appConfig } from "../config/app"
 import type { OrderParams } from "./order-interface"
 
@@ -285,7 +285,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
     }
 }
 
-async function createQrisRequest(params: {
+export async function createQrisRequest(params: {
     userId: string
     amount: string
     permalink: string
@@ -326,7 +326,7 @@ async function createQrisRequest(params: {
     }
 }
 
-async function createVaRequest(params: {
+export async function createVaRequest(params: {
     id_user: string
     totalbayar: string
     bank: string
@@ -359,7 +359,7 @@ async function createVaRequest(params: {
     }
 }
 
-async function pushNotif(
+export async function pushNotif(
     pesan: string,
     no_hp?: string,
     userId?: string
@@ -457,6 +457,51 @@ export async function findOrderById(prisma: PrismaClient, orderId?: string) {
         })
         return result
     } catch (error) {
+        return null
+    }
+}
+
+export async function getMultiOrder(prisma: PrismaClient, orderId?: string) {
+    if (!orderId) return null
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            const orders = await tx.$queryRaw<t_multi_order[]>`SELECT t_multi_order.id_order,
+            t_multi_order.order_id,
+            t_multi_order.kode_keranjang,
+            t_multi_order.nama_pembeli,
+            t_multi_order.alamat_pembeli,
+            t_multi_order.no_hp_pembeli,
+            t_multi_order.email_pembeli,
+            t_multi_order.prov,
+            t_multi_order.kab,
+            t_multi_order.kec,
+            t_multi_order.expedisi,
+            t_multi_order.estimasi,
+            t_multi_order.paket,
+            t_multi_order.ongkir,
+            t_multi_order.status_bayar,
+            t_multi_order.order_status,
+            t_multi_order.is_created,
+            t_multi_order.tgl_order,
+            -- t_multi_order.tgl_proses,
+            -- t_multi_order.tgl_kirim,
+            -- t_multi_order.tgl_selesai,
+            t_multi_order.totalbayar,
+            t_multi_order.bank,
+            t_multi_order.payment,
+            t_multi_order.no_resi,
+            t_multi_order.mutasi,
+            t_multi_order.id_user,
+            t_multi_order.id_payment
+            FROM t_multi_order
+            WHERE t_multi_order.order_id = ${orderId} LIMIT 1 OFFSET 0`
+            const [firstOrder] = orders.filter((_item, index) => index === 0)
+            if (!firstOrder) throw new Error('Data tidak ditemukan')
+            return firstOrder
+        })
+        return result
+    } catch (error) {
+        console.log("err", error)
         return null
     }
 }

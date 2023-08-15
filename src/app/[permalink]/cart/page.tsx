@@ -83,10 +83,12 @@ export default async function Cart(props: CartProps) {
                                                         </h3>
                                                         <p className="ml-4">{toIDR(item.total.toString())}</p>
                                                     </div>
-                                                    <p className="mt-1 text-xs text-gray-500">
-                                                        {item.varian.length > 0 ? `${item.varian} ` : ""}
-                                                        {item.ukuran.length > 0 ? `${item.ukuran}` : ""}
-                                                    </p>
+                                                    {(item.varian || item.ukuran) && (
+                                                        <p className="mt-1 text-xs text-gray-500">
+                                                            {item.varian.length > 0 ? `Variasi: ${item.varian} ` : ""}
+                                                            {item.ukuran.length > 0 ? `Ukuran: ${item.ukuran}` : ""}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="flex flex-1 items-end justify-between text-xs">
                                                     <p className="text-gray-500">Qty {item.qty}</p>
@@ -127,7 +129,9 @@ export default async function Cart(props: CartProps) {
                     
                 </>
             ) : (
-                <p className="text-center mt-12">Data tidak ditemukan.</p>
+                <div className="py-12">
+                    <p className="text-center text-xs font-semibold text-gray-700">Data tidak ditemukan</p>
+                </div>
             )}
         </div>
     )

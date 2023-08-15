@@ -1,5 +1,5 @@
-import ILoading from "./components/loading";
+import LoaderUi from "@/app/components/loader-ui"
 
 export default function SlugLoading() {
-    return <ILoading text="Please loading..."/>
+    return <LoaderUi />
 }

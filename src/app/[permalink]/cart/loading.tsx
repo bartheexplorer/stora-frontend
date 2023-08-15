@@ -1,3 +1,5 @@
+import LoaderUi from "@/app/components/loader-ui"
+
 export default function CartLoading() {
-    return <p>Loading...</p>
+    return <LoaderUi />
 }

@@ -1,5 +1,5 @@
 import { prisma } from "@/entry-server/config/db"
-import { findOrderById } from "@/entry-server/services/order"
+import { findOrderById, getMultiOrder } from "@/entry-server/services/order"
 import { getUser } from "@/entry-server/services/user"
 import { ArrowLeftIcon } from "@radix-ui/react-icons"
 import Link from "next/link"
@@ -19,6 +19,7 @@ interface SuccessProps {
 export default async function Success(props: SuccessProps) {
     const user = await getUser(prisma, props.params.permalink)
     const order = await findOrderById(prisma, props.searchParams?.id?.toString())
+    const multiOrder = await getMultiOrder(prisma, props.searchParams?.id?.toString())
 
     return (
         <div className="min-h-screen">
@@ -45,8 +46,8 @@ export default async function Success(props: SuccessProps) {
                 </div>
             </div>
 
-            {!!order && (
-                <div>
+            {!!order ? (
+                <>
                     {!!!order.payment && (
                         <div className="p-12">
                             <div className="p-6 rounded-xl bg-slate-200">
@@ -81,10 +82,55 @@ export default async function Success(props: SuccessProps) {
                             total={order.totalbayar.toString()}
                         />
                     )}
-                </div>
-            )}
+                </>
+            ) : (
+                <>
+                    {!!multiOrder ? (
+                        <>
+                            {!!!multiOrder.payment && (
+                                <div className="p-12">
+                                    <div className="p-6 rounded-xl bg-slate-200">
+                                        <h3 className="text-gray-500 font-semibold">Terimakasih telah melakukan pemesanan</h3>
+                                    </div>
+                                </div>
+                            )}
 
-            <pre>{JSON.stringify(order, undefined, 2)}</pre>
+                            {multiOrder.payment === "bank" && (
+                                <Tf
+                                    bank={multiOrder.bank}
+                                    total={multiOrder.totalbayar.toString()}
+                                />
+                            )}
+
+                            {multiOrder.payment === "virtual" && (
+                                <Va
+                                    bank={multiOrder.bank}
+                                    total={multiOrder.totalbayar.toString()}
+                                />
+                            )}
+
+                            {multiOrder.payment === "qris" && (
+                                <Qris />
+                            )}
+
+                            {multiOrder.payment === "cod" && (
+                                <Cod
+                                    qty="0"
+                                    price={multiOrder.totalbayar.toString()}
+                                    ongkir={multiOrder.ongkir ? multiOrder.ongkir.toString() : "0"}
+                                    total={multiOrder.totalbayar.toString()}
+                                />
+                            )}
+                        </>
+                    ) : (
+                        <div className="p-12">
+                            <div className="p-6 rounded-xl bg-slate-200">
+                                <h3 className="text-gray-500 font-semibold">Terimakasih telah melakukan pemesanan</h3>
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     )
 }

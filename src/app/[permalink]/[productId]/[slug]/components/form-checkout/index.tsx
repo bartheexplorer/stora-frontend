@@ -287,7 +287,7 @@ export default function IFormCheckout({
             return
         }
         reset()
-        router.replace(`/${permalink}/cart?id=${(Math.floor(Math.random() * 900) + 100).toString()}`)
+        router.push(`/${permalink}/cart?id=${(Math.floor(Math.random() * 900) + 100).toString()}`)
     }
 
     const submitAction = handleSubmit(async (data) => {

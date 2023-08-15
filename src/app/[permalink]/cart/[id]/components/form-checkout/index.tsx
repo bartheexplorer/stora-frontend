@@ -15,6 +15,12 @@ import clsx from "clsx"
 import BankLogo from "./bank-logo"
 import IFormAddressArveoli from "./form-address-arveoli"
 import { OrderContext } from "@/context/order"
+import { getLastThreeWords } from "@/utils/get-unik-code"
+import { getRandomThreeDigitNumber } from "@/utils/get-rand-number"
+import { useRouter } from "next/navigation"
+import ILoading from "../loading"
+
+const RAND_CODE = getRandomThreeDigitNumber()
 
 interface IFormCheckoutProps {
     cartId: string
@@ -54,7 +60,9 @@ interface IFormCheckoutProps {
         isFree: boolean
         weight: number
         total: number
+        discount: number
     }
+    codeUnique: boolean
 }
 
 type AddressType = {
@@ -83,10 +91,13 @@ export default function IFormCheckout({
     user,
     product,
     cartId,
+    codeUnique,
 }: IFormCheckoutProps) {
+    const router = useRouter()
     const { shippingArveoli } = useContext(OrderContext)
     const {
         sendRequest: createOrder,
+        isLoading: loadingCreateOrder,
     } = useCreateOrderCart()
     const [isOpenAddress, setIsOpenAddress] = useState<boolean>(false)
     const [isOpenShipping, setIsOpenShipping] = useState<boolean>(false)
@@ -98,21 +109,18 @@ export default function IFormCheckout({
         bank?: string
         name?: string
     } | null>(null)
+    const cunik = codeUnique ? RAND_CODE : 0
+    const totalUniqueCode = Math.round(Number(product.total + cunik))
+
     const [checkout, setCheckout] = useState<{
-        price: number
-        afterPrice: number
         subTotal: number
         total: number
-        qty: number
         randCode: number
         ongkir: number
     }>({
-        total: 0,
-        subTotal: 0,
-        price: 0,
-        afterPrice: 0,
-        qty: 0,
-        randCode: 0,
+        total: totalUniqueCode,
+        subTotal: product.total,
+        randCode: cunik,
         ongkir: 0,
     })
     const [address, setAddress] = useState<AddressType | null>(null)
@@ -137,9 +145,16 @@ export default function IFormCheckout({
             user,
             product,
             cartId,
+            currentPayment,
+            currentShipping,
+            address,
+            checkout,
         }
-        await createOrder(body)
-        console.log(body)
+        const result = await createOrder(body)
+        console.log("!!Result", !!result)
+        console.log("Result", result)
+        if (!result?.orderId) return
+        router.push(`/${permalink}/sucess?id=${result?.orderId}&m=1&_=${(Math.floor(Math.random() * 900) + 100).toString()}`)
     })
 
     const paymentComponent = () => {
@@ -571,7 +586,9 @@ export default function IFormCheckout({
                             className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
                             onClick={() => {
                                 if (selectedShipping) {
-                                    const ongkir = selectedShipping.price
+                                    const ongkir = !Number.isNaN(parseInt(selectedShipping.price.toString()))
+                                        ? Number(selectedShipping.price)
+                                        : 0
                                     setIsOpenShipping(false)
                                     setCurrentShipping((prevState) => ({
                                         ...prevState,
@@ -579,26 +596,18 @@ export default function IFormCheckout({
                                     }))
                                     // set_checkout
                                     setCheckout((prevState) => {
-                                        const subTotal = multiplySubTotal(
-                                            prevState.qty.toString(),
-                                            prevState.afterPrice.toString()
-                                        )
                                         const totalOngkir = sumTotal(
-                                            subTotal.toString(),
+                                            prevState.subTotal.toString(),
                                             ongkir.toString()
                                         )
                                         const totalRand = sumTotal(
                                             totalOngkir.toString(),
                                             prevState.randCode.toString(),
                                         )
-                                        const totalCoupon = subtractTotal(
-                                            totalRand.toString(),
-                                            "0"
-                                        )
                                         return {
                                             ...prevState,
                                             ongkir,
-                                            total: totalCoupon,
+                                            total: totalRand,
                                         }
                                     })
                                 }
@@ -721,27 +730,19 @@ export default function IFormCheckout({
                                                     })
                                                     // set_checkout
                                                     setCheckout((prevState) => {
-                                                        const subTotal = multiplySubTotal(
-                                                            prevState.qty.toString(),
-                                                            prevState.afterPrice.toString()
-                                                        )
                                                         const totalOngkir = sumTotal(
-                                                            subTotal.toString(),
+                                                            prevState.subTotal.toString(),
                                                             (ongkir || 0).toString()
                                                         )
                                                         const totalRand = sumTotal(
                                                             totalOngkir.toString(),
                                                             prevState.randCode.toString()
                                                         )
-                                                        const totalCoupon = subtractTotal(
-                                                            totalRand.toString(),
-                                                            "0"
-                                                        )
 
                                                         return {
                                                             ...prevState,
                                                             ongkir,
-                                                            total: totalCoupon,
+                                                            total: totalRand,
                                                         }
                                                     })
                                                 }}
@@ -841,6 +842,48 @@ export default function IFormCheckout({
 
                     {selectPaymentMethod()}
 
+                    <div>
+                        <div className="bg-slate-50 rounded-lg">
+                            <div className="pt-4 px-4 pb-2 border-b">
+                                <h3 className="text-gray-800 text-[13px] font-medium tracking-wide">Rincian pembayaran:</h3>
+                            </div>
+                            <div className="px-4 py-2">
+
+                                <div className="flex flex-col">
+                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
+                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                            {getLastThreeWords(checkout.total.toString())}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Subtotal</span>
+                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                            {toIDR(checkout.subTotal.toString())}
+                                        </span>
+                                    </div>
+                                    {!product.isFreeOngkir && (
+                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Pengiriman</span>
+                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                {!!currentShipping
+                                                    ? toIDR(currentShipping.price.toString())
+                                                    : toIDR("0")}
+                                            </span>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Total</span>
+                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                            {toIDR(checkout.total.toString())}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
                         <div className="w-full max-w-lg mx-auto px-8">
                             <div className="h-12 flex items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
@@ -851,9 +894,10 @@ export default function IFormCheckout({
 
                                     <button
                                         type="submit"
+                                        disabled={loadingCreateOrder}
                                         className="inline-flex items-center justify-center rounded-lg px-4 text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default"
                                     >
-                                        Checkout
+                                        Selesaikan pesanan
                                     </button>
                                 </div>
                             </div>
@@ -861,6 +905,12 @@ export default function IFormCheckout({
                     </div>
                 </form>
             </div>
+
+            {loadingCreateOrder && (
+                <div className="z-50 overflow-hidden w-full h-screen fixed inset-0 bg-slate-300/25 flex flex-col items-center justify-center">
+                    <ILoading />
+                </div>
+            )}
 
             <Toast.Provider swipeDirection="right">
                 <Toast.Root

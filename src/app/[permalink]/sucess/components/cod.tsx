@@ -22,7 +22,9 @@ export default function Cod(props: CodProps) {
                         <p className="text-sm font-semibold border-b-2">Bayar di tempat</p>
 
                         <div className="flex justify-between">
-                            <div className="text-sm font-semibold text-gray-800">Harga ({props.qty} Barang)</div>
+                            <div className="text-sm font-semibold text-gray-800">
+                                Harga {`${props.qty !== "0" ? `(${props.qty} Barang)` : "0"}`}
+                            </div>
                             <div className="text-sm font-semibold text-gray-800">{toIDR(props.price)}</div>
                         </div>
                         <div className="flex justify-between">

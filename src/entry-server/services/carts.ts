@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client"
 import type { CartsEntity, CreateOrderByCartParams, Free1Entity, ParamsCreateCart, QueryRawTf } from "./carts-interface"
+import { createQrisRequest, createVaRequest, pushNotif } from "./order"
 
 const generateNumberID = (length: number): string => {
     let result = ''
@@ -97,12 +98,15 @@ export async function getCart(
             const carts = await tx.$queryRaw<CartsEntity[]>`SELECT id_keranjang
         ,id_produk
         ,nama_produk
-        ,if(berat = '0','',CONCAT('Berat : ', berat)) as berat
+        ,if(berat = '0','',CONCAT('Berat : ', berat)) as berat_str
+        ,if(berat = '0','', berat) as berat
         ,gambar_produk
         ,jenis_produk
         ,qty
-        ,if(varian = '0','',CONCAT('Varian : ', varian)) as varian
-        ,if(ukuran = '0','',CONCAT('Ukuran : ', ukuran)) as ukuran
+        ,if(varian = '0','',CONCAT('Varian : ', varian)) as varian_str
+        ,if(varian = '0','',varian) as varian
+        ,if(ukuran = '0','',CONCAT('Ukuran : ', ukuran)) as ukuran_str
+        ,if(ukuran = '0','',ukuran) as ukuran
         ,kupon
         ,potongan
         ,total
@@ -211,8 +215,101 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             const now = new Date()
 
             let accountBank = ''
-            let paymentId = '0'
+            let paymentId = ''
             textOrder2 = '-'
+            let textOrder3 = ""
+
+            // Bayar
+            async function paymentData() {
+                textOrder3 += `Ongkir: *${formatCurrency(params.ongkir)}*`
+                // Payment method
+                if (params.paymentMethodCode === 'bank') {
+                    const cekBank = await tx.t_bank.findFirst({
+                        where: {
+                            id_bank: { equals: parseInt(params.payment_id) },
+                            id_user: { equals: params.id_user },
+                        },
+                    })
+                    if (!cekBank) throw new Error('Bank tidak ditemukan')
+
+                    accountBank = [cekBank.bank, cekBank.rekening].join(' - ')
+                    paymentId = ""
+
+                    textOrder2 = `Bank tujuan pembayaran: ${[cekBank.bank, cekBank.rekening].join(' ')} (${cekBank.pemilik})`
+                } else if (params.paymentMethodCode === 'virtual') {
+                    const dbVa = await tx.t_bank_va_xendit.findFirst({
+                        where: {
+                            id_user: { equals: params.id_user },
+                            id_bank_va_xendit: { equals: parseInt(params.payment_id) },
+                        },
+                    })
+                    if (!dbVa) throw new Error('Va tidak ditemukan')
+                    const virtualData = await createVaRequest({
+                        id_user: params.id_user.toString(),
+                        totalbayar: params.totalbayar.toString(),
+                        bank: dbVa.bank_code,
+                        order_id: orderId,
+                    })
+                    accountBank = virtualData?.data ? virtualData.data : ''
+                    paymentId = virtualData?.id ? virtualData.id : ""
+
+                    textOrder2 = `Virtual Akun tujuan pembayaran: ${virtualData?.data}`
+                } else if (params.paymentMethodCode === 'qris') {
+                    const cekSettingXendit = await tx.t_setting_xendit.findFirst({
+                        where: {
+                            id_user: { equals: params.id_user },
+                            status_qris: { equals: 'SATU' },
+                        },
+                    })
+                    if (!cekSettingXendit) throw new Error('Setting xendit')
+
+                    const dataCod = await createQrisRequest({
+                        userId: cekSettingXendit.id.toString(),
+                        amount: params.totalbayar.toString(),
+                        permalink: params.permalink,
+                        orderId: params.id_user.toString(),
+                    })
+
+                    accountBank = dataCod?.qr_string ? dataCod.qr_string : ""
+                    paymentId = dataCod?.id ? dataCod.id : ""
+                    textOrder2 = `link Qris tujan pembayaran: ${process.env.url}/${params.permalink}/order/qris?id=${orderId}`
+                } else if (params.paymentMethodCode === 'cod') {
+                    // if (params.typeProduct !== "fisik") throw new Error("payment not found");
+                    accountBank = ""
+                    paymentId = ""
+                    textOrder2 = `COD`
+                } else {
+                    throw new Error('payment not found')
+                }
+            }
+
+            await paymentData()
+
+            console.log(`${orderId},
+            ${cartId.kode_keranjang},
+            ${params.nama},
+            ${params.hp},
+            ${params.email},
+            ${params.alamat},
+            ${params.provinsi},
+            ${params.kota},
+            ${params.kecamatan},
+            ${params.expedisi},
+            ${params.paket},
+            ${params.ongkir},
+            ${params.estimasi},
+            ${totalBayar},
+            ${accountBank},
+            ${params.paymentMethodCode},
+            ${'0'},
+            ${'1'},
+            ${now},
+            ${now},
+            ${params.id_user},
+            ${paymentId},
+              "0000-00-00 00:00:00",
+              "0000-00-00 00:00:00",
+            "0000-00-00 00:00:00"`)
 
             const createOrder = await tx.$executeRaw`INSERT INTO t_multi_order(
           order_id,
@@ -236,7 +333,10 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
           tgl_order,
           is_created,
           id_user,
-          id_payment
+          id_payment,
+          tgl_proses,
+            tgl_kirim,
+        tgl_selesai
         )
         VALUES (
           ${orderId},
@@ -260,7 +360,10 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
           ${now},
           ${now},
           ${params.id_user},
-          ${paymentId}
+          ${paymentId},
+            "0000-00-00 00:00:00",
+            "0000-00-00 00:00:00",
+          "0000-00-00 00:00:00"
         )`
 
             if (createOrder === 0) throw new Error('Gagal insert data')
@@ -336,12 +439,19 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             }
 
             const clearCart = await tx.$executeRaw`DELETE FROM t_keranjang_temp WHERE session = ${params.cartId}`
-            if (clearCart === 0) throw new Error('Gagal hapus data')
+            if (clearCart === 0) throw new Error('Gagal Membersihkan data')
 
-            return { textOrder: textOrder4 }
+            const notip = await pushNotif(
+                textOrder4,
+                params.no_hp_toko,
+                params.id_user.toString()
+            )
+
+            return { textOrder: textOrder4, notip, orderId}
         })
         return result
     } catch (error) {
+        console.log("error", error)
         return null
     }
 }
