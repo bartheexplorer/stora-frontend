@@ -212,12 +212,12 @@ export async function getProduct(
 }
 
 // get photo produk1
-async function getPhotoProduct(fileName: string, userId: string) {
+export async function getPhotoProduct2(fileName: string, userId: string) {
     const url = `${appConfig.domain.storaAssets}/assets/image/produk/${userId}/${fileName}`
     const result = await fetch(url, {
         method: "GET"
     })
-    if (!result.ok) throw new Error("Data tidak ditemukan")
+    if (!result.ok) return await getPhotoProduct1(fileName)
 
     return {
         data: url,
@@ -226,13 +226,14 @@ async function getPhotoProduct(fileName: string, userId: string) {
 }
 
 // get photo produk2
-export async function getPhotoProduct2(fileName: string, userId: string) {
+export async function getPhotoProduct1(fileName: string) {
     try {
         const url = `${appConfig.domain.storaAssets}/assets/image/produk/${fileName}`
         const result = await fetch(url, {
             method: "GET",
         })
-        if (!result.ok) return await getPhotoProduct(fileName, userId)
+        if (!result.ok) throw new Error("Data tidak ditemukan")
+
         return {
             data: url,
             data1: `/assets/image/produk/${fileName}`,

@@ -10,7 +10,7 @@ import { useCreateOrderCart } from "@/hooks/cart"
 import * as Dialog from "@radix-ui/react-dialog"
 import { CaretRightIcon, Cross2Icon } from "@radix-ui/react-icons"
 import { validateAndConvertToString } from "@/utils/to-string-converter"
-import { multiplySubTotal, subtractTotal, sumTotal } from "@/utils/add-decimal"
+import { sumTotal } from "@/utils/add-decimal"
 import clsx from "clsx"
 import BankLogo from "./bank-logo"
 import IFormAddressArveoli from "./form-address-arveoli"
@@ -139,6 +139,33 @@ export default function IFormCheckout({
 
     const onHandleSubmit = handleSubmit(async (data) => {
         setAlertOpen(false)
+        if (!address) {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = window.setTimeout(() => {
+                eventAlertRef.current = "Belum mengisi alamat"
+                setAlertOpen(true)
+            }, 100)
+            return
+        }
+
+        if (!currentPayment?.id || typeof currentPayment.id !== "string") {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = window.setTimeout(() => {
+                eventAlertRef.current = "Belum memilih metode pembayaran"
+                setAlertOpen(true)
+            }, 100)
+            return
+        }
+
+        const alamatStr = validateAndConvertToString([
+            address.address,
+            address.urban_village,
+            address.sub_district,
+            address.regency,
+            address.province,
+            address.zip_code ? `Kode Pos: ${address.zip_code}` : "",
+        ])
+
         const body = {
             ...data,
             permalink,
@@ -149,6 +176,7 @@ export default function IFormCheckout({
             currentShipping,
             address,
             checkout,
+            alamatStr,
         }
         const result = await createOrder(body)
         console.log("!!Result", !!result)

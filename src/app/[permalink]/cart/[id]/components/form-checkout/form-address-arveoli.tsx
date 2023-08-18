@@ -11,6 +11,7 @@ import { type IFormValueAddressArveoli, IFormValueAddressArveoliSchema } from ".
 import { useContext, useState } from "react"
 import ILoading from "../loading"
 import { OrderContext, toShipping } from "@/context/order"
+import { gramsToKilogramsAndCeil } from "@/utils/convert-to-weight"
 
 interface IFormAddressArveoliProps {
     userId: string
@@ -82,7 +83,9 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
             if (mapping) {
                 const { data: shipper } = await getShipping({
                     userId: props.userId,
-                    weight: props.weight,
+                    weight: !Number.isNaN(parseInt(props.weight))
+                        ? gramsToKilogramsAndCeil(Number(props.weight.toString())).toString()
+                        : "1",
                     destination: mapping.id_mapping,
                 })
                 if (!shipper) return

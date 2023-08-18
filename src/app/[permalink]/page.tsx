@@ -75,8 +75,6 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
     const productArray = toProducts(products)
     const categoryArray = toCategories(categories)
 
-    console.log("User", user)
-
     if (!user) return <LoaderUi />
 
     return (
