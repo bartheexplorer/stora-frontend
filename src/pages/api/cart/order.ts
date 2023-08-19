@@ -23,6 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         metode_pembayaran = "bank"
     }
 
+    const subDistrict_str = body.address?.sub_district && body.address?.id_mapping
+        ?  [body.address.id_mapping, body.address.sub_district].join("=")
+        : ""
+
     const params: CreateOrderByCartParams = {
         cartId: body.cartId,
         nama: body.nama_lengkap,
@@ -39,9 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         kota: body.address?.regency
             ? body.address.regency
             : "", // string
-        kecamatan: body.address?.sub_district
-            ? body.address.sub_district
-            : "", // string
+        kecamatan: subDistrict_str, // string
         expedisi: body.currentShipping?.s_name
             ? body.currentShipping.s_name
             : "", // string

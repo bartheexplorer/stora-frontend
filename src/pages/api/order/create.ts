@@ -33,6 +33,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else if (body.currentPayment?.payment_method === "tf") {
         metode_pembayaran = "bank"
     }
+
+    const subDistrict_str = body.address?.sub_district && body.address?.id_mapping
+        ?  [body.address.id_mapping, body.address.sub_district].join("=")
+        : ""
     
     const params: OrderParams = {
         userId: !Number.isNaN(parseInt(body.user?.user_id)) ? Number(body.user.user_id) : 0,
@@ -52,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         address: body.address?.address ? body.address.address : "",
         province: body.address?.province ? body.address.province : "",
         city: body.address?.regency ? body.address.regency : "",
-        subdistrict: body.address?.sub_district ? body.address.sub_district : "",
+        subdistrict: subDistrict_str,
         qty: !Number.isNaN(parseInt(body.jumlah)) ? Number(body.jumlah) : 0,
         // variant
         variant: body.variasi ? body.variasi : null,

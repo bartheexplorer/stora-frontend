@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .json({ error: "Data tidak ditemukan" })
     }
 
-    const result = await getPhotoProduct2(file_name, user_id)
+    const result = await getPhotoProduct2(fileName, user_id)
     if (!result) {
         return res.status(400)
             .json({ error: "Data tidak ditemukan" })

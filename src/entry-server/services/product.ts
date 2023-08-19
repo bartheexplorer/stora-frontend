@@ -214,6 +214,7 @@ export async function getProduct(
 // get photo produk1
 export async function getPhotoProduct2(fileName: string, userId: string) {
     const url = `${appConfig.domain.storaAssets}/assets/image/produk/${userId}/${fileName}`
+    console.log("2", url)
     const result = await fetch(url, {
         method: "GET"
     })
@@ -229,6 +230,7 @@ export async function getPhotoProduct2(fileName: string, userId: string) {
 export async function getPhotoProduct1(fileName: string) {
     try {
         const url = `${appConfig.domain.storaAssets}/assets/image/produk/${fileName}`
+        console.log("1", url)
         const result = await fetch(url, {
             method: "GET",
         })
