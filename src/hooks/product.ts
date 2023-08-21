@@ -5,6 +5,7 @@ const fetcher = async (url: RequestInfo) => {
     const headers = new Headers()
     headers.append("Accept", "application/json")
     const result = await fetch(url, { method: "GET" })
+    if (!result.ok) return null
     return await result.json() as PhotoProduct
 }
 

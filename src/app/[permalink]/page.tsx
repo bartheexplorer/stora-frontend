@@ -1,12 +1,9 @@
-import { Suspense } from "react"
 import { prisma } from "@/entry-server/config/db"
 import { getProductWithPaginate } from "@/entry-server/services/product"
 import { getUser } from "@/entry-server/services/user"
 import Image from "next/image"
 import Link from "next/link"
 import { getCategories } from "@/entry-server/services/category"
-import Category from "./components/category"
-import Product from "./components/product"
 // Icons
 import ShoppingCartIcon from "../components/shopping-cart-icon"
 import whatsAppIcon from "@/app/assets/medsos/WhatsApp.svg"
@@ -14,9 +11,62 @@ import facebook from "@/app/assets/medsos/Facebook.svg"
 import tiktok from "@/app/assets/medsos/TikTok.svg"
 import instagram from "@/app/assets/medsos/Instagram-Logo.wine.svg"
 import youtube from "@/app/assets/medsos/YouTube.svg"
-import Search from "./components/search"
 import ImageProfile from "./components/image-profile"
 import LoaderUi from "../components/loader-ui"
+import dynamic from "next/dynamic"
+
+const DynamicCartCounter = dynamic(() => import("./components/cart/cart-counter"), {
+    ssr: false,
+    loading: () => <p className="sr-only">Loading...</p>
+})
+
+const DynamicSearch = dynamic(() => import("./components/search"), {
+    ssr: false,
+    loading: () => (
+        <div className="px-20 animate-pulse my-6">
+            <div className="h-12 rounded-full bg-slate-200 w-full max-w-full"></div>
+        </div>
+    )
+})
+
+const DynamicProductContent = dynamic(() => import("./components/product"), {
+    ssr: false,
+    loading: () => (
+        <div className="animate-pulse px-8 mb-8">
+            <div className="flex justify-between mb-1">
+                <div>
+                    <div className="h-8 w-[120px] bg-slate-200 rounded mb-3"></div>
+                </div>
+                <div>
+                    <div className="h-10 w-[170px] bg-slate-200 rounded mb-3"></div>
+                </div>
+
+            </div>
+            <div className="flex gap-6 mb-6">
+                <div className="h-[220px] rounded-2xl bg-slate-200 w-full"></div>
+                <div className="h-[220px] rounded-2xl bg-slate-200 w-full"></div>
+            </div>
+            <div className="flex gap-6 mb-6">
+                <div className="h-[220px] rounded-2xl bg-slate-200 w-full"></div>
+                <div className="h-[220px] rounded-2xl bg-white w-full"></div>
+            </div>
+        </div>
+    )
+})
+
+const DynamicCategory = dynamic(() => import("./components/category"), {
+    ssr: false,
+    loading: () => (
+        <div className="animate-pulse px-8 mb-8">
+            <div className="h-6 w-[200px] bg-slate-200 rounded mb-3"></div>
+            <div className="flex gap-4">
+                <div className="h-14 rounded-lg bg-slate-200 w-full"></div>
+                <div className="h-14 rounded-lg bg-slate-200 w-full"></div>
+                <div className="h-14 rounded-lg bg-slate-200 w-full"></div>
+            </div>
+        </div>
+    )
+})
 
 interface PermalinkProps {
     params: {
@@ -78,15 +128,13 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
     if (!user) return <LoaderUi />
 
     return (
-        <>
+        <div className="w-full min-h-screen">
             {/* Shopping cart icon */}
             <div className="w-full relative">
                 <div className="absolute top-10 right-10">
                     <Link href={`/${permalink}/cart`} className="relative">
                         <ShoppingCartIcon className="inline-block h-7 w-7" />
-                        <div className="absolute -top-1 -left-3 bg-gray-500 rounded-full text-[9px] w-4 h-4 leading-3 text-gray-100 flex items-center justify-center">
-                            99+
-                        </div>
+                        <DynamicCartCounter />
                     </Link>
                 </div>
             </div>
@@ -100,7 +148,7 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
                                 <ImageProfile
                                     logo={user.setting.logo_toko}
                                     nama_toko={user.setting.nama_toko}
-                                />                                
+                                />
                             ) : (
                                 <div className="animate-pulse">
                                     <div className="inline-block h-[120px] w-[120px] rounded-full shadow-lg"></div>
@@ -201,22 +249,20 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
             )}
 
             {/* Product filter nav component */}
-            <Suspense fallback={<p>Loading...</p>}>
-                <Search />
-            </Suspense>
+            <DynamicSearch />
 
             {/* Categories */}
-            <Category
+            <DynamicCategory
                 permalink={permalink}
                 categories={categoryArray}
                 swipe
             />
 
             {/* Product */}
-            <Product
+            <DynamicProductContent
                 products={productArray}
                 permalink={permalink}
             />
-        </>
+        </div>
     )
 }

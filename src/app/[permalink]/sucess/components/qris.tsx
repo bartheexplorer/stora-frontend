@@ -64,7 +64,6 @@ export default function Qris({
     total_bayar: string
 }) {
 
-    console.log("bank", bank)
     const [qr, setQr] = useState("")
     useEffect(() => {
         const generateQR = async (text: string) => {
@@ -75,10 +74,8 @@ export default function Qris({
                         errorCorrectionLevel: "H",
                     }
                 )
-                console.log(qr)
                 setQr(qr)
             } catch (err) {
-                console.error(err)
             }
         }
         generateQR(bank)

@@ -33,8 +33,6 @@ export default function ContentScrollHeader({
                         return vl - 1
                     },
                     renderFraction: (currentClass, totalClass) => {
-                        console.log(currentClass)
-                        console.log(totalClass)
                         return `<div style="color: #94a3b8; padding: 5px; font-size: 0.75rem; line-height: 1rem; display: flex;">
                             <div style="background-color: rgb(241 245 249); width: 1.75rem; text-align: center; border-radius: 0.25rem;"><span class="${currentClass}"></span>/<span class="${totalClass}"></span></div>
                         </div>`

@@ -309,7 +309,6 @@ export default function IFormAddressArveoli(props: IFormAddressArveoliProps) {
                                                 name: string
                                                 zip_code: string
                                             }
-                                            console.log("value", value)
                                             setMapping((prevState) => ({
                                                 ...prevState,
                                                 id_mapping: value.id_mapping.toString(),

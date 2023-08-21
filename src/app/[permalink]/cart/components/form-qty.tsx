@@ -27,7 +27,7 @@ export default function IFormQty(props: IFormQtyProps) {
     })
 
     const onHandleSubmit = handleSubmit((data) => {
-        console.log()
+        console.log(data)
     })
 
     const num = (length: number = 50) => {

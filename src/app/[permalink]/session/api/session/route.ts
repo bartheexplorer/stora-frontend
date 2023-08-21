@@ -13,8 +13,6 @@ export async function GET(_req: NextRequest, ctx: { params: { permalink: string 
 
     const user = await getUser(prisma, ctx.params.permalink)
 
-    console.log("use", user)
-
     if (!user) {
         return NextResponse.json({
             message: "User tidak ditemukan",

@@ -10,7 +10,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const body = JSON.parse(req.body)
-    console.log(body)
 
     let metode_pembayaran: string | undefined = undefined
     if (body.currentPayment?.payment_method === "COD") {
@@ -78,7 +77,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             : "",
     }
     const result = await createOrderByCart(prisma, params)
-    console.log("result", result)
     if (!result) {
         return res.status(400)
             .json({ message: "Gagal menambahkan data" })

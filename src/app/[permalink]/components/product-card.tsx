@@ -35,9 +35,6 @@ export default function ProductCard(props: ProductCardProps) {
     } = usePhotoProduct(product.gambar, product.id_user)
     const photoProduct = photoProductData?.data
 
-    console.log("product.gambar", product.gambar)
-    console.log("photoProduct", photoProduct)
-
     return (
         <div className="h-full relative group rounded-3xl drop-shadow border-0 border-gray-50 bg-white overflow-hidden sm:hover:shadow">
             <div>

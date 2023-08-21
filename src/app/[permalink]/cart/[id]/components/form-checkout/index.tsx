@@ -179,8 +179,6 @@ export default function IFormCheckout({
             alamatStr,
         }
         const result = await createOrder(body)
-        console.log("!!Result", !!result)
-        console.log("Result", result)
         if (!result?.orderId) return
         router.push(`/${permalink}/sucess?id=${result?.orderId}&m=1&_=${(Math.floor(Math.random() * 900) + 100).toString()}`)
     })
@@ -531,7 +529,6 @@ export default function IFormCheckout({
         const serviceCode = selectedShipping
             ? selectedShipping.service_code.toString()
             : null
-        console.log("serviceCode", serviceCode)
 
         return (Array.isArray(shipping) && shipping.length > 0)
             ? (

@@ -7,7 +7,12 @@ import Link from "next/link"
 import PhotoProduct from "./components/photo-product"
 import { toIDR } from "@/utils/to-idr"
 import IFormQty from "./components/form-qty"
-import BtnRemoveProduct from "./components/btn-remove-product"
+import dynamic from "next/dynamic"
+
+const DynamicBtnRemoveProduct = dynamic(() => import("./components/btn-remove-product"), {
+    ssr: false,
+    loading: () => <p>Loading...</p>
+})
 
 interface CartProps {
     params: {
@@ -98,7 +103,7 @@ export default async function Cart(props: CartProps) {
                                                             cartId={item.id_keranjang.toString()}
                                                             qty={item.qty.toString()}
                                                         />
-                                                        <BtnRemoveProduct
+                                                        <DynamicBtnRemoveProduct
                                                             cartId={item.id_keranjang.toString()}
                                                         />
                                                     </div>

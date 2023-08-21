@@ -285,31 +285,31 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
 
             await paymentData()
 
-            console.log(`${orderId},
-            ${cartId.kode_keranjang},
-            ${params.nama},
-            ${params.hp},
-            ${params.email},
-            ${params.alamat},
-            ${params.provinsi},
-            ${params.kota},
-            ${params.kecamatan},
-            ${params.expedisi},
-            ${params.paket},
-            ${params.ongkir},
-            ${params.estimasi},
-            ${totalBayar},
-            ${accountBank},
-            ${params.paymentMethodCode},
-            ${'0'},
-            ${'1'},
-            ${now},
-            ${now},
-            ${params.id_user},
-            ${paymentId},
-              "0000-00-00 00:00:00",
-              "0000-00-00 00:00:00",
-            "0000-00-00 00:00:00"`)
+            // console.log(`${orderId},
+            // ${cartId.kode_keranjang},
+            // ${params.nama},
+            // ${params.hp},
+            // ${params.email},
+            // ${params.alamat},
+            // ${params.provinsi},
+            // ${params.kota},
+            // ${params.kecamatan},
+            // ${params.expedisi},
+            // ${params.paket},
+            // ${params.ongkir},
+            // ${params.estimasi},
+            // ${totalBayar},
+            // ${accountBank},
+            // ${params.paymentMethodCode},
+            // ${'0'},
+            // ${'1'},
+            // ${now},
+            // ${now},
+            // ${params.id_user},
+            // ${paymentId},
+            //   "0000-00-00 00:00:00",
+            //   "0000-00-00 00:00:00",
+            // "0000-00-00 00:00:00"`)
 
             const createOrder = await tx.$executeRaw`INSERT INTO t_multi_order(
           order_id,
@@ -451,7 +451,6 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
         })
         return result
     } catch (error) {
-        console.log("error", error)
         return null
     }
 }

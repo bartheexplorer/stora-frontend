@@ -9,7 +9,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const body = JSON.parse(req.body)
-    console.log(body)
 
     const result = await updateCart(prisma, body.cartId, body.qty)
     if (!result) {

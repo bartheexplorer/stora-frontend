@@ -5,7 +5,6 @@ import type { NextApiRequest, NextApiResponse } from "next"
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { permalink, product_id, coupon } = req.query
 
-    console.log(permalink, product_id, coupon)
     if (!permalink || !product_id || !coupon) {
         return res.status(400)
             .json({ error: "Data tidak ditemukan" }) 

@@ -10,6 +10,7 @@ export default function PhotoProduct(props: {
 }) {
     const {
         data: photoProductData,
+        error,
     } = usePhotoProduct(props.images, props.user_id)
     if (!photoProductData) return <ILoading />
 

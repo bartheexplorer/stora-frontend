@@ -291,7 +291,6 @@ export default function IFormCheckout({
     }
 
     const submitAction = handleSubmit(async (data) => {
-        console.log("FORM UTAMA RENDER", data)
         setAlertOpen(false)
         if ((Array.isArray(variations) && variations.length > 0)) {
             if (!data.variasi || typeof data.variasi !== "string") {
@@ -419,9 +418,7 @@ export default function IFormCheckout({
 
             reset()
             router.push(`/${permalink}/sucess?id=${result.data.orderId}`)
-            console.log("result", result)
         } catch (error) {
-            console.log(error)
             window.clearTimeout(timerRef.current);
             timerRef.current = window.setTimeout(() => {
                 eventAlertRef.current = "Pesanan tidak dapat diproses"
@@ -515,7 +512,6 @@ export default function IFormCheckout({
         const serviceCode = selectedShipping
             ? selectedShipping.service_code.toString()
             : null
-        console.log("serviceCode", serviceCode)
 
         return (Array.isArray(shipping) && shipping.length > 0)
             ? (
@@ -1100,12 +1096,7 @@ export default function IFormCheckout({
                                                         totalRand.toString(),
                                                         (couponData?.discount || 0).toString()
                                                     )
-                                                    console.log({
-                                                        ...prevState,
-                                                        qty: qty,
-                                                        subTotal: subtotal,
-                                                        total: totalCoupon,
-                                                    })
+                                                   
                                                     return {
                                                         ...prevState,
                                                         qty: qty,

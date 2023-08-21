@@ -280,7 +280,6 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             orderId: result.orderId,
         }
     } catch (error) {
-        console.log('repo', error)
         return null
     }
 }
@@ -318,8 +317,6 @@ export async function createQrisRequest(params: {
         }
         const data = await res.json()
 
-        console.log(data)
-
         if (!data?.id) throw new Error('Data tidak ditemukan')
 
         return data
@@ -352,11 +349,8 @@ export async function createVaRequest(params: {
         }
         const data = await res.json()
 
-        console.log('data', data)
-
         return data
     } catch (error) {
-        console.log('error', error)
         throw new Error('Data tidak ditemukan')
     }
 }
@@ -503,7 +497,6 @@ export async function getMultiOrder(prisma: PrismaClient, orderId?: string) {
         })
         return result
     } catch (error) {
-        console.log("err", error)
         return null
     }
 }

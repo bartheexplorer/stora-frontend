@@ -1,14 +1,14 @@
-import icon from "@/app/assets/bag.svg"
 import Image from "next/image"
 
-export default function ShoppingCartIcon({ className = "h-5 w-5" }: { className?: string }) {
+export default function ShoppingCartIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <Image
       className={className}
-      src={icon}
+      src="/images/bag.svg"
       alt="Shopping Cart"
       width={300}
       height={300}
+      priority
     />
   )
 }

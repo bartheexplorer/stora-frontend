@@ -115,7 +115,6 @@ export default async function handler(request: NextApiRequest, response: NextApi
             data: null
         })
     } catch (error) {
-        console.log(error)
         return response.json({ data: null })
     }
 }
