@@ -14,6 +14,7 @@ import youtube from "@/app/assets/medsos/YouTube.svg"
 import ImageProfile from "./components/image-profile"
 import LoaderUi from "../components/loader-ui"
 import dynamic from "next/dynamic"
+import { cookies } from "next/headers"
 
 const DynamicCartCounter = dynamic(() => import("./components/cart/cart-counter"), {
     ssr: false,
@@ -105,6 +106,8 @@ const toCategories = (categories: Awaited<ReturnType<typeof getCategories>>) => 
 }
 
 export default async function Permalink({ params, searchParams }: PermalinkProps) {
+    const cookieStore = cookies()
+    const cartId = cookieStore.get("cartid")
     const permalink = params.permalink
     const categoryProductId = !Number.isNaN(Number(searchParams?.category?.toString()))
         ? Number(searchParams?.category?.toString())
@@ -134,7 +137,10 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
                 <div className="absolute top-10 right-10">
                     <Link href={`/${permalink}/cart`} className="relative">
                         <ShoppingCartIcon className="inline-block h-7 w-7" />
-                        <DynamicCartCounter />
+                        <DynamicCartCounter
+                            userId={user.id_user.toString()}
+                            cartId={cartId?.value.toString()}
+                        />
                     </Link>
                 </div>
             </div>

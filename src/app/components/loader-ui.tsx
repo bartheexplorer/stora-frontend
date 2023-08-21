@@ -1,16 +1,17 @@
 import Image from "next/image"
-import stora from "@/app/assets/stora.png"
 
 export default function LoaderUi() {
     return (
-        <div className="relative flex min-h-screen flex-col justify-center overflow-hidden py-6 sm:py-12">
-            <div className="relative bg-white px-6 pt-10 pb-8 sm:mx-auto sm:max-w-lg sm:rounded-lg sm:px-10">
-                <div className="mx-auto max-w-md">
+        <div className="relative flex min-h-screen w-full flex-col justify-center overflow-hidden py-6 sm:py-12">
+            <div className="flex items-center justify-center w-full">
+                <div className="w-20 h-16">
                     <Image
-                        src={stora}
+                        src="/images/stora.png"
                         alt="Stora"
-                        width={75}
-                        height={75}
+                        width={500}
+                        height={500}
+                        className="w-full h-full bg-center"
+                        priority
                     />
                 </div>
             </div>

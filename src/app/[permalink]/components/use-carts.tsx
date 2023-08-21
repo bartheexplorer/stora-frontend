@@ -6,13 +6,13 @@ const fetcher = async (url: RequestInfo) => {
     return _body
 }
 
-export function useCarts() {
+export function useCarts(user_id: string, cart_id?: string) {
     const {
         data,
         isLoading,
         mutate: sendRequest,
         ...rest
-    } = useSWR("/api/cart?user_id=16&cart_id=7473139449741111", fetcher)
+    } = useSWR(`/api/cart?user_id=${user_id}&cart_id=${cart_id}`, fetcher)
 
     return {
         data,
