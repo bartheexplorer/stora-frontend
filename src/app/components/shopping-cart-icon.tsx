@@ -4,7 +4,7 @@ export default function ShoppingCartIcon({ className = "h-4 w-4" }: { className?
   return (
     <Image
       className={className}
-      src="/images/bag.svg"
+      src="/images/shopping_basket.png"
       alt="Shopping Cart"
       width={300}
       height={300}
