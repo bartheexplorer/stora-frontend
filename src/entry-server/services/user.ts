@@ -3,8 +3,8 @@ import type { Features } from "./user-interface"
 import { appConfig } from "../config/app"
 
 export async function cekMembership(
-    memberId: string,
-    productId: string
+    memberId?: string,
+    productId?: string
 ) {
     try {
         const result = await fetch(
@@ -14,53 +14,75 @@ export async function cekMembership(
             }
         )
 
+        // console.log("result.text", await result.text())
+
+        console.log(`${appConfig.domain.storaApi}/apiv2/user/getExpiredNew?_key=WbsLinkV00&user_id=${memberId}&product_id=${productId}`)
+
         if (!result.ok) throw new Error("Error jaringan")
         return Boolean((await result.text()) === "1")
-    } catch {
+    } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+            if (error instanceof Error) {
+                console.log("error member", error)
+                return false
+            }
+        }
         return false
     }
 }
 
 export async function getUser(prisma: PrismaClient, permalink: string) {
-    const user = await prisma.t_user.findFirst({
-        where: {
-            setting: {
-                OR: [
-                    { permalink: { equals: permalink } },
-                    { nama_toko: { equals: permalink } },
-                ],
-            },
-        },
-        include: {
-            setting: true,
-            pickups: true,
-            banks: {
-                where: {
-                    is_active: { equals: "SATU" },
+    try {
+        const user = await prisma.t_user.findFirst({
+            where: {
+                setting: {
+                    OR: [
+                        { permalink: permalink },
+                        { nama_toko: permalink },
+                    ],
                 },
             },
-            xendits: {
-                where: {
-                    is_active: { equals: "SATU" },
-                    is_blocked: { equals: "NOL" },
+            include: {
+                setting: true,
+                pickups: true,
+                banks: {
+                    where: {
+                        is_active: { equals: "SATU" },
+                    },
+                },
+                xendits: {
+                    where: {
+                        is_active: { equals: "SATU" },
+                        is_blocked: { equals: "NOL" },
+                    },
+                },
+                xendits_va: {
+                    where: {
+                        is_active: { equals: "SATU" },
+                    },
                 },
             },
-            xendits_va: {
-                where: {
-                    is_active: { equals: "SATU" },
-                },
-            },
-        },
-    })
+        })
 
-    if (!user) return null
+        console.log("user/user", user)
 
-    const membership = await cekMembership(
-        user.user_id.toString(),
-        user.produk_id.toString()
-    )
+        if (!user) throw new Error("Data tidak ditemukan")
 
-    return { ...user, membership }
+        const membership = await cekMembership(
+            user.user_id.toString(),
+            user.produk_id.toString()
+        )
+
+        return { ...user, membership }
+    } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+            if (error instanceof Error) {
+                console.log("error member", error)
+                return null
+            }
+        }
+        return null
+    }
 }
 
 export async function findFeatureUser(prisma: PrismaClient, params: { userId: string }) {

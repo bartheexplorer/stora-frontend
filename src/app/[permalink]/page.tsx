@@ -109,13 +109,23 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
     const cookieStore = cookies()
     const cartId = cookieStore.get("cartid")
     const permalink = params.permalink
+
+    function _slugToTitle(slug: string): string {
+        const words = slug.split('-'); // Split the slug into words using dashes
+        const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
+
+        return titleWords.join(' '); // Join the words back together with spaces
+    }
+
+    const _permak_link = _slugToTitle(permalink)
+
     const categoryProductId = !Number.isNaN(Number(searchParams?.category?.toString()))
         ? Number(searchParams?.category?.toString())
         : null
     // Service
-    const user = await getUser(prisma, permalink)
+    const user = await getUser(prisma, _permak_link)
     const products = await getProductWithPaginate(prisma, {
-        permalink,
+        permalink: _permak_link,
         page: !Number.isNaN(Number(searchParams?.page))
             ? Number(searchParams.page)
             : 0,
@@ -123,12 +133,18 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
         search: searchParams?.q?.toString(),
         ...(categoryProductId ? { categoryProductId } : {})
     })
-    const categories = await getCategories(prisma, permalink)
+    const categories = await getCategories(prisma, _permak_link)
     // Map to array
     const productArray = toProducts(products)
     const categoryArray = toCategories(categories)
 
+    console.log("user", user)
+
     if (!user) return <LoaderUi />
+
+    const _userId = user.id_user
+        ? user.id_user.toString()
+        : ""
 
     return (
         <div className="w-full min-h-screen">
@@ -138,7 +154,7 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
                     <Link href={`/${permalink}/cart`} className="relative">
                         <ShoppingCartIcon className="inline-block h-7 w-7" />
                         <DynamicCartCounter
-                            userId={user.id_user.toString()}
+                            userId={_userId}
                             cartId={cartId?.value.toString()}
                         />
                     </Link>

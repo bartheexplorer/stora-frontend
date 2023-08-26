@@ -91,9 +91,19 @@ export default async function Slug(props: SlugProps) {
     const cookieStore = cookies()
     const cartId = cookieStore.get("cartid")
     const isCart = Boolean(props.searchParams?.cart)
-    const user = await getUser(prisma, props.params.permalink)
+    const permalink = props.params.permalink
+
+    function _slugToTitle(slug: string): string {
+        const words = slug.split('-'); // Split the slug into words using dashes
+        const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
+
+        return titleWords.join(' '); // Join the words back together with spaces
+    }
+
+    const _permak_link = _slugToTitle(permalink)
+    const user = await getUser(prisma, _permak_link)
     const productService = await getProduct(prisma, {
-        permalink: props.params.permalink,
+        permalink: _permak_link,
         productId: Number(props.params.productId),
     })
     const product = toProduct(productService)

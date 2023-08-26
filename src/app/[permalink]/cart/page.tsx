@@ -33,7 +33,18 @@ const toCarts = (carts: Awaited<ReturnType<typeof getCart>>) => {
 export default async function Cart(props: CartProps) {
     const cookieStore = cookies()
     const cartId = cookieStore.get("cartid")
-    const user = await getUser(prisma, props.params.permalink)
+    const permalink = props.params.permalink
+
+    function _slugToTitle(slug: string): string {
+        const words = slug.split('-'); // Split the slug into words using dashes
+        const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
+
+        return titleWords.join(' '); // Join the words back together with spaces
+    }
+
+    const _permak_link = _slugToTitle(permalink)
+
+    const user = await getUser(prisma, _permak_link)
     const cart = await getCart(prisma, {
         userId: user?.id_user.toString(),
         cartId: cartId?.value,
@@ -46,7 +57,7 @@ export default async function Cart(props: CartProps) {
             <div className="w-full px-6 py-4 shadow mb-2">
                 <div className="flex items-center justify-between gap-4">
                     <Link
-                        href={`/${props.params.permalink}`}
+                        href={`/${permalink}`}
                         className="rounded-full bg-gray-50"
                     >
                         <ArrowLeftIcon className="w-5 h-5" />

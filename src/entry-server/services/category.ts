@@ -11,8 +11,8 @@ export async function getCategories(prisma:PrismaClient, permalink: string) {
                                 user: {
                                     setting: {
                                         OR: [
-                                            { permalink: { equals: permalink } },
-                                            { nama_toko: { equals: permalink } },
+                                            { permalink: permalink },
+                                            { nama_toko: permalink },
                                         ]
                                     }
                                 }

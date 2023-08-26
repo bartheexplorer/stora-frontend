@@ -44,8 +44,8 @@ export async function getProductWithPaginate(
                         user: {
                             setting: {
                                 OR: [
-                                    { permalink: { equals: params?.permalink } },
-                                    { nama_toko: { equals: params?.permalink } },
+                                    { permalink: params?.permalink },
+                                    { nama_toko: params?.permalink },
                                 ],
                             }
                         },
@@ -99,8 +99,8 @@ export async function getProduct(
                             user: {
                                 setting: {
                                     OR: [
-                                        { permalink: { equals: params.permalink } },
-                                        { nama_toko: { equals: params.permalink } },
+                                        { permalink: params.permalink },
+                                        { nama_toko: params.permalink },
                                     ],
                                 },
                             },
