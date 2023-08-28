@@ -25,7 +25,9 @@ export default function SessionContent({ permalink }: { permalink: string }) {
             </div>
 
             <div className="relative rounded-xl overflow-hidden h-[419px] mb-6">
-                <div className="absolute inset-0 w-[367px] mx-auto bg-no-repeat bg-center h-full bg-[url(/images/frame-qr.svg)]"></div>
+                {_data?.status !== "connected" && (
+                    <div className="absolute inset-0 w-[367px] mx-auto bg-no-repeat bg-center h-full bg-[url(/images/frame-qr.svg)]"></div>
+                )}
                 {loadingSession && (
                     <div className="flex items-center justify-center h-full">
                         <svg className="animate-spin h-8 w-8 text-slate-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -49,19 +51,19 @@ export default function SessionContent({ permalink }: { permalink: string }) {
                         </div>
                     </>
                 ) : (
-                    <div className="flex items-center justify-center h-full">
-                        <h3 className="text-white text-sm font-medium tracking-wide">Session tidak ditemukan</h3>
-                    </div>
+                    <>
+                        {_data?.status === "connected" ? (
+                            <div className="flex items-center justify-center h-full">
+                                <h3 className="text-white text-xl font-medium tracking-wide">Terhubung</h3>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-full">
+                                <h3 className="text-white text-xl font-medium tracking-wide">Session tidak ditemukan</h3>
+                            </div>
+                        )}
+                    </>
+                    
                 )}
-            </div>
-
-            <div className="flex items-center justify-center">
-                <button
-                    type="button"
-                    className="bg-white rounded-lg text-stora-600 text-center font-semibold w-[161px] h-[40px]"
-                >
-                    Scan
-                </button>
             </div>
         </div>
     )
