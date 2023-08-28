@@ -93,7 +93,7 @@ export default async function Slug(props: SlugProps) {
     const isCart = Boolean(props.searchParams?.cart)
     const permalink = props.params.permalink
 
-    function _slugToTitle(slug: string): string {
+    const _slugToTitle = (slug: string): string => {
         const words = slug.split('-'); // Split the slug into words using dashes
         const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
 
@@ -107,6 +107,13 @@ export default async function Slug(props: SlugProps) {
         productId: Number(props.params.productId),
     })
     const product = toProduct(productService)
+
+    const _pickup = user?.pickups
+    const _firstPickupArray = (Array.isArray(_pickup) && _pickup.length > 0)
+        ? _pickup.find((_item, index) => (index === 0))
+        : null
+
+    const _firstPickup = _firstPickupArray || null
 
     return (
         <>
@@ -281,6 +288,20 @@ export default async function Slug(props: SlugProps) {
                         })) : [],
                     }}
                     codeUnique={Boolean(user?.setting?.status_kode_unik === "SATU")}
+                    firstPickup={{
+                        kd_setting_pickup_arveoli: _firstPickup?.kd_setting_pickup_arveoli || "",
+                        id_user: _firstPickup?.id_user.toString() || "",
+                        expedisi: _firstPickup?.expedisi || "",
+                        label: _firstPickup?.label || "",
+                        nama_tim_gudang: _firstPickup?.nama_tim_gudang || "",
+                        no_hp_tim_gudang: _firstPickup?.no_hp_tim_gudang || "",
+                        origin_code: _firstPickup?.origin_code || "",
+                        branch_code: _firstPickup?.branch_code || "",
+                        kota_pickup: _firstPickup?.kota_pickup || "",
+                        kecamatan_pickup: _firstPickup?.kecamatan_pickup || "",
+                        kode_pos: _firstPickup?.kode_pos || "",
+                        alamat_lengkap: _firstPickup?.alamat_lengkap || "",
+                    }}
                 />
             )}
         </>

@@ -189,6 +189,13 @@ export async function destroyCart(prisma: PrismaClient, idKeranjang: number) {
 export async function createOrderByCart(prisma: PrismaClient, params: CreateOrderByCartParams) {
     try {
         const result = await prisma.$transaction(async (tx) => {
+
+            const generateRandomInt = (): number => {
+                const min = -2147483648;
+                const max = 2147483647;
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+            const id_order_random = generateRandomInt()
             const tglOrder = new Date()
             // Text order
             let textOrder1: string
@@ -210,7 +217,8 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
                 const total = Number(accumulate + item.total)
                 return Math.round(Number(total * item.qty))
             }, 0)
-            const totalBayar = Math.round(Number(total + params.ongkir))
+            // const totalBayar = Math.round(Number(total + params.ongkir))
+            const totalBayar =  Number(params.totalbayar)
             const orderId = generateNumberID(16)
             const now = new Date()
 
@@ -311,7 +319,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             //   "0000-00-00 00:00:00",
             // "0000-00-00 00:00:00"`)
 
-            const createOrder = await tx.$executeRaw`INSERT INTO t_multi_order(
+            const createOrder = await tx.$executeRaw`INSERT INTO t_multi_order(id_order,
           order_id,
           kode_keranjang,
           nama_pembeli,
@@ -339,6 +347,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
         tgl_selesai
         )
         VALUES (
+            ${id_order_random},
           ${orderId},
           ${cartId.kode_keranjang},
           ${params.nama},
@@ -447,10 +456,16 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
                 params.id_user.toString()
             )
 
-            return { textOrder: textOrder4, notip, orderId}
+            return {
+                textOrder: textOrder4,
+                notip,
+                orderId,
+                id_order_random: id_order_random.toString(),
+            }
         })
         return result
     } catch (error) {
+        console.log(error)
         return null
     }
 }

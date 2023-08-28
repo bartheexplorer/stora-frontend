@@ -23,7 +23,18 @@ interface SessionProps {
 }
 
 export default async function Session(props: SessionProps) {
-    const user = await getUser(prisma, props.params.permalink)
+    const permalink = props.params.permalink
+
+    const _slugToTitle = (slug: string): string => {
+        const words = slug.split('-'); // Split the slug into words using dashes
+        const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
+
+        return titleWords.join(' '); // Join the words back together with spaces
+    }
+
+    const _permak_link = _slugToTitle(permalink)
+
+    const user = await getUser(prisma, _permak_link)
 
     if (!user) {
         return (
@@ -33,5 +44,5 @@ export default async function Session(props: SessionProps) {
         )
     }
 
-    return <DynamicSessioncontent permalink={props.params.permalink} />
+    return <DynamicSessioncontent permalink={_permak_link} />
 }

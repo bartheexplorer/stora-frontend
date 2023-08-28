@@ -94,6 +94,20 @@ interface IFormCheckoutProps {
         }[]
     }
     codeUnique: boolean
+    firstPickup: {
+        kd_setting_pickup_arveoli: string
+        id_user: string
+        expedisi: string
+        label: string
+        nama_tim_gudang: string
+        no_hp_tim_gudang: string
+        origin_code: string
+        branch_code: string
+        kota_pickup: string
+        kecamatan_pickup: string
+        kode_pos: string
+        alamat_lengkap: string
+    }
 }
 
 type AddressType = {
@@ -126,6 +140,7 @@ export default function IFormCheckout({
     user,
     isCart,
     cartId,
+    ...props
 }: IFormCheckoutProps) {
     const router = useRouter()
     const {
