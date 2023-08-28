@@ -683,8 +683,8 @@ export default function IFormCheckout({
                                                             )}
                                                         >
                                                             <div className="flex items-center gap-2">
-                                                                <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                    <BankLogo id={item.id_bank.toString()} />
+                                                                <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                    <BankLogo id={item.bank.toString()} />
                                                                 </div>
                                                                 <p className="text-xs text-gray-800 font-semibold">{item.bank}</p>
                                                             </div>
@@ -728,8 +728,8 @@ export default function IFormCheckout({
                                                                 )}
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                        <BankLogo id={item.id_bank_va_xendit.toString()} />
+                                                                    <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                        <BankLogo id={item.bank_code.toString()} />
                                                                     </div>
                                                                     <p className="text-xs text-gray-800 font-semibold uppercase">
                                                                         {`Bank ${account}`}
@@ -778,8 +778,8 @@ export default function IFormCheckout({
                                                                         )}
                                                                     >
                                                                         <div className="flex items-center gap-2">
-                                                                            <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                                <BankLogo id={item.id_setting_xendit.toString()} />
+                                                                            <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                                <BankLogo id="qris" />
                                                                             </div>
                                                                             <p className="text-xs text-gray-800 font-semibold uppercase">
                                                                                 {`QRIS`}
@@ -813,7 +813,7 @@ export default function IFormCheckout({
                                                         )}
                                                     >
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                            <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                                                 <BankLogo id="cod" />
                                                             </div>
                                                             <p className="text-xs text-gray-800 font-semibold uppercase">
