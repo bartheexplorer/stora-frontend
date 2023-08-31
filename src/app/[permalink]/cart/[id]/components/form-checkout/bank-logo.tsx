@@ -11,93 +11,95 @@ import sampoerna from "@/app/assets/logo-bang-bang/sahabat-sampoerna.png"
 import cod from "@/app/assets/logo-bang-bang/cod.png"
 import Image from "next/image"
 
-export default function BankLogo({ id }: { id: string }) {
-    if (id === "21" || id === "35") {
+export default function BankLogo(props: { id: string }) {
+    const id = props.id.toUpperCase()
+    console.log("id", id)
+    if (id === "BANK CENTRAL ASIA" || id === "BCA") {
         return <Image
             src={bca}
             alt="BCA"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "171" || id === "40") {
+    if (id === "BANK MANDIRI" || id === "MANDIRI") {
         return <Image
             src={mandiri}
             alt="Mandiri"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "172" || id === "39") {
+    if (id === "BANK SYARIAH INDONESIA" || id === "BSI") {
         return <Image
             src={bsi}
             alt="BSI"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "174" || id === "36") {
+    if (id === "BANK NEGARA INDONESIA" || id === "BNI") {
         return <Image
             src={bni}
             alt="BNI"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "738" || id === "37") {
+    if (id === "BANK RAKYAT INDONESIA" || id === "BRI") {
         return <Image
             src={bri}
             alt="BRI"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "41") {
+    if (id === "PERMATA") {
         return <Image
             src={permata}
             alt="Permata"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "38") {
+    if (id === "BJB") {
         return <Image
             src={bjb}
             alt="Bjb"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "qris") {
+    if (id === "QRIS") {
         return <Image
             src={qris}
             alt="Qris"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "42") {
+    if (id === "SAHABAT_SAMPOERNA") {
         return <Image
             src={sampoerna}
             alt="Sampoerna"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
@@ -107,17 +109,17 @@ export default function BankLogo({ id }: { id: string }) {
             src={qris}
             alt="Qris"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }
 
-    if (id === "cod") {
+    if (id === "COD") {
         return <Image
             src={cod}
             alt="COD"
             width={500}
-            height={500}
+            height={300}
             className="h-full w-full object-cover object-center"
         />
     }

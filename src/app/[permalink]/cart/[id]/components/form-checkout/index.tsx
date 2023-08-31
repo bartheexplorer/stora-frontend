@@ -109,8 +109,15 @@ export default function IFormCheckout({
         bank?: string
         name?: string
     } | null>(null)
-    const cunik = codeUnique ? RAND_CODE : 0
-    const totalUniqueCode = Math.round(Number(product.total + cunik))
+    const _isFreeOngkir = product.isFreeOngkir
+    let cunik = 0
+    let totalUniqueCode = 0
+
+    if (!_isFreeOngkir) {
+        cunik = codeUnique ? RAND_CODE : 0
+        totalUniqueCode = Math.round(Number(product.total + cunik))
+    }
+
 
     const [checkout, setCheckout] = useState<{
         subTotal: number
@@ -139,32 +146,37 @@ export default function IFormCheckout({
 
     const onHandleSubmit = handleSubmit(async (data) => {
         setAlertOpen(false)
-        if (!address) {
-            window.clearTimeout(timerRef.current);
-            timerRef.current = window.setTimeout(() => {
-                eventAlertRef.current = "Belum mengisi alamat"
-                setAlertOpen(true)
-            }, 100)
-            return
-        }
 
-        if (!currentPayment?.id || typeof currentPayment.id !== "string") {
-            window.clearTimeout(timerRef.current);
-            timerRef.current = window.setTimeout(() => {
-                eventAlertRef.current = "Belum memilih metode pembayaran"
-                setAlertOpen(true)
-            }, 100)
-            return
-        }
+        let _alamatStr = ""
 
-        const alamatStr = validateAndConvertToString([
-            address.address,
-            address.urban_village,
-            address.sub_district,
-            address.regency,
-            address.province,
-            address.zip_code ? `Kode Pos: ${address.zip_code}` : "",
-        ])
+        if (!_isFreeOngkir) {
+            if (!address) {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum mengisi alamat"
+                    setAlertOpen(true)
+                }, 100)
+                return
+            }
+    
+            if (!currentPayment?.id || typeof currentPayment.id !== "string") {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih metode pembayaran"
+                    setAlertOpen(true)
+                }, 100)
+                return
+            }
+    
+            _alamatStr = validateAndConvertToString([
+                address.address,
+                address.urban_village,
+                address.sub_district,
+                address.regency,
+                address.province,
+                address.zip_code ? `Kode Pos: ${address.zip_code}` : "",
+            ])
+        }
 
         const body = {
             ...data,
@@ -174,9 +186,9 @@ export default function IFormCheckout({
             cartId,
             currentPayment,
             currentShipping,
-            address,
+            address: address || null,
             checkout,
-            alamatStr,
+            alamatStr: _alamatStr,
         }
         const result = await createOrder(body)
         if (!result?.orderId) return
@@ -219,8 +231,8 @@ export default function IFormCheckout({
                                                         )}
                                                     >
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                <BankLogo id={item.id_bank.toString()} />
+                                                            <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                <BankLogo id={item.bank.toString()} />
                                                             </div>
                                                             <p className="text-xs text-gray-800 font-semibold">{item.bank}</p>
                                                         </div>
@@ -264,8 +276,8 @@ export default function IFormCheckout({
                                                                 )}
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                        <BankLogo id={item.id_bank_va_xendit.toString()} />
+                                                                    <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                        <BankLogo id={item.bank_code.toString()} />
                                                                     </div>
                                                                     <p className="text-xs text-gray-800 font-semibold uppercase">
                                                                         {`Bank ${account}`}
@@ -312,8 +324,8 @@ export default function IFormCheckout({
                                                                 )}
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                        <BankLogo id={item.id_setting_xendit.toString()}/>
+                                                                    <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                        <BankLogo id="qris" />
                                                                     </div>
                                                                     <p className="text-xs text-gray-800 font-semibold uppercase">
                                                                         {`QRIS`}
@@ -346,7 +358,7 @@ export default function IFormCheckout({
                                             )}
                                         >
                                             <div className="flex items-center gap-2">
-                                                <div className="w-10 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                                     <BankLogo id="cod" />
                                                 </div>
                                                 <p className="text-xs text-gray-800 font-semibold uppercase">
@@ -679,166 +691,105 @@ export default function IFormCheckout({
                         />
                     </fieldset>
 
-                    {/* Addresses */}
-                    <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="text-xs">Alamat Pengiriman:</div>
-                            <Dialog.Root
-                                open={isOpenAddress}
-                                onOpenChange={setIsOpenAddress}
-                            >
-                                <Dialog.Trigger asChild>
-                                    {!!address ? (
-                                        <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                            <span className="text-[13px] leading-none text-stora-500 block">Ubah Alamat</span>
-                                            <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                        </button>
-                                    ) : (
-                                        <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                            <span className="text-[13px] leading-none text-stora-500 block">Tambah alamat</span>
-                                            <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                        </button>
-                                    )}
-                                </Dialog.Trigger>
-                                <Dialog.Portal>
-                                    <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                    <Dialog.Content className="overflow-y-scroll z-40 data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                        <div className="py-20">
-                                            <Dialog.Title className="text-sm font-medium mb-6">
-                                                Alamat Penerima
-                                            </Dialog.Title>
-                                            {/* Address */}
-                                            <IFormAddressArveoli
-                                                isFreeOngkir={product.isFreeOngkir}
-                                                userId={user.user_id ? user.user_id.toString() : "01"}
-                                                weight={product.weight.toString()}
-                                                onSelected={(val) => {
-                                                    setIsOpenAddress(false)
-                                                    let ongkir = 0
-                                                    if (val.shipping) {
-                                                        const price = !Number.isNaN(parseInt(val.shipping.price.toString()))
-                                                            ? Number(val.shipping.price)
-                                                            : 0
-                                                        ongkir = price
-                                                        const shipping: ShippingType = {
-                                                            service_code: val.shipping.service_code,
-                                                            service_name: val.shipping.service_name,
-                                                            price: val.shipping.price,
-                                                            etd: val.shipping.etd
-                                                                ? val.shipping.etd
-                                                                : "",
-                                                            discount_price: val.shipping.discount_price,
-                                                            cashless_discount_price: val.shipping.cashless_discount_price,
-                                                            s_name: val.shipping.s_name
-                                                                ? val.shipping.s_name
-                                                                : "",
-                                                        }
-                                                        setCurrentShipping((prevState) => {
-                                                            return {
-                                                                ...(prevState ? prevState : {}),
-                                                                ...shipping,
-                                                            }
-                                                        })
-                                                    }
-                                                    // set_address
-                                                    setAddress((prevState) => {
-                                                        return {
-                                                            ...(prevState ? prevState : {}),
-                                                            province: val.province,
-                                                            regency: val.regency,
-                                                            id_mapping: val.id_mapping,
-                                                            sub_district: val.sub_district,
-                                                            urban_village: val.urban_village,
-                                                            zip_code: val.zip_code,
-                                                            address: val.address,
-                                                        }
-                                                    })
-                                                    // set_checkout
-                                                    setCheckout((prevState) => {
-                                                        const totalOngkir = sumTotal(
-                                                            prevState.subTotal.toString(),
-                                                            (ongkir || 0).toString()
-                                                        )
-                                                        const totalRand = sumTotal(
-                                                            totalOngkir.toString(),
-                                                            prevState.randCode.toString()
-                                                        )
-
-                                                        return {
-                                                            ...prevState,
-                                                            ongkir,
-                                                            total: totalRand,
-                                                        }
-                                                    })
-                                                }}
-                                            />
-                                        </div>
-                                        <Dialog.Close asChild>
-                                            <button
-                                                className="text-stora-800 hover:bg-stora-200 focus:shadow-stora-200 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                                                aria-label="Close"
-                                            >
-                                                <Cross2Icon className="w-5 h-5" />
-                                            </button>
-                                        </Dialog.Close>
-                                    </Dialog.Content>
-                                </Dialog.Portal>
-                            </Dialog.Root>
-                        </div>
-
-                        {!!address && (
-                            <div className="my-3">
-                                <p className="text-xs">
-                                    {validateAndConvertToString([
-                                        address.address,
-                                        address.urban_village,
-                                        address.sub_district,
-                                        address.regency,
-                                        address.province
-                                    ])}
-                                </p>
-                                {address.zip_code ? (
-                                    <p className="text-xs">
-                                        {validateAndConvertToString([
-                                            `Kode Pos: ${address.zip_code}`
-                                        ])}
-                                    </p>
-                                ) : null}
-                            </div>
-                        )}
-
-                        {!!currentShipping && (
-                            <>
-                                <div className="flex items-center justify-between my-2">
-                                    <div className="text-xs">Informasi Pengiriman:</div>
+                    {!_isFreeOngkir && (
+                        <>
+                            {/* Addresses */}
+                            <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-xs">Alamat Pengiriman:</div>
                                     <Dialog.Root
-                                        open={isOpenShipping}
-                                        onOpenChange={setIsOpenShipping}
+                                        open={isOpenAddress}
+                                        onOpenChange={setIsOpenAddress}
                                     >
                                         <Dialog.Trigger asChild>
-                                            <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                <span className="text-[13px] leading-none text-stora-500 block">Ubah pengiriman</span>
-                                                <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                            </button>
+                                            {!!address ? (
+                                                <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                    <span className="text-[13px] leading-none text-stora-500 block">Ubah Alamat</span>
+                                                    <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                                </button>
+                                            ) : (
+                                                <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                    <span className="text-[13px] leading-none text-stora-500 block">Tambah alamat</span>
+                                                    <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                                </button>
+                                            )}
                                         </Dialog.Trigger>
                                         <Dialog.Portal>
                                             <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                            <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                            <Dialog.Content className="overflow-y-scroll z-40 data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
                                                 <div className="py-20">
-                                                    <Dialog.Title className="mb-6 text-sm font-medium">
-                                                        Pengiriman
+                                                    <Dialog.Title className="text-sm font-medium mb-6">
+                                                        Alamat Penerima
                                                     </Dialog.Title>
-                                                    {/* Form shipping data */}
-                                                    {!!shippingArveoli && (
-                                                        <>
-                                                            {shippingArveoliMap()}
-                                                        </>
-                                                    )}
-                                                </div>
+                                                    {/* Address */}
+                                                    <IFormAddressArveoli
+                                                        isFreeOngkir={product.isFreeOngkir}
+                                                        userId={user.user_id ? user.user_id.toString() : "01"}
+                                                        weight={product.weight.toString()}
+                                                        onSelected={(val) => {
+                                                            setIsOpenAddress(false)
+                                                            let ongkir = 0
+                                                            if (val.shipping) {
+                                                                const price = !Number.isNaN(parseInt(val.shipping.price.toString()))
+                                                                    ? Number(val.shipping.price)
+                                                                    : 0
+                                                                ongkir = price
+                                                                const shipping: ShippingType = {
+                                                                    service_code: val.shipping.service_code,
+                                                                    service_name: val.shipping.service_name,
+                                                                    price: val.shipping.price,
+                                                                    etd: val.shipping.etd
+                                                                        ? val.shipping.etd
+                                                                        : "",
+                                                                    discount_price: val.shipping.discount_price,
+                                                                    cashless_discount_price: val.shipping.cashless_discount_price,
+                                                                    s_name: val.shipping.s_name
+                                                                        ? val.shipping.s_name
+                                                                        : "",
+                                                                }
+                                                                setCurrentShipping((prevState) => {
+                                                                    return {
+                                                                        ...(prevState ? prevState : {}),
+                                                                        ...shipping,
+                                                                    }
+                                                                })
+                                                            }
+                                                            // set_address
+                                                            setAddress((prevState) => {
+                                                                return {
+                                                                    ...(prevState ? prevState : {}),
+                                                                    province: val.province,
+                                                                    regency: val.regency,
+                                                                    id_mapping: val.id_mapping,
+                                                                    sub_district: val.sub_district,
+                                                                    urban_village: val.urban_village,
+                                                                    zip_code: val.zip_code,
+                                                                    address: val.address,
+                                                                }
+                                                            })
+                                                            // set_checkout
+                                                            setCheckout((prevState) => {
+                                                                const totalOngkir = sumTotal(
+                                                                    prevState.subTotal.toString(),
+                                                                    (ongkir || 0).toString()
+                                                                )
+                                                                const totalRand = sumTotal(
+                                                                    totalOngkir.toString(),
+                                                                    prevState.randCode.toString()
+                                                                )
 
+                                                                return {
+                                                                    ...prevState,
+                                                                    ongkir,
+                                                                    total: totalRand,
+                                                                }
+                                                            })
+                                                        }}
+                                                    />
+                                                </div>
                                                 <Dialog.Close asChild>
                                                     <button
-                                                        className="hover:bg-stora-200 focus:shadow-stora-300 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                        className="text-stora-800 hover:bg-stora-200 focus:shadow-stora-200 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
                                                         aria-label="Close"
                                                     >
                                                         <Cross2Icon className="w-5 h-5" />
@@ -849,23 +800,89 @@ export default function IFormCheckout({
                                     </Dialog.Root>
                                 </div>
 
-                                <div>
-                                    <p className="text-xs">
-                                        <span className="uppercase">{currentShipping.s_name}</span>{", "}
-                                        {currentShipping.service_name}{" "}
-                                        {currentShipping.price
-                                            ? toIDR(currentShipping.price.toString())
-                                            : toIDR("0")}
-                                    </p>
-                                    {!!currentShipping.etd && (
-                                        <p className="text-xs italic">{currentShipping.etd}</p>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
+                                {!!address && (
+                                    <div className="my-3">
+                                        <p className="text-xs">
+                                            {validateAndConvertToString([
+                                                address.address,
+                                                address.urban_village,
+                                                address.sub_district,
+                                                address.regency,
+                                                address.province
+                                            ])}
+                                        </p>
+                                        {address.zip_code ? (
+                                            <p className="text-xs">
+                                                {validateAndConvertToString([
+                                                    `Kode Pos: ${address.zip_code}`
+                                                ])}
+                                            </p>
+                                        ) : null}
+                                    </div>
+                                )}
 
-                    {selectPaymentMethod()}
+                                {!!currentShipping && (
+                                    <>
+                                        <div className="flex items-center justify-between my-2">
+                                            <div className="text-xs">Informasi Pengiriman:</div>
+                                            <Dialog.Root
+                                                open={isOpenShipping}
+                                                onOpenChange={setIsOpenShipping}
+                                            >
+                                                <Dialog.Trigger asChild>
+                                                    <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                        <span className="text-[13px] leading-none text-stora-500 block">Ubah pengiriman</span>
+                                                        <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                                    </button>
+                                                </Dialog.Trigger>
+                                                <Dialog.Portal>
+                                                    <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                                    <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                        <div className="py-20">
+                                                            <Dialog.Title className="mb-6 text-sm font-medium">
+                                                                Pengiriman
+                                                            </Dialog.Title>
+                                                            {/* Form shipping data */}
+                                                            {!!shippingArveoli && (
+                                                                <>
+                                                                    {shippingArveoliMap()}
+                                                                </>
+                                                            )}
+                                                        </div>
+
+                                                        <Dialog.Close asChild>
+                                                            <button
+                                                                className="hover:bg-stora-200 focus:shadow-stora-300 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                                aria-label="Close"
+                                                            >
+                                                                <Cross2Icon className="w-5 h-5" />
+                                                            </button>
+                                                        </Dialog.Close>
+                                                    </Dialog.Content>
+                                                </Dialog.Portal>
+                                            </Dialog.Root>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-xs">
+                                                <span className="uppercase">{currentShipping.s_name}</span>{", "}
+                                                {currentShipping.service_name}{" "}
+                                                {currentShipping.price
+                                                    ? toIDR(currentShipping.price.toString())
+                                                    : toIDR("0")}
+                                            </p>
+                                            {!!currentShipping.etd && (
+                                                <p className="text-xs italic">{currentShipping.etd}</p>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {selectPaymentMethod()}
+                        </>
+                    )}
+
 
                     <div>
                         <div className="bg-slate-50 rounded-lg">

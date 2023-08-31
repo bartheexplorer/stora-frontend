@@ -1,3 +1,4 @@
+import { useRef } from "react"
 import useSWR from "swr"
 
 const fetcher = async (url: RequestInfo) => {
@@ -7,12 +8,16 @@ const fetcher = async (url: RequestInfo) => {
 }
 
 export function useSession(permalink: string) {
+    const random = useRef(Date.now())
     const {
         data,
         isLoading,
         mutate: sendRequest,
         ...rest
-    } = useSWR(`/${permalink}/session/api/session`, fetcher, {
+    } = useSWR([
+        `/${permalink}/session/api/session`,
+        random
+    ], fetcher, {
         refreshInterval: 3000,
     })
 

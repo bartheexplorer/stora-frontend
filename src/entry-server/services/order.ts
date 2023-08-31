@@ -1,6 +1,8 @@
 import type { PrismaClient, t_order as TOrder, t_multi_order } from "@prisma/client"
 import { appConfig } from "../config/app"
 import type { OrderParams } from "./order-interface"
+import { format } from 'date-fns';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 
 function formatCurrency(amount: number): string {
     const formattedAmount = new Intl.NumberFormat('id-ID').format(amount)
@@ -8,9 +10,24 @@ function formatCurrency(amount: number): string {
     return formattedAmount
 }
 
+function formatInTimezone(): string {
+    const originalDate = new Date();
+    const targetTimezone = 'Asia/Jakarta'; // Replace with your desired timezone
+    const dateFormat = 'yyyy-MM-dd HH:mm:ss';
+    // Convert the date to the desired timezone
+    const zonedDate = utcToZonedTime(originalDate, targetTimezone);
+    
+    // Format the date in the desired timezone
+    const formattedDate = format(zonedDate, dateFormat);
+    
+    return formattedDate;
+}
+  
+
 export async function createOrder(prisma: PrismaClient, params: OrderParams) {
     try {
-        const tglOrder = new Date()
+        const tglOrder = formatInTimezone()
+        console.log("tglOrder", tglOrder)
         // Text order
         let textOrder1: string = `Produk Yg Dibeli: *${params.productName}*`
         let textOrder2: string = ''
@@ -242,7 +259,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
                     .replaceAll('{{METODE_PEMBAYARAN}}', textOrder2)
                     .replaceAll('{{NAMA_TOKO}}', params.namaToko)
                     .replaceAll('{{EKSPEDISI}}', params.expedisi)
-                    .replaceAll('{{TANGGAL_ORDER}}', tglOrder.toDateString())
+                    .replaceAll('{{TANGGAL_ORDER}}', tglOrder)
                     .replaceAll('{{NAMA_PEMBELI}}', params.name)
                     .replaceAll('{{ALAMAT_PEMBELI}}', params.address)
                     .replaceAll('{{WHATSAPP_PEMBELI}}', params.phone)
@@ -280,6 +297,9 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             orderId: result.orderId,
         }
     } catch (error) {
+        if (error instanceof Error) {
+            console.log(error.message)
+        }
         return null
     }
 }

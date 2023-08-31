@@ -1,6 +1,8 @@
 import type { PrismaClient } from "@prisma/client"
 import type { CartsEntity, CreateOrderByCartParams, Free1Entity, ParamsCreateCart, QueryRawTf } from "./carts-interface"
 import { createQrisRequest, createVaRequest, pushNotif } from "./order"
+import { format } from 'date-fns';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 
 const generateNumberID = (length: number): string => {
     let result = ''
@@ -81,6 +83,9 @@ export async function createCarts(prisma: PrismaClient, params: ParamsCreateCart
 
         return result
     } catch (error) {
+        if (error instanceof Error) {
+            console.log("address", error)
+        }
         return null
     }
 }
@@ -185,6 +190,19 @@ export async function destroyCart(prisma: PrismaClient, idKeranjang: number) {
     }
 }
 
+function formatInTimezone(): string {
+    const originalDate = new Date();
+    const targetTimezone = 'Asia/Jakarta'; // Replace with your desired timezone
+    const dateFormat = 'yyyy-MM-dd HH:mm:ss';
+    // Convert the date to the desired timezone
+    const zonedDate = utcToZonedTime(originalDate, targetTimezone);
+    
+    // Format the date in the desired timezone
+    const formattedDate = format(zonedDate, dateFormat);
+    
+    return formattedDate;
+}
+
 // Create order
 export async function createOrderByCart(prisma: PrismaClient, params: CreateOrderByCartParams) {
     try {
@@ -196,7 +214,8 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
                 return Math.floor(Math.random() * (max - min + 1)) + min;
             }
             const id_order_random = generateRandomInt()
-            const tglOrder = new Date()
+            const tglOrder = formatInTimezone()
+            console.log("tglOrder", tglOrder)
             // Text order
             let textOrder1: string
             let textOrder2: string
@@ -287,7 +306,10 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
                     paymentId = ""
                     textOrder2 = `COD`
                 } else {
-                    throw new Error('payment not found')
+                    accountBank = ""
+                    paymentId = ""
+                    textOrder2 = ""
+                    // throw new Error('payment not found')
                 }
             }
 
@@ -319,7 +341,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             //   "0000-00-00 00:00:00",
             // "0000-00-00 00:00:00"`)
 
-            const createOrder = await tx.$executeRaw`INSERT INTO t_multi_order(id_order,
+            const createOrder = await tx.$executeRaw`INSERT INTO t_multi_order(
           order_id,
           kode_keranjang,
           nama_pembeli,
@@ -347,7 +369,6 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
         tgl_selesai
         )
         VALUES (
-            ${id_order_random},
           ${orderId},
           ${cartId.kode_keranjang},
           ${params.nama},
@@ -428,7 +449,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
                     .replaceAll('{{METODE_PEMBAYARAN}}', textOrder2)
                     .replaceAll('{{NAMA_TOKO}}', params.permalink)
                     .replaceAll('{{EKSPEDISI}}', params.expedisi)
-                    .replaceAll('{{TANGGAL_ORDER}}', tglOrder.toDateString())
+                    .replaceAll('{{TANGGAL_ORDER}}', tglOrder)
                     .replaceAll('{{NAMA_PEMBELI}}', params.nama)
                     .replaceAll('{{ALAMAT_PEMBELI}}', params.alamat)
                     .replaceAll('{{WHATSAPP_PEMBELI}}', params.hp)
@@ -465,7 +486,9 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
         })
         return result
     } catch (error) {
-        console.log(error)
+        if (error instanceof Error) {
+            console.log(error)
+        }
         return null
     }
 }

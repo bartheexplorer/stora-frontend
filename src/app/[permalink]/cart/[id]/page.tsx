@@ -54,6 +54,30 @@ export default async function CartId(props: CartIdProps) {
     })
     const carts = toCarts(cart)
 
+    console.log("[carts]", carts)
+
+    const _digitalProduct = ["digital"]
+    const _fisikProduct = ["fisik"]
+    const _isDigital = carts?.find((item) => _digitalProduct.includes(item.jenis_produk))
+    const _isFisik = carts?.find((item) => _fisikProduct.includes(item.jenis_produk))
+    
+    console.log("_isDigital", _isDigital)
+    console.log("!!_isDigital", !!_isDigital)
+    console.log("_isDigital", _isFisik)
+    console.log("!!_isDigital", !!_isFisik)
+
+    let _isFreeOngkir = false
+    if (!!_isDigital) {
+        _isFreeOngkir = true
+    } 
+
+    if (!!_isFisik) {
+        _isFreeOngkir = false
+    }
+
+
+    console.log("_isFreeOngkir", _isFreeOngkir)
+
     return (
         <div className="min-h-screen">
             <div className="w-full px-6 py-4 shadow mb-2">
@@ -134,7 +158,7 @@ export default async function CartId(props: CartIdProps) {
                                 weight: carts
                                     ? carts.reduce((sum, item) => (sumTotal(sum.toString(), item.berat.toString())), 0)
                                     : 0,
-                                isFreeOngkir: false,
+                                isFreeOngkir: _isFreeOngkir,
                                 isFree: false,
                                 total: carts
                                     ? carts.reduce((sum, item) => (sumTotal(sum.toString(), item.total.toString())), 0)
