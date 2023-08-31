@@ -19,20 +19,23 @@ export async function GET(_req: NextRequest, ctx: { params: { permalink: string 
         }, {status: 401})
     }
 
-    const getSession = async () => {
+    console.log("user.id_user.toString()", user?.id_user)
+
+    const getSession = async (userId?: string) => {
+        if (!userId) return null 
         const requestOptions: RequestInit = {
             method: 'GET',
         }
 
         const result = await fetch(
-            `${appConfig.domain.ep}/session?session=${sha1Hash(user.id_user.toString())}`,
+            `${appConfig.domain.ep}/session?session=${sha1Hash(userId)}`,
             requestOptions
         )
         const _body = await result.json()
         return _body
     }
 
-    const res = await getSession()
+    const res = await getSession(user?.id_user.toString())
     return NextResponse.json({
         data: res,
     })

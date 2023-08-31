@@ -16,7 +16,7 @@ export async function cekMembership(
 
         // console.log("result.text", await result.text())
 
-        console.log(`${appConfig.domain.storaApi}/apiv2/user/getExpiredNew?_key=WbsLinkV00&user_id=${memberId}&product_id=${productId}`)
+        // console.log(`${appConfig.domain.storaApi}/apiv2/user/getExpiredNew?_key=WbsLinkV00&user_id=${memberId}&product_id=${productId}`)
 
         if (!result.ok) throw new Error("Error jaringan")
         return Boolean((await result.text()) === "1")
@@ -64,7 +64,7 @@ export async function getUser(prisma: PrismaClient, permalink: string) {
             },
         })
 
-        console.log("user/user", user)
+        // console.log("user/user", user)
 
         if (!user) throw new Error("Data tidak ditemukan")
 
