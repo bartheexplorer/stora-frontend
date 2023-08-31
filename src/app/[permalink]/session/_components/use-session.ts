@@ -12,7 +12,7 @@ export function useSession(permalink: string) {
         isLoading,
         mutate: sendRequest,
         ...rest
-    } = useSWR(`/${permalink}/session/api/session`, fetcher, {
+    } = useSWR(`/${permalink}/session/api/session?_id=${(Math.floor(Math.random() * 1000))}`, fetcher, {
         refreshInterval: 3000,
     })
 
