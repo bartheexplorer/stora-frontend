@@ -138,13 +138,13 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
     const productArray = toProducts(products)
     const categoryArray = toCategories(categories)
 
-    console.log("user", user)
-
     if (!user) return <LoaderUi />
 
     const _userId = user.id_user
         ? user.id_user.toString()
         : ""
+
+    // console.log("productArray", productArray)
 
     return (
         <div className="w-full min-h-screen">

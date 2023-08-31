@@ -50,7 +50,6 @@ export default async function Cart(props: CartProps) {
         cartId: cartId?.value,
     })
     const carts = toCarts(cart)
-    console.log("props", props)
 
     return (
         <div className="min-h-screen">

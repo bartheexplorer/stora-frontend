@@ -141,18 +141,21 @@ export default function ProductCard(props: ProductCardProps) {
                     </div>
                 </div>
 
-                <div className="absolute bottom-1.5 right-2">
-                    <div className="p-3">
-                        <div>
-                            <Link
-                                href={`${props.slug}?cart=true`}
-                                className="w-full cursor-pointer"
-                            >
-                                <ShoppingCartIcon className="inline-block h-6 w-6" />
-                            </Link>
+                {product.jenis_produk !== 'link' && (
+                    <div className="absolute bottom-1.5 right-2">
+                        <div className="p-3">
+                            <div>
+                                <Link
+                                    href={`${props.slug}?cart=true`}
+                                    className="w-full cursor-pointer"
+                                >
+                                    <ShoppingCartIcon className="inline-block h-6 w-6" />
+                                </Link>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
+
             </div>
         </div>
     )
