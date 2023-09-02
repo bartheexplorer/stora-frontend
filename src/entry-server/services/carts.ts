@@ -473,7 +473,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
 
             const notip = await pushNotif(
                 textOrder4,
-                params.no_hp_toko,
+                params.hp,
                 params.id_user.toString()
             )
 
