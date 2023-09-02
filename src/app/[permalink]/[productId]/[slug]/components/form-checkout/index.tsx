@@ -691,7 +691,8 @@ export default function IFormCheckout({
                                                             <button
                                                                 type="button"
                                                                 className="absolute inset-0"
-                                                                onClick={() => {
+                                                                onClick={(event) => {
+                                                                    event.preventDefault()
                                                                     onChange({
                                                                         id: item.id_bank,
                                                                         bank: item.bank.toString(),
@@ -738,7 +739,8 @@ export default function IFormCheckout({
                                                                 <button
                                                                     type="button"
                                                                     className="absolute inset-0"
-                                                                    onClick={() => {
+                                                                    onClick={(event) => {
+                                                                        event.preventDefault()
                                                                         onChange({
                                                                             id: item.id_bank_va_xendit,
                                                                             account: account,
@@ -788,7 +790,8 @@ export default function IFormCheckout({
                                                                         <button
                                                                             type="button"
                                                                             className="absolute inset-0"
-                                                                            onClick={() => {
+                                                                            onClick={(event) => {
+                                                                                event.preventDefault()
                                                                                 onChange({
                                                                                     id: item.id_setting_xendit,
                                                                                     name: item.business_name,
@@ -823,7 +826,8 @@ export default function IFormCheckout({
                                                         <button
                                                             type="button"
                                                             className="absolute inset-0"
-                                                            onClick={() => {
+                                                            onClick={(event) => {
+                                                                event.preventDefault()
                                                                 onChange({
                                                                     id: "COD",
                                                                     payment_method: "COD"
@@ -842,6 +846,16 @@ export default function IFormCheckout({
                                         type="button"
                                         className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
                                         onClick={(event) => {
+                                            event.preventDefault()
+                                            // if (event) {
+                                            //     if (typeof event.preventDefault === "function") {
+                                            //         event.preventDefault();
+                                            //     }
+                                            //     if (typeof event.stopPropagation === "function") {
+                                            //         event.stopPropagation();
+                                            //     }
+                                            // }
+
                                             setAlertOpen(false)
                                             if (value) {
                                                 setIsOpenPayment(false)
@@ -857,14 +871,6 @@ export default function IFormCheckout({
                                                     eventAlertRef.current = "Belum memilih metode pembayaran"
                                                     setAlertOpen(true)
                                                 }, 100)
-                                            }
-                                            if (event) {
-                                                if (typeof event.preventDefault === "function") {
-                                                    event.preventDefault();
-                                                }
-                                                if (typeof event.stopPropagation === "function") {
-                                                    event.stopPropagation();
-                                                }
                                             }
                                         }}
                                     >Simpan</button>
