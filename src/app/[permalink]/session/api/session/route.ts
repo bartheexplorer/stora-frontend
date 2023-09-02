@@ -4,6 +4,9 @@ import { getUser } from "@/entry-server/services/user"
 import { NextRequest, NextResponse } from "next/server"
 import * as crypto from "crypto"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 export async function GET(_req: NextRequest, ctx: { params: { permalink: string } }) {
     const sha1Hash = (input: string): string => {
       const hash = crypto.createHash("sha1")
@@ -25,11 +28,12 @@ export async function GET(_req: NextRequest, ctx: { params: { permalink: string 
         if (!userId) return null 
         const requestOptions: RequestInit = {
             method: 'GET',
+            cache: 'no-store',
         }
 
         const result = await fetch(
             `${appConfig.domain.ep}/session?session=${sha1Hash(userId)}`,
-            requestOptions
+            requestOptions,
         )
         const _body = await result.json()
         return _body

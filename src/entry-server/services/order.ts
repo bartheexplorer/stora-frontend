@@ -35,11 +35,11 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
         let textOrder4: string = ''
 
         if (params.variant) {
-            textOrder1 += ` Varian: *${params.variant}*`
+            textOrder1 += `\n Varian: *${params.variant}*`
         }
 
         if (params.size) {
-            textOrder1 += ` Ukuran: *${params.size}*`
+            textOrder1 += `\n Ukuran: *${params.size}*`
         }
 
         const result = await prisma.$transaction(async (tx) => {
@@ -57,10 +57,10 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
                     }
                 })
                 customFields.push(customField.id_data_custom_field)
-                textOrder1 += ` ${iter.label}: *${iter.value}*`
+                textOrder1 += `\n ${iter.label}: *${iter.value}*`
             }
 
-            textOrder1 += ` Harga: *${formatCurrency(params.totalbayar)}* Jumlah: *${params.qty}*`
+            textOrder1 += `\n Harga: *${formatCurrency(params.totalbayar)} \n *Jumlah: *${params.qty}*`
 
             // const customFieldsData = customFields.join(',')
             const customFieldFirst = customFields.find((_item, index) => (index === 0))
@@ -70,7 +70,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             let accountBank: string = ''
 
             async function paymentData() {
-                textOrder3 += `Ongkir: *${formatCurrency(params.ongkir)}*`
+                textOrder3 += `\n Ongkir: *${formatCurrency(params.ongkir)}*`
                 // Payment method
                 if (params.paymentMethodCode === 'bank') {
                     const cekBank = await tx.t_bank.findFirst({

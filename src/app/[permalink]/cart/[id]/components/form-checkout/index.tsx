@@ -19,6 +19,7 @@ import { getLastThreeWords } from "@/utils/get-unik-code"
 import { getRandomThreeDigitNumber } from "@/utils/get-rand-number"
 import { useRouter } from "next/navigation"
 import ILoading from "../loading"
+import * as RadioGroup from "@radix-ui/react-radio-group"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
@@ -61,6 +62,7 @@ interface IFormCheckoutProps {
         weight: number
         total: number
         discount: number
+        typeProduct: string
     }
     codeUnique: boolean
 }
@@ -109,11 +111,14 @@ export default function IFormCheckout({
         bank?: string
         name?: string
     } | null>(null)
+
     const _isFreeOngkir = product.isFreeOngkir
     let cunik = 0
     let totalUniqueCode = 0
 
-    if (!_isFreeOngkir) {
+    const _total = Number(product.total)
+
+    if (_total > 0) {
         cunik = codeUnique ? RAND_CODE : 0
         totalUniqueCode = Math.round(Number(product.total + cunik))
     }
@@ -126,10 +131,11 @@ export default function IFormCheckout({
         ongkir: number
     }>({
         total: totalUniqueCode,
-        subTotal: product.total,
+        subTotal: _total,
         randCode: cunik,
         ongkir: 0,
     })
+    console.log(checkout)
     const [address, setAddress] = useState<AddressType | null>(null)
     const [currentShipping, setCurrentShipping] = useState<ShippingType | null>(null)
     const [selectedShipping, setSelectedShipping] = useState<ShippingType | null>(null)
@@ -195,6 +201,231 @@ export default function IFormCheckout({
         router.push(`/${permalink}/sucess?id=${result?.orderId}&m=1&_=${(Math.floor(Math.random() * 900) + 100).toString()}`)
     })
 
+    // const paymentComponent = () => {
+    //     return (
+    //         <div className="">
+    //             <Controller
+    //                 name="payment"
+    //                 control={control}
+    //                 render={({ field }) => {
+    //                     const { onChange, value } = field
+
+    //                     const isQris = (Array.isArray(payment.settings) && payment.settings.length > 0)
+    //                         ? payment.settings[0].status_qris
+    //                         : false
+
+    //                     const isVa = (Array.isArray(payment.settings) && payment.settings.length > 0)
+    //                         ? payment.settings[0].status_va
+    //                         : false
+
+    //                     return (
+    //                         <>
+    //                             {(Array.isArray(payment.transfer) && payment.transfer.length > 0) && (
+    //                                 <div className="py-2">
+    //                                     <div className="bg-slate-300 py-2 px-8">
+    //                                         <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
+    //                                     </div>
+    //                                     <ul className="flex flex-col">
+    //                                         {payment.transfer.map((item) => {
+    //                                             const classActive = item.id_bank === value?.id
+    //                                             return item.is_active ? (
+    //                                                 <li
+    //                                                     key={item.id_bank}
+    //                                                     className={clsx(
+    //                                                         "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+    //                                                         classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+    //                                                     )}
+    //                                                 >
+    //                                                     <div className="flex items-center gap-2">
+    //                                                         <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+    //                                                             <BankLogo id={item.bank.toString()} />
+    //                                                         </div>
+    //                                                         <p className="text-xs text-gray-800 font-semibold">{item.bank}</p>
+    //                                                     </div>
+    //                                                     <button
+    //                                                         type="button"
+    //                                                         className="absolute inset-0"
+    //                                                         onClick={() => {
+    //                                                             onChange({
+    //                                                                 id: item.id_bank,
+    //                                                                 bank: item.bank.toString(),
+    //                                                                 account: item.rekening,
+    //                                                                 name: item.pemilik,
+    //                                                                 payment_method: "tf"
+    //                                                             })
+    //                                                         }}
+    //                                                     >&nbsp;</button>
+    //                                                 </li>
+    //                                             ) : null
+    //                                         })}
+    //                                     </ul>
+    //                                 </div>
+    //                             )}
+
+    //                             {isVa && (
+    //                                 <>
+    //                                     {(Array.isArray(payment.va) && payment.va.length > 0) && (
+    //                                         <div className="py-2">
+    //                                             <div className="bg-slate-300 py-2 px-8">
+    //                                                 <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
+    //                                             </div>
+    //                                             <ul className="flex flex-col">
+    //                                                 {payment.va.map((item) => {
+    //                                                     const account = item.bank_code.replaceAll("_", " ").toString()
+    //                                                     const classActive = item.id_bank_va_xendit === value?.id
+    //                                                     return item.is_active ? (
+    //                                                         <li
+    //                                                             key={item.id_bank_va_xendit}
+    //                                                             className={clsx(
+    //                                                                 "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+    //                                                                 classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+    //                                                             )}
+    //                                                         >
+    //                                                             <div className="flex items-center gap-2">
+    //                                                                 <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+    //                                                                     <BankLogo id={item.bank_code.toString()} />
+    //                                                                 </div>
+    //                                                                 <p className="text-xs text-gray-800 font-semibold uppercase">
+    //                                                                     {`Bank ${account}`}
+    //                                                                 </p>
+    //                                                             </div>
+    //                                                             <button
+    //                                                                 type="button"
+    //                                                                 className="absolute inset-0"
+    //                                                                 onClick={() => {
+    //                                                                     onChange({
+    //                                                                         id: item.id_bank_va_xendit,
+    //                                                                         account: account,
+    //                                                                         payment_method: "va",
+
+    //                                                                     })
+    //                                                                 }}
+    //                                                             >&nbsp;</button>
+    //                                                         </li>
+    //                                                     ) : null
+    //                                                 })}
+    //                                             </ul>
+    //                                         </div>
+    //                                     )}
+    //                                 </>
+    //                             )}
+
+    //                             <div className="py-2">
+    //                                 <div className="bg-slate-300 py-2 px-8">
+    //                                     <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya {isQris.valueOf()}</h3>
+    //                                 </div>
+
+    //                                 {isQris && (
+    //                                     <>
+    //                                         {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
+    //                                             <ul className="flex flex-col">
+    //                                                 {payment.settings.map((item) => {
+    //                                                     const classActive = item.id_setting_xendit === value?.id
+    //                                                     return item.status_qris ? (
+    //                                                         <li
+    //                                                             key={item.id_setting_xendit}
+    //                                                             className={clsx(
+    //                                                                 "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+    //                                                                 classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+    //                                                             )}
+    //                                                         >
+    //                                                             <div className="flex items-center gap-2">
+    //                                                                 <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+    //                                                                     <BankLogo id="qris" />
+    //                                                                 </div>
+    //                                                                 <p className="text-xs text-gray-800 font-semibold uppercase">
+    //                                                                     {`QRIS`}
+    //                                                                 </p>
+    //                                                             </div>
+    //                                                             <button
+    //                                                                 type="button"
+    //                                                                 className="absolute inset-0"
+    //                                                                 onClick={() => {
+    //                                                                     onChange({
+    //                                                                         id: item.id_setting_xendit,
+    //                                                                         name: item.business_name,
+    //                                                                         payment_method: "QRIS",
+    //                                                                     })
+    //                                                                 }}
+    //                                                             >&nbsp;</button>
+    //                                                         </li>
+    //                                                     ) : null
+    //                                                 })}
+    //                                             </ul>
+    //                                         )}
+    //                                     </>
+    //                                 )}
+
+    //                                 <ul className="flex flex-col gap-3">
+    //                                     <li
+    //                                         className={clsx(
+    //                                             "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+    //                                             "COD" === value?.id.toString() ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+    //                                         )}
+    //                                     >
+    //                                         <div className="flex items-center gap-2">
+    //                                             <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+    //                                                 <BankLogo id="cod" />
+    //                                             </div>
+    //                                             <p className="text-xs text-gray-800 font-semibold uppercase">
+    //                                                 {`COD (Cash On Delivery)`}
+    //                                             </p>
+    //                                         </div>
+    //                                         <button
+    //                                             type="button"
+    //                                             className="absolute inset-0"
+    //                                             onClick={() => {
+    //                                                 onChange({
+    //                                                     id: "COD",
+    //                                                     payment_method: "COD"
+    //                                                 })
+    //                                             }}
+    //                                         >&nbsp;</button>
+    //                                     </li>
+    //                                 </ul>
+    //                             </div>
+
+    //                             <div className="px-12 py-6 flex flex-col">
+    //                                 <button
+    //                                     type="button"
+    //                                     className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
+    //                                     onClick={(event) => {
+    //                                         setAlertOpen(false)
+    //                                         if (value) {
+    //                                             setIsOpenPayment(false)
+    //                                             setCurrentPayment({
+    //                                                 ...value,
+    //                                                 id: value.id,
+    //                                                 account: value.account,
+    //                                                 payment_method: value.payment_method,
+    //                                             })
+    //                                         } else {
+    //                                             window.clearTimeout(timerRef.current);
+    //                                             timerRef.current = window.setTimeout(() => {
+    //                                                 eventAlertRef.current = "Belum memilih metode pembayaran"
+    //                                                 setAlertOpen(true)
+    //                                             }, 100)
+    //                                         }
+    //                                         if (event) {
+    //                                             if (typeof event.preventDefault === "function") {
+    //                                                 event.preventDefault();
+    //                                             }
+    //                                             if (typeof event.stopPropagation === "function") {
+    //                                                 event.stopPropagation();
+    //                                             }
+    //                                         }
+    //                                     }}
+    //                                 >Simpan</button>
+    //                             </div>
+    //                         </>
+    //                     )
+    //                 }}
+    //             />
+    //         </div>
+    //     )
+    // }
+
+    // select payment
     const paymentComponent = () => {
         return (
             <div className="">
@@ -202,7 +433,17 @@ export default function IFormCheckout({
                     name="payment"
                     control={control}
                     render={({ field }) => {
-                        const { onChange, value } = field
+                        const { onChange: _onChange, value } = field
+
+                        const onChange = (vl: any) => {
+                            _onChange(vl)
+                            setCurrentPayment({
+                                ...vl,
+                                id: vl.id,
+                                account: vl.account,
+                                payment_method: vl.payment_method,
+                            })
+                        }
 
                         const isQris = (Array.isArray(payment.settings) && payment.settings.length > 0)
                             ? payment.settings[0].status_qris
@@ -214,7 +455,265 @@ export default function IFormCheckout({
 
                         return (
                             <>
-                                {(Array.isArray(payment.transfer) && payment.transfer.length > 0) && (
+                                <RadioGroup.Root
+                                    className="flex flex-col gap-2.5"
+                                    aria-label="View density"
+                                    onValueChange={(value) => {
+                                        const _value = JSON.parse(value)
+                                        _onChange(_value)
+                                    }}
+                                >
+
+                                    {(Array.isArray(payment.transfer) && payment.transfer.length > 0) && (
+                                        <div className="py-2">
+                                            <div className="bg-slate-300 py-2 px-8">
+                                                <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                {payment.transfer.map((item) => {
+                                                    const classActive = item.id_bank === value?.id
+                                                    return item.is_active ? (
+                                                        <RadioGroup.Item
+                                                            key={item.id_bank}
+                                                            className={clsx(
+                                                                "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                            )}
+                                                            value={JSON.stringify({
+                                                                id: item.id_bank,
+                                                                bank: item.bank.toString(),
+                                                                account: item.rekening,
+                                                                name: item.pemilik,
+                                                                payment_method: "tf"
+                                                            })}
+                                                            id={item.id_bank}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                    <BankLogo id={item.bank.toString()} />
+                                                                </div>
+                                                                <p className="text-xs text-gray-800 font-semibold">{item.bank}</p>
+                                                            </div>
+                                                        </RadioGroup.Item>
+                                                    ) : null
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {isVa && (
+                                        <>
+                                            {(Array.isArray(payment.va) && payment.va.length > 0) && (
+                                                <div className="py-2">
+                                                    <div className="bg-slate-300 py-2 px-8">
+                                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Virtual account</h3>
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        {payment.va.map((item) => {
+                                                            const account = item.bank_code.replaceAll("_", " ").toString()
+                                                            const classActive = item.id_bank_va_xendit === value?.id
+                                                            return item.is_active ? (
+                                                                <RadioGroup.Item
+                                                                    key={item.id_bank_va_xendit}
+                                                                    className={clsx(
+                                                                        "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                        classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                                    )}
+                                                                    value={JSON.stringify({
+                                                                        id: item.id_bank_va_xendit,
+                                                                        account: account,
+                                                                        payment_method: "va",
+
+                                                                    })}
+                                                                    id={item.id_bank_va_xendit}
+                                                                >
+                                                                    {/* <li
+                                                                key={item.id_bank_va_xendit}
+                                                                className={clsx(
+                                                                    "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                    classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                                )}
+                                                            > */}
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                            <BankLogo id={item.bank_code.toString()} />
+                                                                        </div>
+                                                                        <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                            {`Bank ${account}`}
+                                                                        </p>
+                                                                    </div>
+                                                                    {/* <button
+                                                                    type="button"
+                                                                    className="absolute inset-0"
+                                                                    onClick={(event) => {
+                                                                        event.preventDefault()
+                                                                        onChange({
+                                                                            id: item.id_bank_va_xendit,
+                                                                            account: account,
+                                                                            payment_method: "va",
+
+                                                                        })
+                                                                    }}
+                                                                >&nbsp;</button> */}
+                                                                    {/* </li> */}
+                                                                </RadioGroup.Item>
+                                                            ) : null
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {(isQris || (product.typeProduct === "fisik")) && (
+                                        <>
+                                            <div className="py-2">
+                                                <div className="bg-slate-300 py-2 px-8">
+                                                    <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya {isQris.valueOf()}</h3>
+                                                </div>
+
+                                                {isQris && (
+                                                    <>
+                                                        {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
+                                                            <div className="flex flex-col">
+                                                                {payment.settings.map((item) => {
+                                                                    const classActive = item.id_setting_xendit === value?.id
+                                                                    return item.status_qris ? (
+                                                                        <RadioGroup.Item
+                                                                            key={item.id_setting_xendit}
+                                                                            className={clsx(
+                                                                                "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                                classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                                            )}
+                                                                            value={JSON.stringify({
+                                                                                id: item.id_setting_xendit,
+                                                                                name: item.business_name,
+                                                                                payment_method: "QRIS",
+                                                                            })}
+                                                                            id={item.id_setting_xendit}
+                                                                        >
+                                                                            {/* <li
+                                                                        key={item.id_setting_xendit}
+                                                                        className={clsx(
+                                                                            "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                            classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                                        )}
+                                                                    > */}
+                                                                            <div className="flex items-center gap-2">
+                                                                                <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                                    <BankLogo id="qris" />
+                                                                                </div>
+                                                                                <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                                    {`QRIS`}
+                                                                                </p>
+                                                                            </div>
+                                                                            {/* <button
+                                                                            type="button"
+                                                                            className="absolute inset-0"
+                                                                            onClick={(event) => {
+                                                                                event.preventDefault()
+                                                                                onChange({
+                                                                                    id: item.id_setting_xendit,
+                                                                                    name: item.business_name,
+                                                                                    payment_method: "QRIS",
+                                                                                })
+                                                                            }}
+                                                                        >&nbsp;</button> */}
+                                                                            {/* </li> */}
+                                                                        </RadioGroup.Item>
+                                                                    ) : null
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+
+                                                {product.typeProduct === "fisik" && (
+                                                    <div className="flex flex-col">
+                                                        <RadioGroup.Item
+                                                            key="COD"
+                                                            className={clsx(
+                                                                "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                "COD" === value?.id.toString() ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                            )}
+                                                            value={JSON.stringify({
+                                                                id: "COD",
+                                                                payment_method: "COD"
+                                                            })}
+                                                            id="COD"
+                                                        >
+                                                            {/* <li
+                                                            className={clsx(
+                                                                "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                "COD" === value?.id.toString() ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                            )}
+                                                        > */}
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                    <BankLogo id="cod" />
+                                                                </div>
+                                                                <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                    {`COD (Cash On Delivery)`}
+                                                                </p>
+                                                            </div>
+                                                            {/* <button
+                                                                type="button"
+                                                                className="absolute inset-0"
+                                                                onClick={(event) => {
+                                                                    event.preventDefault()
+                                                                    onChange({
+                                                                        id: "COD",
+                                                                        payment_method: "COD"
+                                                                    })
+                                                                }}
+                                                            >&nbsp;</button> */}
+                                                        </RadioGroup.Item>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* <div className="flex items-center">
+                                        <RadioGroup.Item
+                                            className="bg-white w-[25px] h-[25px] rounded-full outline-none cursor-default"
+                                            value="default"
+                                            id="r1"
+                                        >
+                                            <RadioGroup.Indicator className="flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[11px] after:h-[11px] after:rounded-[50%] after:bg-violet11" />
+                                        </RadioGroup.Item>
+                                        <label className="text-white text-[15px] leading-none pl-[15px]" htmlFor="r1">
+                                            Default
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <RadioGroup.Item
+                                            className="bg-white w-[25px] h-[25px] rounded-full outline-none cursor-default"
+                                            value="comfortable"
+                                            id="r2"
+                                        >
+                                            <RadioGroup.Indicator className="flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[11px] after:h-[11px] after:rounded-[50%] after:bg-violet11" />
+                                        </RadioGroup.Item>
+                                        <label className="text-white text-[15px] leading-none pl-[15px]" htmlFor="r2">
+                                            Comfortable
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <RadioGroup.Item
+                                            className="bg-white w-[25px] h-[25px] rounded-full outline-none cursor-default"
+                                            value="compact"
+                                            id="r3"
+                                        >
+                                            <RadioGroup.Indicator className="flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[11px] after:h-[11px] after:rounded-[50%] after:bg-violet11" />
+                                        </RadioGroup.Item>
+                                        <label className="text-white text-[15px] leading-none pl-[15px]" htmlFor="r3">
+                                            Compact
+                                        </label>
+                                    </div> */}
+                                </RadioGroup.Root>
+
+                                {/* <div className="mt-5"></div> */}
+                                {/* {(Array.isArray(payment.transfer) && payment.transfer.length > 0) && (
                                     <div className="py-2">
                                         <div className="bg-slate-300 py-2 px-8">
                                             <h3 className="py-2 text-xs font-semibold tracking-wide">Transfer</h3>
@@ -239,7 +738,8 @@ export default function IFormCheckout({
                                                         <button
                                                             type="button"
                                                             className="absolute inset-0"
-                                                            onClick={() => {
+                                                            onClick={(event) => {
+                                                                event.preventDefault()
                                                                 onChange({
                                                                     id: item.id_bank,
                                                                     bank: item.bank.toString(),
@@ -254,9 +754,9 @@ export default function IFormCheckout({
                                             })}
                                         </ul>
                                     </div>
-                                )}
+                                )} */}
 
-                                {isVa && (
+                                {/* {isVa && (
                                     <>
                                         {(Array.isArray(payment.va) && payment.va.length > 0) && (
                                             <div className="py-2">
@@ -286,7 +786,8 @@ export default function IFormCheckout({
                                                                 <button
                                                                     type="button"
                                                                     className="absolute inset-0"
-                                                                    onClick={() => {
+                                                                    onClick={(event) => {
+                                                                        event.preventDefault()
                                                                         onChange({
                                                                             id: item.id_bank_va_xendit,
                                                                             account: account,
@@ -302,88 +803,106 @@ export default function IFormCheckout({
                                             </div>
                                         )}
                                     </>
-                                )}
+                                )} */}
 
-                                <div className="py-2">
-                                    <div className="bg-slate-300 py-2 px-8">
-                                        <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya {isQris.valueOf()}</h3>
-                                    </div>
+                                {/* {(isQris || (product.typeProduct === "fisik")) && (
+                                    <>
+                                        <div className="py-2">
+                                            <div className="bg-slate-300 py-2 px-8">
+                                                <h3 className="py-2 text-xs font-semibold tracking-wide">Lainnya {isQris.valueOf()}</h3>
+                                            </div>
 
-                                    {isQris && (
-                                        <>
-                                            {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
-                                                <ul className="flex flex-col">
-                                                    {payment.settings.map((item) => {
-                                                        const classActive = item.id_setting_xendit === value?.id
-                                                        return item.status_qris ? (
-                                                            <li
-                                                                key={item.id_setting_xendit}
-                                                                className={clsx(
-                                                                    "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
-                                                                    classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
-                                                                )}
-                                                            >
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                        <BankLogo id="qris" />
-                                                                    </div>
-                                                                    <p className="text-xs text-gray-800 font-semibold uppercase">
-                                                                        {`QRIS`}
-                                                                    </p>
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    className="absolute inset-0"
-                                                                    onClick={() => {
-                                                                        onChange({
-                                                                            id: item.id_setting_xendit,
-                                                                            name: item.business_name,
-                                                                            payment_method: "QRIS",
-                                                                        })
-                                                                    }}
-                                                                >&nbsp;</button>
-                                                            </li>
-                                                        ) : null
-                                                    })}
+                                            {isQris && (
+                                                <>
+                                                    {(Array.isArray(payment.settings) && payment.settings.length > 0) && (
+                                                        <ul className="flex flex-col">
+                                                            {payment.settings.map((item) => {
+                                                                const classActive = item.id_setting_xendit === value?.id
+                                                                return item.status_qris ? (
+                                                                    <li
+                                                                        key={item.id_setting_xendit}
+                                                                        className={clsx(
+                                                                            "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                                            classActive ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                                        )}
+                                                                    >
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                                <BankLogo id="qris" />
+                                                                            </div>
+                                                                            <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                                {`QRIS`}
+                                                                            </p>
+                                                                        </div>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="absolute inset-0"
+                                                                            onClick={(event) => {
+                                                                                event.preventDefault()
+                                                                                onChange({
+                                                                                    id: item.id_setting_xendit,
+                                                                                    name: item.business_name,
+                                                                                    payment_method: "QRIS",
+                                                                                })
+                                                                            }}
+                                                                        >&nbsp;</button>
+                                                                    </li>
+                                                                ) : null
+                                                            })}
+                                                        </ul>
+                                                    )}
+                                                </>
+                                            )}
+
+                                            {product.typeProduct === "fisik" && (
+                                                <ul className="flex flex-col gap-3">
+                                                    <li
+                                                        className={clsx(
+                                                            "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
+                                                            "COD" === value?.id.toString() ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                <BankLogo id="cod" />
+                                                            </div>
+                                                            <p className="text-xs text-gray-800 font-semibold uppercase">
+                                                                {`COD (Cash On Delivery)`}
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            className="absolute inset-0"
+                                                            onClick={(event) => {
+                                                                event.preventDefault()
+                                                                onChange({
+                                                                    id: "COD",
+                                                                    payment_method: "COD"
+                                                                })
+                                                            }}
+                                                        >&nbsp;</button>
+                                                    </li>
                                                 </ul>
                                             )}
-                                        </>
-                                    )}
-
-                                    <ul className="flex flex-col gap-3">
-                                        <li
-                                            className={clsx(
-                                                "relative overflow-hidden py-2.5 bg-gray-100 border-b px-8",
-                                                "COD" === value?.id.toString() ? "bg-slate-400/40" : "border-transparent hover:bg-slate-300/40"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-12 h-5 p-1 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                    <BankLogo id="cod" />
-                                                </div>
-                                                <p className="text-xs text-gray-800 font-semibold uppercase">
-                                                    {`COD (Cash On Delivery)`}
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className="absolute inset-0"
-                                                onClick={() => {
-                                                    onChange({
-                                                        id: "COD",
-                                                        payment_method: "COD"
-                                                    })
-                                                }}
-                                            >&nbsp;</button>
-                                        </li>
-                                    </ul>
-                                </div>
+                                        </div>
+                                    </>
+                                )} */}
 
                                 <div className="px-12 py-6 flex flex-col">
                                     <button
                                         type="button"
                                         className="w-full h-[40px] text-sm text-white rounded-lg shadow bg-stora-500"
                                         onClick={(event) => {
+                                            event.preventDefault()
+                                            // if (event) {
+                                            //     if (typeof event.preventDefault === "function") {
+                                            //         event.preventDefault();
+                                            //     }
+                                            //     if (typeof event.stopPropagation === "function") {
+                                            //         event.stopPropagation();
+                                            //     }
+                                            // }
+
                                             setAlertOpen(false)
                                             if (value) {
                                                 setIsOpenPayment(false)
@@ -399,14 +918,6 @@ export default function IFormCheckout({
                                                     eventAlertRef.current = "Belum memilih metode pembayaran"
                                                     setAlertOpen(true)
                                                 }, 100)
-                                            }
-                                            if (event) {
-                                                if (typeof event.preventDefault === "function") {
-                                                    event.preventDefault();
-                                                }
-                                                if (typeof event.stopPropagation === "function") {
-                                                    event.stopPropagation();
-                                                }
                                             }
                                         }}
                                     >Simpan</button>
@@ -878,10 +1389,15 @@ export default function IFormCheckout({
                                     </>
                                 )}
                             </div>
+                        </>
+                    )}
 
+                    {(_total > 0) && (
+                        <>
                             {selectPaymentMethod()}
                         </>
                     )}
+
 
 
                     <div>

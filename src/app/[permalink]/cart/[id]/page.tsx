@@ -60,6 +60,7 @@ export default async function CartId(props: CartIdProps) {
     const _fisikProduct = ["fisik"]
     const _isDigital = carts?.find((item) => _digitalProduct.includes(item.jenis_produk))
     const _isFisik = carts?.find((item) => _fisikProduct.includes(item.jenis_produk))
+    // const _isFreeOngkir = carts?.find((item) => item.is_free_ongkir === "SATU")
     
     console.log("_isDigital", _isDigital)
     console.log("!!_isDigital", !!_isDigital)
@@ -77,6 +78,7 @@ export default async function CartId(props: CartIdProps) {
 
 
     console.log("_isFreeOngkir", _isFreeOngkir)
+    console.log("carts", carts)
 
     return (
         <div className="min-h-screen">
@@ -166,6 +168,7 @@ export default async function CartId(props: CartIdProps) {
                                 discount: carts
                                     ? carts.reduce((sum, item) => (sumTotal(sum.toString(), item.potongan ? item.potongan.toString() : "0")), 0)
                                     : 0,
+                                typeProduct: _isFisik?.jenis_produk || ""
                             }}
                             user={{
                                 name: user?.nama_lengkap,

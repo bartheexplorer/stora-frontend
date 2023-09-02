@@ -657,7 +657,6 @@ export default function IFormCheckout({
                     control={control}
                     render={({ field }) => {
                         const { onChange: _onChange, value } = field
-                        console.log("value_selected", value)
 
                         const onChange = (vl: any) => {
                             _onChange(vl)
@@ -684,7 +683,6 @@ export default function IFormCheckout({
                                     aria-label="View density"
                                     onValueChange={(value) => {
                                         const _value = JSON.parse(value)
-                                        console.log("_value", _value)
                                         _onChange(_value)
                                     }}
                                 >
@@ -965,7 +963,6 @@ export default function IFormCheckout({
                                                             className="absolute inset-0"
                                                             onClick={(event) => {
                                                                 event.preventDefault()
-                                                                console.log("id", item.id_bank)
                                                                 onChange({
                                                                     id: item.id_bank,
                                                                     bank: item.bank.toString(),

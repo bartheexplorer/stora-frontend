@@ -1,7 +1,10 @@
 import useSWR from "swr"
 
 const fetcher = async (url: RequestInfo) => {
-    const res = await fetch(url)
+    const res = await fetch(url, {
+        method: "GET",
+        cache: 'no-store'
+    })
     const _body = await res.json()
     return _body?.data
 }
