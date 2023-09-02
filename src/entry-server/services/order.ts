@@ -280,7 +280,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
 
             const notip = await pushNotif(
                 textOrder4,
-                params.phoneToko,
+                params.phone,
                 params.userId.toString()
             )
 

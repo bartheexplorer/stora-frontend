@@ -654,7 +654,17 @@ export default function IFormCheckout({
                     name="payment"
                     control={control}
                     render={({ field }) => {
-                        const { onChange, value } = field
+                        const { onChange: _onChange, value } = field
+
+                        const onChange = (vl: any) => {
+                            _onChange(vl)
+                            setCurrentPayment({
+                                ...vl,
+                                id: vl.id,
+                                account: vl.account,
+                                payment_method: vl.payment_method,
+                            })
+                        }
 
                         const isQris = (Array.isArray(payment.settings) && payment.settings.length > 0)
                             ? payment.settings[0].status_qris
@@ -693,6 +703,7 @@ export default function IFormCheckout({
                                                                 className="absolute inset-0"
                                                                 onClick={(event) => {
                                                                     event.preventDefault()
+                                                                    console.log("id", item.id_bank)
                                                                     onChange({
                                                                         id: item.id_bank,
                                                                         bank: item.bank.toString(),
@@ -856,22 +867,22 @@ export default function IFormCheckout({
                                             //     }
                                             // }
 
-                                            setAlertOpen(false)
-                                            if (value) {
+                                            // setAlertOpen(false)
+                                            // if (value) {
                                                 setIsOpenPayment(false)
-                                                setCurrentPayment({
-                                                    ...value,
-                                                    id: value.id,
-                                                    account: value.account,
-                                                    payment_method: value.payment_method,
-                                                })
-                                            } else {
-                                                window.clearTimeout(timerRef.current);
-                                                timerRef.current = window.setTimeout(() => {
-                                                    eventAlertRef.current = "Belum memilih metode pembayaran"
-                                                    setAlertOpen(true)
-                                                }, 100)
-                                            }
+                                                // setCurrentPayment({
+                                                //     ...value,
+                                                //     id: value.id,
+                                                //     account: value.account,
+                                                //     payment_method: value.payment_method,
+                                                // })
+                                            // } else {
+                                            //     window.clearTimeout(timerRef.current);
+                                            //     timerRef.current = window.setTimeout(() => {
+                                            //         eventAlertRef.current = "Belum memilih metode pembayaran"
+                                            //         setAlertOpen(true)
+                                            //     }, 100)
+                                            // }
                                         }}
                                     >Simpan</button>
                                 </div>
