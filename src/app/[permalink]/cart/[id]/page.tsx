@@ -54,31 +54,59 @@ export default async function CartId(props: CartIdProps) {
     })
     const carts = toCarts(cart)
 
-    console.log("[carts]", carts)
-
     const _digitalProduct = ["digital"]
     const _fisikProduct = ["fisik"]
-    const _isDigital = carts?.find((item) => _digitalProduct.includes(item.jenis_produk))
-    const _isFisik = carts?.find((item) => _fisikProduct.includes(item.jenis_produk))
-    // const _isFreeOngkir = carts?.find((item) => item.is_free_ongkir === "SATU")
+
+    const _isDigitalArray = carts?.filter((item) => _digitalProduct.includes(item.jenis_produk))
+    const _isFisikArray = carts?.filter((item) => _fisikProduct.includes(item.jenis_produk))
+    // const _isFreeOngkirArray = carts?.filter((item) => ["1"].includes(item.is_free_ongkir))
+    const _isNoFreeOngkirArray = carts?.filter((item) => ["0"].includes(item.is_free_ongkir))
     
-    console.log("_isDigital", _isDigital)
-    console.log("!!_isDigital", !!_isDigital)
-    console.log("_isDigital", _isFisik)
-    console.log("!!_isDigital", !!_isFisik)
+    const _isFisik = carts?.find((item) => _fisikProduct.includes(item.jenis_produk))
+    // const _isFreeOngkir = carts?.find((item) => ["1"].includes(item.is_free_ongkir))
 
     let _isFreeOngkir = false
-    if (!!_isDigital) {
-        _isFreeOngkir = true
-    } 
+    let _showShipping = false
 
-    if (!!_isFisik) {
+    if (Array.isArray(_isNoFreeOngkirArray) && _isNoFreeOngkirArray.length > 0) {
         _isFreeOngkir = false
+        _showShipping = true
+        console.log("_isNoFreeOngkirArray")
     }
 
+    if (Array.isArray(_isDigitalArray) && _isDigitalArray.length > 0) {
+        _isFreeOngkir = true
+        _showShipping = false
+        console.log("_isDigitalArray")
+    }
+
+    if (Array.isArray(_isFisikArray) && _isFisikArray.length > 0) {
+        const _isFreeOngkirFind = carts?.find((item) => ["1"].includes(item.is_free_ongkir))
+        // _isFreeOngkir = !!_isFreeOngkirFind
+        _isFreeOngkir = !!_isFreeOngkirFind
+        _showShipping = !!_isFreeOngkirFind
+        if (Array.isArray(_isNoFreeOngkirArray) && _isNoFreeOngkirArray.length > 0) {
+            _isFreeOngkir = false
+            _showShipping = true
+        }
+        console.log("_isFisikArray")
+        // const _is_fisik = carts?.find((item) => _fisikProduct.includes(item.jenis_produk))
+        // if (_is_fisik) {
+
+        // }
+    }
+
+    // if (Array.isArray(_isFreeOngkirArray) && _isFreeOngkirArray.length > 0) {
+    //     console.log("_isFreeOngkirArray")
+    // }
+
+    console.log("_isDigitalArray", _isDigitalArray)
+    console.log("_isFisikArray", _isFisikArray)
+    // console.log("_isFreeOngkirArray", _isFreeOngkirArray)
+    console.log("_isNoFreeOngkirArray", _isNoFreeOngkirArray)
+    console.log("carts", carts)
 
     console.log("_isFreeOngkir", _isFreeOngkir)
-    console.log("carts", carts)
 
     return (
         <div className="min-h-screen">
@@ -108,7 +136,7 @@ export default async function CartId(props: CartIdProps) {
             {(Array.isArray(carts) && carts.length > 0) ? (
                 <>
                     <div className="py-4 px-12">
-                        <h3 className="text-sm font-semibold text-slate-600">Checkout</h3>
+                        <h3 className="text-sm font-semibold text-slate-600">Checkouts</h3>
                     </div>
 
                     {(Array.isArray(carts) && carts.length > 0) && (
@@ -160,6 +188,7 @@ export default async function CartId(props: CartIdProps) {
                                 weight: carts
                                     ? carts.reduce((sum, item) => (sumTotal(sum.toString(), item.berat.toString())), 0)
                                     : 0,
+                                showShipping: _showShipping,
                                 isFreeOngkir: _isFreeOngkir,
                                 isFree: false,
                                 total: carts

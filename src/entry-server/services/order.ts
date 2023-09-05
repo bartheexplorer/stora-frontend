@@ -1,8 +1,8 @@
 import type { PrismaClient, t_order as TOrder, t_multi_order } from "@prisma/client"
 import { appConfig } from "../config/app"
 import type { OrderParams } from "./order-interface"
-import { format } from 'date-fns';
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { format } from "date-fns"
+import { utcToZonedTime } from "date-fns-tz"
 
 function formatCurrency(amount: number): string {
     const formattedAmount = new Intl.NumberFormat('id-ID').format(amount)
@@ -141,6 +141,16 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
                     await paymentData()
                 }
             }
+            let _statusOrder = "1"
+            if (params.typeProduct === "digital") {
+                if (params.isFree) {
+                    _statusOrder = "4"
+                }
+            }
+
+            // console.log(params)
+            // console.log(_statusOrder)
+
             const order = await tx.$executeRaw`
           INSERT INTO t_order (
             order_id,
@@ -229,7 +239,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
           ${params.typeProduct},
 
           '0',
-          '1',
+          ${_statusOrder},
           
           ${tglOrder},
           ${tglOrder},

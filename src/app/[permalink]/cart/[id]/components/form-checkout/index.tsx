@@ -57,6 +57,7 @@ interface IFormCheckoutProps {
         }[]
     }
     product: {
+        showShipping: boolean
         isFreeOngkir: boolean
         isFree: boolean
         weight: number
@@ -113,6 +114,7 @@ export default function IFormCheckout({
     } | null>(null)
 
     const _isFreeOngkir = product.isFreeOngkir
+    const _showShipping = product.showShipping
     let cunik = 0
     let totalUniqueCode = 0
 
@@ -154,6 +156,38 @@ export default function IFormCheckout({
         setAlertOpen(false)
 
         let _alamatStr = ""
+
+        if (_showShipping) {
+            if (!address) {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum mengisi alamat"
+                    setAlertOpen(true)
+                }, 100)
+                return
+            }
+    
+            _alamatStr = validateAndConvertToString([
+                address.address,
+                address.urban_village,
+                address.sub_district,
+                address.regency,
+                address.province,
+                address.zip_code ? `Kode Pos: ${address.zip_code}` : "",
+            ])
+        }
+
+        if (checkout.total > 0) {
+            if (!currentPayment?.id || typeof currentPayment.id !== "string") {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(() => {
+                    eventAlertRef.current = "Belum memilih metode pembayaran"
+                    setAlertOpen(true)
+                }, 100)
+                return
+            }
+        }
+
 
         if (!_isFreeOngkir) {
             if (!address) {
@@ -1202,7 +1236,7 @@ export default function IFormCheckout({
                         />
                     </fieldset>
 
-                    {!_isFreeOngkir && (
+                    {_showShipping && (
                         <>
                             {/* Addresses */}
                             <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
