@@ -209,7 +209,7 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
 
             {/* Medsos icon list */}
             {user.setting ? (
-                <div className="mt-2 flex justify-center space-x-3">
+                <div className="py-2 flex justify-center space-x-3">
                     {Boolean(user.setting.whatsapp.length) && (
                         <div className="rounded-full h-5 w-5">
                             <Image
@@ -263,7 +263,7 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
                     )}
                 </div>
             ) : (
-                <div className="mt-2 animate-pulse flex justify-center space-x-3">
+                <div className="py-2 animate-pulse flex justify-center space-x-3">
                     <div className="rounded-full bg-gray-200 h-5 w-5"></div>
                     <div className="rounded-full bg-gray-200 h-5 w-5"></div>
                     <div className="rounded-full bg-gray-200 h-5 w-5"></div>
