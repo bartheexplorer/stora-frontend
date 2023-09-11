@@ -209,56 +209,66 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
 
             {/* Medsos icon list */}
             {user.setting ? (
-                <div className="py-2 flex justify-center space-x-3">
+                <div className="py-2 flex justify-center space-x-4">
                     {Boolean(user.setting.whatsapp.length) && (
                         <div className="rounded-full h-5 w-5">
-                            <Image
-                                src={whatsAppIcon}
-                                width={100}
-                                height={100}
-                                alt="WhatsApp"
-                            />
+                            <Link target="_blank" href={`https://wa.me/+${user.setting.whatsapp.toString()}?text=Halo+Admin`}>
+                                <Image
+                                    src={whatsAppIcon}
+                                    width={100}
+                                    height={100}
+                                    alt="WhatsApp"
+                                />
+                            </Link>
                         </div>
                     )}
                     {Boolean(user.setting.instagram.length) && (
                         <div className="relative rounded-full w-8">
-                            <Image
-                                src={instagram}
-                                width={100}
-                                height={100}
-                                alt="Instgram"
-                                className="absolute w-8"
-                            />
+                            <Link target="_blank" href={`https://instagram.com/${user.setting.instagram.toString()}`}>
+                                <Image
+                                    src={instagram}
+                                    width={100}
+                                    height={100}
+                                    alt="Instgram"
+                                    className="absolute w-8"
+                                />
+                            </Link>
                         </div>
                     )}
                     {Boolean(user.setting.tiktok.length) && (
                         <div className="rounded-full h-5 w-5">
-                            <Image
-                                src={tiktok}
-                                width={100}
-                                height={100}
-                                alt="Tiktok"
-                            />
+                            <Link target="_blank" href={`https://tiktok.com/${user.setting.tiktok.toString()}`}>
+                                <Image
+                                    src={tiktok}
+                                    width={100}
+                                    height={100}
+                                    alt="Tiktok"
+                                />
+                            </Link>
                         </div>
                     )}
                     {Boolean(user.setting.facebook.length) && (
                         <div className="rounded-full h-5 w-5">
-                            <Image
-                                src={facebook}
-                                width={100}
-                                height={100}
-                                alt="Facebook"
-                            />
+                            <Link target="_blank" href={`https://facebook.com/${user.setting.facebook.toString()}`}>
+                                <Image
+                                    src={facebook}
+                                    width={100}
+                                    height={100}
+                                    alt="Facebook"
+                                />
+                            </Link>
                         </div>
                     )}
                     {Boolean(user.setting.youtube.length) && (
                         <div className="rounded-full h-5 w-5">
-                            <Image
-                                src={youtube}
-                                width={100}
-                                height={100}
-                                alt="Youtube"
-                            />
+                            <Link target="_blank" href={`https://youtube.com/${user.setting.youtube.toString()}`}>
+                                <Image
+                                    src={youtube}
+                                    width={100}
+                                    height={100}
+                                    alt="Youtube"
+                                />
+                            </Link>
                         </div>
                     )}
                 </div>

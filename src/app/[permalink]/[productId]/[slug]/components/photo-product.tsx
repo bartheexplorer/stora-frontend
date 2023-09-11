@@ -23,7 +23,7 @@ export default function PhotoProduct({
     if (isLoading) return <ILoading />
 
     return (
-        <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden lg:aspect-none group-hover:opacity-75 lg:h-96 rounded-lg">
+        <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden lg:aspect-none group-hover:opacity-75 rounded">
             {images ? (
                 <Image
                     src={images.data1}

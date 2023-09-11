@@ -38,21 +38,21 @@ export default function ContentScrollHeader({
                         </div>`
                     },
                 }}
-                spaceBetween={20}
+                spaceBetween={16}
                 slidesPerView={1}
-                slidesOffsetAfter={8}
-                slidesOffsetBefore={8}
+                // slidesOffsetAfter={8}
+                // slidesOffsetBefore={8}
                 modules={[Scrollbar, Pagination]}
                 className="mySwiper"
-                style={{
-                    paddingLeft: "18px",
-                    paddingRight: "18px",
-                }}
+                // style={{
+                //     paddingLeft: "18px",
+                //     paddingRight: "18px",
+                // }}
             >
                 {!!video && (
                     <SwiperSlide>
                         <div className="relative flex items-center h-full">
-                            <div className="aspect-h-1 aspect-w-2 w-full overflow-hidden bg-gray-200 lg:aspect-none group-hover:opacity-75 h-96 rounded-lg">
+                            <div className="aspect-h-1 aspect-w-2 w-full overflow-hidden bg-gray-200 lg:aspect-none group-hover:opacity-75 h-96">
                                 <iframe
                                     src={video}
                                     title="YouTube video player"

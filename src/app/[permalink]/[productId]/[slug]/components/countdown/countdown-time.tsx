@@ -1,11 +1,15 @@
 "use client"
 
+// import { useLocalStorage } from "usehooks-ts"
 import DateTimeDisplay from "./datetime-display"
 import { useCountdown } from "@/hooks/countdown"
+// import { useEffect } from "react";
 
-const THREE_DAYS_IN_MS = 1 * 24 * 60 * 60 * 1000;
-const NOW_IN_MS = new Date().getTime();
-const dateTimeAfterThreeDays = NOW_IN_MS + THREE_DAYS_IN_MS;
+// const A_DAYS_IN_MS = 1 * 24 * 60 * 60 * 1000;
+const NOW_IN_MS = new Date();
+NOW_IN_MS.setHours(23, 59, 59, 999)
+// const dateTimeAfterThreeDays = NOW_IN_MS + A_DAYS_IN_MS;
+const dateTimeAfterThreeDays = NOW_IN_MS;
 
 const ExpiredNotice = () => {
     return (
@@ -40,10 +44,18 @@ const ShowCounter = ({
     )
 }
 
-const CountdownTimer = ({ teks_countdown, targetDate = dateTimeAfterThreeDays }: { targetDate?: number; teks_countdown: string }) => {
+interface CountdownTimerxProps {
+    targetDate: number
+    teks_countdown: string
+}
+
+const CountdownTimerx = ({
+    teks_countdown,
+    targetDate
+}: CountdownTimerxProps) => {
     const [days, hours, minutes, seconds] = useCountdown(targetDate)
 
-    if ((days + hours + minutes + seconds) <= 0) return <ExpiredNotice />
+    if ((days + hours + minutes + seconds) <= 0) return null
 
     return (
         <div className="w-full bg-stora-500 max-w-full mx-auto z-20 h-[50px] flex items-center">
@@ -60,6 +72,21 @@ const CountdownTimer = ({ teks_countdown, targetDate = dateTimeAfterThreeDays }:
                 </div>
             </div>
         </div>
+    )
+}
+
+interface CountdownTimerProps {
+    teks_countdown: string
+}
+
+const CountdownTimer = ({
+    teks_countdown,
+}: CountdownTimerProps) => {
+    return (
+        <CountdownTimerx
+            teks_countdown={teks_countdown}
+            targetDate={dateTimeAfterThreeDays.getTime()}
+        />
     )
 }
 

@@ -117,7 +117,7 @@ export default async function Slug(props: SlugProps) {
 
     return (
         <>
-            <div className="w-full px-6 py-4 shadow mb-2">
+            <div className="w-full px-6 py-4 shadow">
                 <div className="flex items-center justify-between gap-4">
                     <Link
                         href={`/${props.params.permalink}`}
@@ -147,7 +147,9 @@ export default async function Slug(props: SlugProps) {
             )}
 
             {!!product?.countText && (
-                <CountdownTimer teks_countdown={product.countText.teks_countdown} />
+                <CountdownTimer
+                    teks_countdown={product.countText.teks_countdown}
+                />
             )}
 
             {!!product && (
