@@ -1356,6 +1356,55 @@ export default function IFormCheckout({
                                     }
                                 }
 
+                                const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+                                    const _val = event.target.value
+                                    let qty = !Number.isNaN(parseInt(_val))
+                                        ? Number(_val)
+                                        : 0
+                                    if (Number.isNaN(qty)) {
+                                        qty = 0
+                                    }
+
+                                    if (qty <= 0) {
+                                        event.target.value = "1"
+                                        qty = 1
+                                    }
+
+                                    if (qty >= 1000) {
+                                        event.target.value = "1000"
+                                        qty = 1000
+                                    }
+
+                                    onChange(event)
+                                    // set_checkout
+                                    setCheckout((prevState) => {
+                                        const cekRandCode = prevState.afterPrice > 0 || prevState.ongkir > 0
+                                        const subtotal = multiplySubTotal(
+                                            qty.toString(),
+                                            prevState.afterPrice.toString()
+                                        )
+                                        const totalOngkir = sumTotal(
+                                            subtotal.toString(),
+                                            ongkir.toString()
+                                        )
+                                        const totalRand = sumTotal(
+                                            totalOngkir.toString(),
+                                            cekRandCode ? prevState.randCode.toString() : "0"
+                                        )
+                                        const totalCoupon = subtractTotal(
+                                            totalRand.toString(),
+                                            (couponData?.discount || 0).toString()
+                                        )
+
+                                        return {
+                                            ...prevState,
+                                            qty: qty,
+                                            subTotal: subtotal,
+                                            total: totalCoupon,
+                                        }
+                                    })
+                                }
+
                                 return (
                                     <fieldset className="mb-[15px] w-full flex flex-col justify-start">
                                         <label className="text-[13px] leading-none mb-2.5 block" htmlFor="jumlah">
@@ -1364,54 +1413,8 @@ export default function IFormCheckout({
                                         <input
                                             {...rest}
                                             ref={ref}
-                                            onChange={(event) => {
-                                                const _val = event.target.value
-                                                let qty = !Number.isNaN(parseInt(_val))
-                                                    ? Number(_val)
-                                                    : 0
-                                                if (Number.isNaN(qty)) {
-                                                    qty = 0
-                                                }
-
-                                                if (qty <= 0) {
-                                                    event.target.value = "1"
-                                                    qty = 1
-                                                }
-
-                                                if (qty >= 1000) {
-                                                    event.target.value = "1000"
-                                                    qty = 1000
-                                                }
-
-                                                onChange(event)
-                                                // set_checkout
-                                                setCheckout((prevState) => {
-                                                    const cekRandCode = prevState.afterPrice > 0 || prevState.ongkir > 0
-                                                    const subtotal = multiplySubTotal(
-                                                        qty.toString(),
-                                                        prevState.afterPrice.toString()
-                                                    )
-                                                    const totalOngkir = sumTotal(
-                                                        subtotal.toString(),
-                                                        ongkir.toString()
-                                                    )
-                                                    const totalRand = sumTotal(
-                                                        totalOngkir.toString(),
-                                                        cekRandCode ? prevState.randCode.toString() : "0"
-                                                    )
-                                                    const totalCoupon = subtractTotal(
-                                                        totalRand.toString(),
-                                                        (couponData?.discount || 0).toString()
-                                                    )
-
-                                                    return {
-                                                        ...prevState,
-                                                        qty: qty,
-                                                        subTotal: subtotal,
-                                                        total: totalCoupon,
-                                                    }
-                                                })
-                                            }}
+                                            value={value}
+                                            onChange={_onChange}
                                             className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
                                             placeholder="Jumlah"
                                         />

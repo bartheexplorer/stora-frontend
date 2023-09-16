@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { type IFormValueQty } from "./form-qty-type"
 import { useUpdateCreateCart } from "@/hooks/cart"
 import { useRouter } from "next/navigation"
@@ -18,8 +18,8 @@ export default function IFormQty(props: IFormQtyProps) {
         isLoading: loadingUpdate,
     } = useUpdateCreateCart()
     const {
-        register,
         handleSubmit,
+        control,
     } = useForm<IFormValueQty>({
         defaultValues: {
             qty: props.qty,
@@ -43,33 +43,50 @@ export default function IFormQty(props: IFormQtyProps) {
     return (
         <div className="relative">
             <form onSubmit={onHandleSubmit}>
-                <input
-                    {...register("qty")}
-                    className="focus:outline-none py-2 shadow px-3 rounded-lg w-14"
-                    onChange={async (event) => {
-                        const _val = event.target.value
-                        let qty = !Number.isNaN(parseInt(_val))
-                            ? Number(_val)
-                            : 0
-                        if (Number.isNaN(qty)) {
-                            qty = 0
-                        }
+                <Controller
+                    name="qty"
+                    control={control}
+                    rules={{
+                        required: true,
+                    }}
+                    render={({ field }) => {
+                        const { onChange, ref, value, ...rest } = field
+                        const _onChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+                            const _val = event.target.value
+                            let qty = !Number.isNaN(parseInt(_val))
+                                ? Number(_val)
+                                : 0
+                            if (Number.isNaN(qty)) {
+                                qty = 0
+                            }
 
-                        if (qty <= 0) {
-                            event.target.value = "1"
-                            qty = 1
-                        }
+                            if (qty <= 0) {
+                                event.target.value = "1"
+                                qty = 1
+                            }
 
-                        if (qty >= 1000) {
-                            event.target.value = "1000"
-                            qty = 1000
-                        }
+                            if (qty >= 1000) {
+                                event.target.value = "1000"
+                                qty = 1000
+                            }
 
-                        await updateCart({
-                            qty: qty.toString(),
-                            cartId: props.cartId,
-                        })
-                        router.refresh()
+                            onChange(event)
+
+                            await updateCart({
+                                qty: qty.toString(),
+                                cartId: props.cartId,
+                            })
+                            router.refresh()
+                        }
+                        return (
+                            <input
+                                {...rest}
+                                ref={ref}
+                                value={value}
+                                className="focus:outline-none py-2 shadow px-3 rounded-lg w-14"
+                                onChange={_onChange}
+                            />
+                        )
                     }}
                 />
             </form>
