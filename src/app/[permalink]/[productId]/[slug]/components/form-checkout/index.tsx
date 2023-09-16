@@ -451,14 +451,14 @@ export default function IFormCheckout({
         setIsOpenShipping(value)
     }
 
-    const num = (length: number = 50) => {
-        const array: number[] = []
-        for (let index = 1; index <= length; index++) {
-            array.push(index);
-        }
+    // const num = (length: number = 50) => {
+    //     const array: number[] = []
+    //     for (let index = 1; index <= length; index++) {
+    //         array.push(index);
+    //     }
 
-        return array.map((item) => (<option key={item} value={item}>{item}</option>))
-    }
+    //     return array.map((item) => (<option key={item} value={item}>{item}</option>))
+    // }
 
     const getPaymentMethod = (currentPayment: {
         id: string
@@ -1361,13 +1361,29 @@ export default function IFormCheckout({
                                         <label className="text-[13px] leading-none mb-2.5 block" htmlFor="jumlah">
                                             Jumlah
                                         </label>
-                                        <select
+                                        <input
                                             {...rest}
                                             ref={ref}
                                             onChange={(event) => {
-                                                const qty = !Number.isNaN(parseInt(event.target.value))
-                                                    ? Number(event.target.value)
+                                                const _val = event.target.value
+                                                let qty = !Number.isNaN(parseInt(_val))
+                                                    ? Number(_val)
                                                     : 0
+                                                if (Number.isNaN(qty)) {
+                                                    qty = 0
+                                                }
+
+                                                if (qty <= 0) {
+                                                    event.target.value = "1"
+                                                    qty = 1
+                                                }
+
+                                                if (qty >= 1000) {
+                                                    event.target.value = "1000"
+                                                    qty = 1000
+                                                }
+
+                                                onChange(event)
                                                 // set_checkout
                                                 setCheckout((prevState) => {
                                                     const cekRandCode = prevState.afterPrice > 0 || prevState.ongkir > 0
@@ -1395,12 +1411,10 @@ export default function IFormCheckout({
                                                         total: totalCoupon,
                                                     }
                                                 })
-                                                onChange(event)
                                             }}
                                             className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                                        >
-                                            {num()}
-                                        </select>
+                                            placeholder="Jumlah"
+                                        />
                                     </fieldset>
                                 )
                             }}
@@ -1867,7 +1881,7 @@ export default function IFormCheckout({
                                         </div>
                                     )}
                                     <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kupon Stora</span>
+                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Diskon</span>
                                         <span className="text-gray-800 text-[13px] font-normal tracking-wide">
                                             {couponData
                                                 ? toIDR(couponData.discount.toString())

@@ -35,6 +35,10 @@ export default function ProductCard(props: ProductCardProps) {
     } = usePhotoProduct(product.gambar, product.id_user)
     const photoProduct = photoProductData?.data
 
+    const _hargaJual = Number.isNaN(parseInt(product.harga_jual))
+        ? 0
+        : Number(product.harga_jual)
+
     return (
         <div className="h-full relative group rounded-3xl drop-shadow border-0 border-gray-50 bg-white overflow-hidden sm:hover:shadow">
             <div>
@@ -134,7 +138,13 @@ export default function ProductCard(props: ProductCardProps) {
                                 </div>
 
                                 <div className="mt-4">
-                                    <div className="text-sm font-medium !leading-none inline-block text-gray-600">{toIDR(product.harga_jual)}</div>
+                                    <div className="text-sm font-medium !leading-none inline-block text-gray-600">
+                                        {_hargaJual > 0 ? (
+                                            <>
+                                                {toIDR(product.harga_jual)}
+                                            </>
+                                        ): "Gratis"}
+                                    </div>
                                 </div>
                             </div>
                         </div>
