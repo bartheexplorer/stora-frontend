@@ -3,6 +3,7 @@ import { appConfig } from "../config/app"
 import type { OrderParams } from "./order-interface"
 import { format } from "date-fns"
 import { utcToZonedTime } from "date-fns-tz"
+import { notifOrder } from "./notif-order"
 
 function formatCurrency(amount: number): string {
     const formattedAmount = new Intl.NumberFormat('id-ID').format(amount)
@@ -16,18 +17,276 @@ function formatInTimezone(): string {
     const dateFormat = 'yyyy-MM-dd HH:mm:ss';
     // Convert the date to the desired timezone
     const zonedDate = utcToZonedTime(originalDate, targetTimezone);
-    
+
     // Format the date in the desired timezone
     const formattedDate = format(zonedDate, dateFormat);
-    
+
     return formattedDate;
 }
-  
 
 export async function createOrder(prisma: PrismaClient, params: OrderParams) {
     try {
         const tglOrder = formatInTimezone()
-        console.log("tglOrder", tglOrder)
+        // Text order
+        const result = await prisma.$transaction(async (tx) => {
+            // Custom field
+            const customFields: number[] = []
+            // Save data custom field
+            for (const iter of params.customFields) {
+                const customField = await tx.t_data_custom_field.create({
+                    data: {
+                        order_id: params.orderId,
+                        id_user: params.userId,
+                        id_produk: params.productId,
+                        id_custom_field: iter.idCustomField,
+                        value: iter.value,
+                    }
+                })
+                customFields.push(customField.id_data_custom_field)
+            }
+
+            const customFieldFirst = customFields.find((_item, index) => (index === 0))
+
+            // Set account bank
+            let paymentId: string | null = null
+            let accountBank: string = ''
+
+            async function paymentData() {
+                // Payment method
+                if (params.paymentMethodCode === 'bank') {
+                    const cekBank = await tx.t_bank.findFirst({
+                        where: {
+                            id_bank: { equals: params.paymentMethodId },
+                            id_user: { equals: params.userId },
+                        },
+                    })
+                    if (!cekBank) throw new Error('Bank tidak ditemukan')
+
+                    accountBank = [cekBank.bank, cekBank.rekening].join(' - ')
+                    paymentId = null
+                } else if (params.paymentMethodCode === 'virtual') {
+                    const dbVa = await tx.t_bank_va_xendit.findFirst({
+                        where: {
+                            id_user: { equals: params.userId },
+                            id_bank_va_xendit: { equals: params.paymentMethodId },
+                        },
+                    })
+                    if (!dbVa) throw new Error('Va tidak ditemukan')
+                    const virtualData = await createVaRequest({
+                        id_user: params.userId.toString(),
+                        totalbayar: params.totalbayar.toString(),
+                        bank: dbVa.bank_code,
+                        order_id: params.orderId,
+                    })
+                    accountBank = virtualData?.data ? virtualData.data : ''
+                    paymentId = virtualData?.id ? virtualData.id : null
+                } else if (params.paymentMethodCode === 'qris') {
+                    const cekSettingXendit = await tx.t_setting_xendit.findFirst({
+                        where: {
+                            id_user: { equals: params.userId },
+                            status_qris: { equals: 'SATU' },
+                        },
+                    })
+                    if (!cekSettingXendit) throw new Error('Setting xendit')
+
+                    const dataCod = await createQrisRequest({
+                        userId: cekSettingXendit.id.toString(),
+                        amount: params.totalbayar.toString(),
+                        permalink: params.permalink,
+                        orderId: params.orderId,
+                    })
+
+                    accountBank = dataCod?.qr_string ? dataCod.qr_string : null
+                    paymentId = dataCod?.id ? dataCod.id : null
+                } else if (params.paymentMethodCode === 'cod') {
+                    if (params.typeProduct !== "fisik") throw new Error("payment not found");
+                    accountBank = ''
+                    paymentId = null
+                } else {
+                    throw new Error('payment not found')
+                }
+            }
+
+            let _statusOrder = "1"
+            let _statusOrderStr = "pending"
+
+            if (params.typeProduct === 'fisik') {
+                if (!params.isFree || !params.isFreeOngkir) {
+                    await paymentData()
+                }
+            } else {
+                if (!params.isFree) {
+                    await paymentData()
+                }
+            }
+            if (params.typeProduct === "digital") {
+                if (params.isFree) {
+                    _statusOrder = "4"
+                    _statusOrderStr = "selesai"
+                }
+            }
+
+            // console.log(params)
+            // console.log(_statusOrder)
+
+            const order = await tx.$executeRaw`
+          INSERT INTO t_order (
+            order_id,
+            id_produk,
+            nama_pembeli,
+            no_hp_pembeli,
+            email_pembeli,
+            alamat_pembeli,
+
+            prov,
+            kab,
+            kec,
+            
+            qty,
+            varian,
+            ukuran,
+            expedisi,
+            paket,
+            ongkir,
+            estimasi,
+            kupon,
+
+            potongan,
+            total,
+            totalbayar,
+            
+            bank,
+            payment,
+
+            nama_produk,
+
+            harga_jual,
+            berat,
+
+            gambar_produk,
+            jenis_produk,
+
+            status_bayar,
+            order_status,
+            
+            tgl_order,
+            is_created,
+            
+            id_user,
+            id_custom_field,
+            id_payment,
+
+            tgl_proses,
+            tgl_kirim,
+            tgl_selesai
+          )
+        VALUES (
+          ${params.orderId},
+          ${params.productId},
+          ${params.name},
+          ${params.phone},
+          ${params.email},
+          ${params.address},
+
+          ${params.province},
+          ${params.city},
+          ${params.subdistrict},
+          
+          ${params.qty},
+          ${params.variant},
+          ${params.size},
+          ${params.expedisi},
+          ${params.paket},
+          ${params.ongkir},
+          ${params.estimasi},
+          ${params.kupon},
+
+          ${params.potongan},
+          ${params.total},
+          ${params.totalbayar},
+          
+          ${accountBank},
+          ${params.paymentMethodCode},
+
+          ${params.productName},
+
+          ${params.productPrice},
+          ${params.weight},
+
+          ${params.productImage},
+          ${params.typeProduct},
+
+          '0',
+          ${_statusOrder},
+          
+          ${tglOrder},
+          ${tglOrder},
+          
+          ${params.userId},
+          ${customFieldFirst ? customFieldFirst : 0},
+          ${paymentId},
+          '0000-00-00 00:00:00',
+          '0000-00-00 00:00:00',
+          '0000-00-00 00:00:00'
+        )
+        `
+
+            if (order !== 1) throw new Error('Gagal insert')
+
+            // const pesanStr = await tx.t_teks_pesan.findFirst({
+            //     where: {
+            //         id_user: { equals: params.userId },
+            //         status_order: { equals: 'order' },
+            //     },
+            // })
+
+            // console.log("pesanStr", pesanStr)
+
+            // const notip = await pushNotif(
+            //     "", // text
+            //     params.phone,
+            //     params.userId.toString()
+            // )
+
+            const _resNotif = await notifOrder({
+                user_id: params.userId.toString(),
+                order_id: params.orderId,
+                order_status: _statusOrderStr,
+                jenis_produk: params.typeProduct,
+            })
+
+            console.log("params", {
+                user_id: params.userId.toString(),
+                order_id: params.orderId,
+                order_status: _statusOrderStr,
+                jenis_produk: params.typeProduct,
+            })
+
+            console.log("_resNotif", _resNotif)
+
+            return {
+                notip: null,
+                textOrder: "", // text
+                orderId: params.orderId,
+            }
+        })
+
+        return {
+            textOrder: result.textOrder,
+            notip: result.notip,
+            orderId: result.orderId,
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            console.log(error.message)
+        }
+        return null
+    }
+}
+
+export async function createOrder1(prisma: PrismaClient, params: OrderParams) {
+    try {
+        const tglOrder = formatInTimezone()
         // Text order
         let textOrder1: string = `Produk Yg Dibeli: *${params.productName}*`
         let textOrder2: string = ''
@@ -254,6 +513,49 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
         `
 
             if (order !== 1) throw new Error('Gagal insert')
+
+            // digital
+            if (params.typeProduct === "digital") {
+                if (params.isFree) {
+                    const pesanStr = await tx.t_teks_pesan.findFirst({
+                        where: {
+                            id_user: { equals: params.userId },
+                            status_order: { equals: "selesai" },
+                        },
+                    })
+
+                    if (pesanStr) {
+                        const message = pesanStr.teks_pesan.replaceAll('{{ORDER_ID}}', params.orderId)
+                            .replaceAll('{{DETAIL_PRODUK}}', textOrder1)
+                            .replaceAll('{{TOTAL_BAYAR}}', formatCurrency(params.totalbayar))
+                            .replaceAll('{{METODE_PEMBAYARAN}}', textOrder2)
+                            .replaceAll('{{NAMA_TOKO}}', params.namaToko)
+                            .replaceAll('{{EKSPEDISI}}', params.expedisi)
+                            .replaceAll('{{TANGGAL_ORDER}}', tglOrder)
+                            .replaceAll('{{NAMA_PEMBELI}}', params.name)
+                            .replaceAll('{{ALAMAT_PEMBELI}}', params.address)
+                            .replaceAll('{{WHATSAPP_PEMBELI}}', params.phone)
+                        textOrder4 = message
+                    } else {
+                        const message = `Halo kak {{NAMA_PEMBELI}} pesanan anda dengan Order Id : {{ORDER_ID}} telah diterima. \n\n Terima Kasih telah berbelanja di {{NAMA_TOKO}}.`
+                        textOrder4 = message.replaceAll('{{NAMA_TOKO}}', params.namaToko)
+                            .replaceAll('{{ORDER_ID}}', params.orderId)
+                            .replaceAll('{{NAMA_PEMBELI}}', params.name)
+                    }
+
+                    const notip = await pushNotif(
+                        textOrder4,
+                        params.phone,
+                        params.userId.toString()
+                    )
+
+                    return {
+                        notip,
+                        textOrder: textOrder4,
+                        orderId: params.orderId,
+                    }
+                }
+            }
 
             const pesanStr = await tx.t_teks_pesan.findFirst({
                 where: {

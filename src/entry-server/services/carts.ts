@@ -3,6 +3,7 @@ import type { CartsEntity, CreateOrderByCartParams, Free1Entity, ParamsCreateCar
 import { createQrisRequest, createVaRequest, pushNotif } from "./order"
 import { format } from 'date-fns';
 import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { notifOrder } from "./notif-order";
 
 const generateNumberID = (length: number): string => {
     let result = ''
@@ -231,6 +232,22 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
                     kode_keranjang: { equals: cartId.kode_keranjang },
                 },
             })
+
+            // console.log("carts", carts)
+            let _order_status  = "pending"
+            let _jenis_produk  = "fisik"
+
+            if (Array.isArray(carts) && carts.length === 1) {
+                const _findFirst = carts.find((_, i) => (i === 0))
+                if (_findFirst) {
+                    if (_findFirst.jenis_produk === "digital") {
+                        _order_status  = "selesai"
+                    }
+                    _jenis_produk = _findFirst.jenis_produk
+                }
+            }
+
+            
 
             const total = carts.reduce((accumulate, item) => {
                 const total = Number(accumulate + item.total)
@@ -471,15 +488,33 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             const clearCart = await tx.$executeRaw`DELETE FROM t_keranjang_temp WHERE session = ${params.cartId}`
             if (clearCart === 0) throw new Error('Gagal Membersihkan data')
 
-            const notip = await pushNotif(
-                textOrder4,
-                params.hp,
-                params.id_user.toString()
-            )
+            // const notip = await pushNotif(
+            //     textOrder4,
+            //     params.hp,
+            //     params.id_user.toString()
+            // )
+
+            // let _statusOrder = "selesai"
+
+            const _resNotif = await notifOrder({
+                user_id: params.id_user.toString(),
+                order_id: orderId,
+                order_status: _order_status,
+                jenis_produk: _jenis_produk,
+            })
+
+            console.log("_resNotif", _resNotif)
+
+            console.log({
+                user_id: params.id_user.toString(),
+                order_id: orderId,
+                order_status: _order_status,
+                jenis_produk: _jenis_produk,
+            })
 
             return {
                 textOrder: textOrder4,
-                notip,
+                notip: null,
                 orderId,
                 id_order_random: id_order_random.toString(),
             }
