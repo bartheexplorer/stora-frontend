@@ -1,8 +1,8 @@
 import invariant from "tiny-invariant"
 
-invariant(typeof process.env.LANDING_PAGE === "string", "Page not found")
+invariant(typeof process.env.NEXT_PUBLIC_LANDING_PAGE === "string", "Page not found")
 
-const HTML_STR = `<iframe width="100%" height="100%" src="${process.env.LANDING_PAGE}" allow="fullscreen"></iframe>`
+const HTML_STR = `<iframe width="100%" height="100%" src="${process.env.NEXT_PUBLIC_LANDING_PAGE}" allow="fullscreen"></iframe>`
 
 export default function Home() {
   const createMarkup = (value: string) => {
