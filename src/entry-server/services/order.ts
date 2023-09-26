@@ -108,7 +108,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             }
 
             let _statusOrder = "1"
-            let _statusOrderStr = "pending"
+            let _statusOrderStr = "selesai"
 
             if (params.typeProduct === 'fisik') {
                 if (!params.isFree || !params.isFreeOngkir) {
@@ -119,6 +119,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
                     await paymentData()
                 }
             }
+        
             if (params.typeProduct === "digital") {
                 if (params.isFree) {
                     _statusOrder = "4"

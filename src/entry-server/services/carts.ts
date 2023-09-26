@@ -234,7 +234,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             })
 
             // console.log("carts", carts)
-            let _order_status  = "pending"
+            let _order_status  = "selesai"
             let _jenis_produk  = "fisik"
 
             if (Array.isArray(carts) && carts.length === 1) {
