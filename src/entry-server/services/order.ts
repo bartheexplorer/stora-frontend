@@ -268,7 +268,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
                 jenis_produk: params.typeProduct,
             })
 
-            console.log("_resNotif", _resNotif)
+            // console.log("_resNotif", _resNotif)
 
             return {
                 notip: null,

@@ -530,7 +530,10 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
         const _resNotif = await notifOrder(result.queryNotif)
         console.log("_resNotif", _resNotif)
 
-        return result
+        return {
+            ...result,
+            resNotif: _resNotif,
+        }
     } catch (error) {
         if (error instanceof Error) {
             console.log(error)
