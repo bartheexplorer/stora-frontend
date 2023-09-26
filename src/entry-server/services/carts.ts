@@ -234,7 +234,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             })
 
             // console.log("carts", carts)
-            let _order_status  = "selesai"
+            let _order_status  = "pending"
             let _jenis_produk  = "fisik"
 
             if (Array.isArray(carts) && carts.length === 1) {
@@ -487,6 +487,8 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
 
             const clearCart = await tx.$executeRaw`DELETE FROM t_keranjang_temp WHERE session = ${params.cartId}`
             if (clearCart === 0) throw new Error('Gagal Membersihkan data')
+
+            await tx.$queryRaw`SELECT order_id, no_hp_pembeli FROM orders where order_id = ${orderId}`
 
             // const notip = await pushNotif(
             //     textOrder4,

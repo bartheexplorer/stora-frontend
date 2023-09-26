@@ -108,7 +108,7 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             }
 
             let _statusOrder = "1"
-            let _statusOrderStr = "selesai"
+            let _statusOrderStr = "pending"
 
             if (params.typeProduct === 'fisik') {
                 if (!params.isFree || !params.isFreeOngkir) {
@@ -249,6 +249,9 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             //     params.userId.toString()
             // )
 
+            const _order = await tx.$queryRaw`SELECT order_id, no_hp_pembeli FROM orders where order_id = ${params.orderId}`
+            console.log(_order)
+
             const _resNotif = await notifOrder({
                 user_id: params.userId.toString(),
                 order_id: params.orderId,
@@ -257,9 +260,11 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             })
 
             console.log("params", {
+                phone: params.phone,
+                status_order: _statusOrder,
+                status_order_str: _statusOrderStr,
                 user_id: params.userId.toString(),
                 order_id: params.orderId,
-                order_status: _statusOrderStr,
                 jenis_produk: params.typeProduct,
             })
 
