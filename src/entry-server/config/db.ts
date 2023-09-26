@@ -37,7 +37,7 @@ function getClient() {
                 url: databaseUrl.toString(),
             },
         },
-        log: ["query"],
+        // log: ["query"],
     });
     // connect eagerly
     client.$connect()
