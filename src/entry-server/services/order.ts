@@ -249,15 +249,15 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             //     params.userId.toString()
             // )
 
-            const _order = await tx.$queryRaw`SELECT order_id, no_hp_pembeli FROM orders where order_id = ${params.orderId}`
-            console.log(_order)
+            // const _order = await tx.$queryRaw`SELECT order_id, no_hp_pembeli FROM orders where order_id = ${params.orderId}`
+            // console.log(_order)
 
-            const _resNotif = await notifOrder({
-                user_id: params.userId.toString(),
-                order_id: params.orderId,
-                order_status: _statusOrderStr,
-                jenis_produk: params.typeProduct,
-            })
+            // const _resNotif = await notifOrder({
+            //     user_id: params.userId.toString(),
+            //     order_id: params.orderId,
+            //     order_status: _statusOrderStr,
+            //     jenis_produk: params.typeProduct,
+            // })
 
             console.log("params", {
                 phone: params.phone,
@@ -274,13 +274,22 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
                 notip: null,
                 textOrder: "", // text
                 orderId: params.orderId,
+                queryNotif: {
+                    user_id: params.userId.toString(),
+                    order_id: params.orderId,
+                    order_status: _statusOrderStr,
+                    jenis_produk: params.typeProduct,
+                }
             }
         })
+
+        const _resNotif = await notifOrder(result.queryNotif)
 
         return {
             textOrder: result.textOrder,
             notip: result.notip,
             orderId: result.orderId,
+            _resNotif,
         }
     } catch (error) {
         if (error instanceof Error) {

@@ -488,7 +488,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             const clearCart = await tx.$executeRaw`DELETE FROM t_keranjang_temp WHERE session = ${params.cartId}`
             if (clearCart === 0) throw new Error('Gagal Membersihkan data')
 
-            await tx.$queryRaw`SELECT order_id, no_hp_pembeli FROM orders where order_id = ${orderId}`
+            // await tx.$queryRaw`SELECT order_id, no_hp_pembeli FROM orders where order_id = ${orderId}`
 
             // const notip = await pushNotif(
             //     textOrder4,
@@ -498,14 +498,14 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
 
             // let _statusOrder = "selesai"
 
-            const _resNotif = await notifOrder({
-                user_id: params.id_user.toString(),
-                order_id: orderId,
-                order_status: _order_status,
-                jenis_produk: _jenis_produk,
-            })
+            // const _resNotif = await notifOrder({
+            //     user_id: params.id_user.toString(),
+            //     order_id: orderId,
+            //     order_status: _order_status,
+            //     jenis_produk: _jenis_produk,
+            // })
 
-            console.log("_resNotif", _resNotif)
+            // console.log("_resNotif", _resNotif)
 
             console.log({
                 user_id: params.id_user.toString(),
@@ -519,8 +519,17 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
                 notip: null,
                 orderId,
                 id_order_random: id_order_random.toString(),
+                queryNotif: {
+                    user_id: params.id_user.toString(),
+                    order_id: orderId,
+                    order_status: _order_status,
+                    jenis_produk: _jenis_produk,
+                }
             }
         })
+        const _resNotif = await notifOrder(result.queryNotif)
+        console.log("_resNotif", _resNotif)
+
         return result
     } catch (error) {
         if (error instanceof Error) {
