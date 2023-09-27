@@ -73,7 +73,12 @@ export async function getProductWithPaginate(
                 },
             },
             orderBy: {
-                id_produk: params?.sort === 'terbaru' ? 'asc' : 'desc',
+                ...((params?.sort === "terbaru") ? { created: "desc" } : {}),
+                ...((params.sort !== "terbaru") ? {
+                    views: {
+                        view: "desc",
+                    },
+                } : {})
             },
         },
         {

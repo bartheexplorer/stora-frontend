@@ -247,8 +247,6 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
                 }
             }
 
-            
-
             const total = carts.reduce((accumulate, item) => {
                 const total = Number(accumulate + item.total)
                 return Math.round(Number(total * item.qty))
@@ -507,7 +505,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
 
             // console.log("_resNotif", _resNotif)
 
-            console.log({
+            console.log("cart", {
                 user_id: params.id_user.toString(),
                 order_id: orderId,
                 order_status: _order_status,
