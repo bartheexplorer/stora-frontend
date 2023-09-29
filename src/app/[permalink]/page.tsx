@@ -15,6 +15,7 @@ import ImageProfile from "./components/image-profile"
 import LoaderUi from "../components/loader-ui"
 import dynamic from "next/dynamic"
 import { cookies } from "next/headers"
+import type { Metadata, ResolvingMetadata } from "next"
 
 const DynamicCartCounter = dynamic(() => import("./components/cart/cart-counter"), {
     ssr: false,
@@ -105,18 +106,33 @@ const toCategories = (categories: Awaited<ReturnType<typeof getCategories>>) => 
     }))
 }
 
+function _slugToTitle(slug: string): string {
+    const words = slug.split('-'); // Split the slug into words using dashes
+    const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
+
+    return titleWords.join(' '); // Join the words back together with spaces
+}
+
+export async function generateMetadata(
+    { params, searchParams }: PermalinkProps,
+    parent: ResolvingMetadata
+): Promise<Metadata> {
+    console.log(params, searchParams)
+    const permalink = `${params.permalink} | Stora`
+    // const _permak_link = _slugToTitle(permalink)
+    // const user = await getUser(prisma, _permak_link)
+    const description = (await parent).description || ""
+
+    return {
+        title: permalink,
+        description,
+    }
+}
+
 export default async function Permalink({ params, searchParams }: PermalinkProps) {
     const cookieStore = cookies()
     const cartId = cookieStore.get("cartid")
     const permalink = params.permalink
-
-    function _slugToTitle(slug: string): string {
-        const words = slug.split('-'); // Split the slug into words using dashes
-        const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
-
-        return titleWords.join(' '); // Join the words back together with spaces
-    }
-
     const _permak_link = _slugToTitle(permalink)
 
     const categoryProductId = !Number.isNaN(Number(searchParams?.category?.toString()))

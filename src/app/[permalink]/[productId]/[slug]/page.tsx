@@ -8,6 +8,7 @@ import ILoading from "./components/loading"
 import { getUser } from "@/entry-server/services/user"
 import ContentScrollHeader from "./components/content-scroll-header"
 import { cookies } from "next/headers"
+import type { Metadata, ResolvingMetadata } from "next"
 
 const CountdownTimer = dynamic(() => import("./components/countdown/countdown-time"), {
     ssr: false,
@@ -87,18 +88,52 @@ const toProduct = (product: Awaited<ReturnType<typeof getProduct>>) => {
     }
 }
 
+const _slugToTitle = (slug: string): string => {
+    const words = slug.split('-'); // Split the slug into words using dashes
+    const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
+
+    return titleWords.join(' '); // Join the words back together with spaces
+}
+
+export async function generateMetadata(
+    { params, searchParams }: SlugProps,
+    parent: ResolvingMetadata
+): Promise<Metadata> {
+    console.log(params, searchParams)
+    const permalink = params.permalink
+    const _permak_link = _slugToTitle(permalink)
+
+    // const user = await getUser(prisma, _permak_link)
+    const description = (await parent).description || ""
+    const productService = await getProduct(prisma, {
+        permalink: _permak_link,
+        productId: Number(params.productId),
+    })
+
+    console.log("productService", productService)
+    const title = productService?.nama_produk || _permak_link
+    const descriptionStr = productService?.deskripsi || description
+
+    return {
+        title,
+        description: descriptionStr,
+        openGraph: {
+            title,
+            description: descriptionStr,
+        },
+        twitter: {
+            title,
+            description: descriptionStr,
+        },
+    }
+}
+
+
 export default async function Slug(props: SlugProps) {
     const cookieStore = cookies()
     const cartId = cookieStore.get("cartid")
     const isCart = Boolean(props.searchParams?.cart)
     const permalink = props.params.permalink
-
-    const _slugToTitle = (slug: string): string => {
-        const words = slug.split('-'); // Split the slug into words using dashes
-        const titleWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)); // Capitalize each word
-
-        return titleWords.join(' '); // Join the words back together with spaces
-    }
 
     const _permak_link = _slugToTitle(permalink)
     const user = await getUser(prisma, _permak_link)
