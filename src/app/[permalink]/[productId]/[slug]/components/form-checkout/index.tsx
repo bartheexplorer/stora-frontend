@@ -1983,7 +1983,7 @@ export default function IFormCheckout({
                         </button>
                     </Toast.Close>
                 </Toast.Root>
-                <Toast.Viewport className="z-30 [--viewport-padding:_25px] fixed bottom-24 sm:bottom-20 flex flex-col px-8 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
+                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-24 sm:bottom-20 flex flex-col px-8 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
             </Toast.Provider>
         </>
     )
