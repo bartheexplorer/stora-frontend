@@ -351,6 +351,15 @@ export default function IFormCheckout({
             ])
 
             if (!product.isFree) {
+                if (!currentShipping) {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = window.setTimeout(() => {
+                        eventAlertRef.current = "Belum memilih ongkos kirim"
+                        setAlertOpen(true)
+                    }, 100)
+                    return
+                }
+
                 if (!currentPayment) {
                     window.clearTimeout(timerRef.current);
                     timerRef.current = window.setTimeout(() => {
@@ -375,6 +384,15 @@ export default function IFormCheckout({
                     window.clearTimeout(timerRef.current);
                     timerRef.current = window.setTimeout(() => {
                         eventAlertRef.current = "Belum memilih metode pembayaran"
+                        setAlertOpen(true)
+                    }, 100)
+                    return
+                }
+
+                if (!currentShipping) {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = window.setTimeout(() => {
+                        eventAlertRef.current = "Belum memilih ongkos kirim"
                         setAlertOpen(true)
                     }, 100)
                     return
@@ -1537,31 +1555,31 @@ export default function IFormCheckout({
                                                             onSelected={(val) => {
                                                                 onOpenAddressChange(false)
                                                                 let ongkir = 0
-                                                                if (val.shipping) {
-                                                                    const price = !Number.isNaN(parseInt(val.shipping.price.toString()))
-                                                                        ? Number(val.shipping.price)
-                                                                        : 0
-                                                                    ongkir = price
-                                                                    const shipping: ShippingType = {
-                                                                        service_code: val.shipping.service_code,
-                                                                        service_name: val.shipping.service_name,
-                                                                        price: val.shipping.price,
-                                                                        etd: val.shipping.etd
-                                                                            ? val.shipping.etd
-                                                                            : "",
-                                                                        discount_price: val.shipping.discount_price,
-                                                                        cashless_discount_price: val.shipping.cashless_discount_price,
-                                                                        s_name: val.shipping.s_name
-                                                                            ? val.shipping.s_name
-                                                                            : "",
-                                                                    }
-                                                                    setCurrentShipping((prevState) => {
-                                                                        return {
-                                                                            ...(prevState ? prevState : {}),
-                                                                            ...shipping,
-                                                                        }
-                                                                    })
-                                                                }
+                                                                // if (val.shipping) {
+                                                                //     const price = !Number.isNaN(parseInt(val.shipping.price.toString()))
+                                                                //         ? Number(val.shipping.price)
+                                                                //         : 0
+                                                                //     ongkir = price
+                                                                //     const shipping: ShippingType = {
+                                                                //         service_code: val.shipping.service_code,
+                                                                //         service_name: val.shipping.service_name,
+                                                                //         price: val.shipping.price,
+                                                                //         etd: val.shipping.etd
+                                                                //             ? val.shipping.etd
+                                                                //             : "",
+                                                                //         discount_price: val.shipping.discount_price,
+                                                                //         cashless_discount_price: val.shipping.cashless_discount_price,
+                                                                //         s_name: val.shipping.s_name
+                                                                //             ? val.shipping.s_name
+                                                                //             : "",
+                                                                //     }
+                                                                //     setCurrentShipping((prevState) => {
+                                                                //         return {
+                                                                //             ...(prevState ? prevState : {}),
+                                                                //             ...shipping,
+                                                                //         }
+                                                                //     })
+                                                                // }
                                                                 // set_address
                                                                 setAddress((prevState) => {
                                                                     return {
@@ -1600,6 +1618,7 @@ export default function IFormCheckout({
                                                                         total: totalCoupon,
                                                                     }
                                                                 })
+                                                                setCurrentShipping(null)
                                                             }}
                                                         />
                                                     </div>
@@ -1617,28 +1636,25 @@ export default function IFormCheckout({
                                     </div>
 
                                     {!!address && (
-                                        <div className="my-3">
-                                            <p className="text-xs">
-                                                {validateAndConvertToString([
-                                                    address.address,
-                                                    address.urban_village,
-                                                    address.sub_district,
-                                                    address.regency,
-                                                    address.province
-                                                ])}
-                                            </p>
-                                            {address.zip_code ? (
+                                        <>
+                                            <div className="my-3">
                                                 <p className="text-xs">
                                                     {validateAndConvertToString([
-                                                        `Kode Pos: ${address.zip_code}`
+                                                        address.address,
+                                                        address.urban_village,
+                                                        address.sub_district,
+                                                        address.regency,
+                                                        address.province
                                                     ])}
                                                 </p>
-                                            ) : null}
-                                        </div>
-                                    )}
-
-                                    {!!currentShipping && (
-                                        <>
+                                                {address.zip_code ? (
+                                                    <p className="text-xs">
+                                                        {validateAndConvertToString([
+                                                            `Kode Pos: ${address.zip_code}`
+                                                        ])}
+                                                    </p>
+                                                ) : null}
+                                            </div>
                                             <div className="flex items-center justify-between my-2">
                                                 <div className="text-xs">Informasi Pengiriman:</div>
                                                 <Dialog.Root
@@ -1678,7 +1694,11 @@ export default function IFormCheckout({
                                                     </Dialog.Portal>
                                                 </Dialog.Root>
                                             </div>
+                                        </>
+                                    )}
 
+                                    {!!currentShipping && (
+                                        <>
                                             <div>
                                                 <p className="text-xs">
                                                     <span className="uppercase">{currentShipping.s_name}</span>{", "}
@@ -1913,7 +1933,7 @@ export default function IFormCheckout({
                                         <div>
                                             <button
                                                 type="button"
-                                                className="flex flex-col items-center justify-center rounded-lg px-2 text-[10px] sm:text-xs leading-none font-medium h-[35px] text-white border border-stora-50 hover:bg-stora-100/25 focus:shadow focus:shadow-green-400 outline-none cursor-default"
+                                                className="flex flex-col items-center justify-center rounded-lg px-2 text-[10px] sm:text-xs leading-none font-medium h-[35px] text-white border border-stora-50 hover:bg-stora-100/25 focus:shadow focus:shadow-gray-300/75 outline-none cursor-default"
                                                 disabled={loadingCreateOrder}
                                                 onClick={(event) => {
                                                     event.preventDefault()
@@ -1944,9 +1964,9 @@ export default function IFormCheckout({
                 </div>
             )}
 
-            <Toast.Provider swipeDirection="right">
+            <Toast.Provider swipeDirection="right" duration={3000} swipeThreshold={3} label="Error checkout">
                 <Toast.Root
-                    className="bg-white rounded-lg shadow shadow-red-500 p-3 flex justify-between items-center data-[state=open]:animate-slideIn data-[state=closed]:animate-hide data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=cancel]:translate-x-0 data-[swipe=cancel]:transition-[transform_200ms_ease-out] data-[swipe=end]:animate-swipeOut"
+                    className="bg-white rounded-lg shadow border p-3 flex justify-between items-center data-[state=open]:animate-slideIn data-[state=closed]:animate-hide data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=cancel]:translate-x-0 data-[swipe=cancel]:transition-[transform_100ms_ease-out] data-[swipe=end]:animate-swipeOut"
                     open={openAlert}
                     onOpenChange={setAlertOpen}
                 >
@@ -1957,13 +1977,13 @@ export default function IFormCheckout({
                             </span>
                         )}
                     </Toast.Description>
-                    <Toast.Action className="[grid-area:_action]" asChild altText="Oke">
-                        <button className="inline-flex items-center justify-center rounded font-normal text-xs px-[10px] leading-[25px] h-[25px] shadow-[inset_0_0_0_1px] shadow-gray-300 hover:shadow-[inset_0_0_0_1px] hover:shadow-gray-400 focus:shadow-[0_0_0_2px] focus:shadow-gray-500">
-                            OKE
+                    <Toast.Close className="[grid-area:_action]" asChild>
+                        <button className="inline-flex items-center justify-center rounded font-normal text-xs px-[10px] leading-[25px] h-[25px]  focus:shadow-[0_0_0_2px] focus:shadow-gray-500">
+                            Oke
                         </button>
-                    </Toast.Action>
+                    </Toast.Close>
                 </Toast.Root>
-                <Toast.Viewport className="[--viewport-padding:_25px] fixed bottom-24 sm:bottom-20 flex flex-col px-8 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
+                <Toast.Viewport className="z-30 [--viewport-padding:_25px] fixed bottom-24 sm:bottom-20 flex flex-col px-8 gap-[10px] w-full max-w-lg m-0 list-none z-[2147483647] outline-none" />
             </Toast.Provider>
         </>
     )
