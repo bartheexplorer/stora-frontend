@@ -71,13 +71,11 @@ export default async function CartId(props: CartIdProps) {
     if (Array.isArray(_isNoFreeOngkirArray) && _isNoFreeOngkirArray.length > 0) {
         _isFreeOngkir = false
         _showShipping = true
-        console.log("_isNoFreeOngkirArray")
     }
 
     if (Array.isArray(_isDigitalArray) && _isDigitalArray.length > 0) {
         _isFreeOngkir = true
         _showShipping = false
-        console.log("_isDigitalArray")
     }
 
     if (Array.isArray(_isFisikArray) && _isFisikArray.length > 0) {
@@ -89,7 +87,7 @@ export default async function CartId(props: CartIdProps) {
             _isFreeOngkir = false
             _showShipping = true
         }
-        console.log("_isFisikArray")
+        // console.log("_isFisikArray")
         // const _is_fisik = carts?.find((item) => _fisikProduct.includes(item.jenis_produk))
         // if (_is_fisik) {
 
@@ -100,13 +98,13 @@ export default async function CartId(props: CartIdProps) {
     //     console.log("_isFreeOngkirArray")
     // }
 
-    console.log("_isDigitalArray", _isDigitalArray)
-    console.log("_isFisikArray", _isFisikArray)
+    // console.log("_isDigitalArray", _isDigitalArray)
+    // console.log("_isFisikArray", _isFisikArray)
     // console.log("_isFreeOngkirArray", _isFreeOngkirArray)
-    console.log("_isNoFreeOngkirArray", _isNoFreeOngkirArray)
-    console.log("carts", carts)
+    // console.log("_isNoFreeOngkirArray", _isNoFreeOngkirArray)
+    // console.log("carts", carts)
 
-    console.log("_isFreeOngkir", _isFreeOngkir)
+    // console.log("_isFreeOngkir", _isFreeOngkir)
 
     return (
         <div className="min-h-screen">

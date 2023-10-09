@@ -99,7 +99,6 @@ export async function generateMetadata(
     { params, searchParams }: SlugProps,
     parent: ResolvingMetadata
 ): Promise<Metadata> {
-    console.log(params, searchParams)
     const permalink = params.permalink
     const _permak_link = _slugToTitle(permalink)
 
@@ -110,7 +109,6 @@ export async function generateMetadata(
         productId: Number(params.productId),
     })
 
-    console.log("productService", productService)
     const title = productService?.nama_produk || _permak_link
     const descriptionStr = productService?.deskripsi || description
 
@@ -275,6 +273,7 @@ export default async function Slug(props: SlugProps) {
                         price: item.harga_uk,
                     }))}
                     product={{
+                        link: product.link || "",
                         productImg: product.gambar.split(",")[0],
                         productName: product.nama_produk,
                         price: Number(product.harga_jual),

@@ -29,6 +29,8 @@ interface ProductCardProps {
 
 
 export default function ProductCard(props: ProductCardProps) {
+    // console.log("props", props)
+
     const { product, isList, slug } = props
     const {
         data: photoProductData,
@@ -99,7 +101,7 @@ export default function ProductCard(props: ProductCardProps) {
                                         'font-medium text-gray-600 normal-case text-sm',
                                         isList ? '!leading-5' : '!leading-4'
                                     )}>
-                                        {product.jenis_produk === 'link' ? (
+                                        {/* {product.jenis_produk === 'link' ? (
                                             <Link
                                                 href={product.link ? product.link : '/'}
                                                 className="w-full"
@@ -116,7 +118,14 @@ export default function ProductCard(props: ProductCardProps) {
                                                 {product.nama_produk}
                                                 <span aria-hidden="true" className="absolute inset-0" />
                                             </Link>
-                                        )}
+                                        )} */}
+                                        <Link
+                                            href={slug}
+                                            className="w-full"
+                                        >
+                                            {product.nama_produk}
+                                            <span aria-hidden="true" className="absolute inset-0" />
+                                        </Link>
                                     </h3>
                                 </div>
 

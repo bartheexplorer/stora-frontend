@@ -259,14 +259,14 @@ export async function createOrder(prisma: PrismaClient, params: OrderParams) {
             //     jenis_produk: params.typeProduct,
             // })
 
-            console.log("params", {
-                phone: params.phone,
-                status_order: _statusOrder,
-                status_order_str: _statusOrderStr,
-                user_id: params.userId.toString(),
-                order_id: params.orderId,
-                jenis_produk: params.typeProduct,
-            })
+            // console.log("params", {
+            //     phone: params.phone,
+            //     status_order: _statusOrder,
+            //     status_order_str: _statusOrderStr,
+            //     user_id: params.userId.toString(),
+            //     order_id: params.orderId,
+            //     jenis_produk: params.typeProduct,
+            // })
 
             // console.log("_resNotif", _resNotif)
 

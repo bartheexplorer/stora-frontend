@@ -13,7 +13,7 @@ import Image from "next/image"
 
 export default function BankLogo(props: { id: string }) {
     const id = props.id.toUpperCase()
-    console.log("id", id)
+
     if (id === "BANK CENTRAL ASIA" || id === "BCA") {
         return <Image
             src={bca}

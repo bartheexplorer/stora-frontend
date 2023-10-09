@@ -11,7 +11,7 @@ export async function notifOrder(params: {
             method: 'GET',
         }
         const url = `${appConfig.domain.storaApi}/apiv3/pesanan/autoSendKostumPesan?_key=WbsLinkV00&id_user=${params.user_id}&order_id=${params.order_id}&order_status=${params.order_status}&jenisProduk=${params.jenis_produk}`
-        console.log(url)
+        // console.log(url)
         const _res = await fetch(url, requestOptions)
         const _body = await _res.json()
         return _body

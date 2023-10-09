@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation"
 import { validateAndConvertToString } from "@/utils/to-string-converter"
 import BankLogo from "./bank-logo"
 import * as RadioGroup from "@radix-ui/react-radio-group"
+import Link from "next/link"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
@@ -52,6 +53,7 @@ interface IFormCheckoutProps {
         isFree: boolean
         isFreeOngkir: boolean
         weight: string
+        link: string
         productId: string
         typeProduct: string
         textBtnOrder: string
@@ -1188,7 +1190,7 @@ export default function IFormCheckout({
                         >
                             <Dialog.Trigger asChild>
                                 <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                    <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
+                                    <span className="text-[13px] leading-none text-stora-500 block">Tampilkan Semua</span>
                                     <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                 </button>
                             </Dialog.Trigger>
@@ -1228,10 +1230,16 @@ export default function IFormCheckout({
     return (
         <>
             <div className="">
-                <div className="px-8 sm:px-12">
-                    <h3 className="mb-2 text-sm font-semibold tracking-wide text-gray-800">Checkout</h3>
-                </div>
-
+                {!!product && (
+                    <>
+                        {product.typeProduct !== "link" && (
+                            <div className="px-8 sm:px-12">
+                                <h3 className="mb-2 text-sm font-semibold tracking-wide text-gray-800">Checkout</h3>
+                            </div>
+                        )}
+                    </>
+                )}
+                
                 <form onSubmit={(event) => {
                     submitAction(event)
                     if (event) {
@@ -1243,718 +1251,741 @@ export default function IFormCheckout({
                         }
                     }
                 }}>
-                    <div className="px-8 sm:px-12 pb-[175px]">
-                        {(Array.isArray(variations) && variations.length > 0) && (
-                            <>
-                                <Controller
-                                    name="variasi"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({ field }) => {
-                                        const { onChange, value } = field
-                                        return (
-                                            <>
-                                                <h3 className="text-xs leading-none mb-2.5 block">Variasi</h3>
-                                                <ul className="flex flex-wrap gap-4 mb-4">
-                                                    {variations.map((item) => {
-                                                        return (
-                                                            <li
-                                                                key={item.id}
-                                                                className={clsx(
-                                                                    "relative px-4 py-3 shadow rounded-lg border-2 bg-slate-50 hover:shadow-lg",
-                                                                    value === item.name ? "border-stora-400/50 bg-slate-300/40" : "border-transparent"
-                                                                )}
-                                                            >
-                                                                <span className="text-xs">{item.name}</span>
-                                                                <button
-                                                                    type="button"
-                                                                    className="absolute inset-0"
-                                                                    onClick={() => {
-                                                                        onChange(item.name)
-                                                                    }}
-                                                                >&nbsp;</button>
-                                                            </li>
-                                                        )
-                                                    })}
-                                                </ul>
-                                            </>
-                                        )
-                                    }}
-                                />
-                            </>
-                        )}
-
-                        {(Array.isArray(sizes) && sizes.length > 0) && (
-                            <>
-                                <Controller
-                                    name="ukuran"
-                                    control={control}
-                                    rules={{
-                                        required: true,
-                                    }}
-                                    render={({ field }) => {
-                                        const { onChange, value } = field
-                                        return (
-                                            <>
-                                                <h3 className="text-xs leading-none mb-2.5 block">Ukuran</h3>
-                                                <ul className="flex flex-wrap gap-4 mb-4">
-                                                    {sizes.map((item) => {
-                                                        const afterPrice = !product.isFree
-                                                            ? Number(item.price)
-                                                            : 0
-                                                        return (
-                                                            <li
-                                                                key={item.id}
-                                                                className={clsx(
-                                                                    "relative px-4 py-3 shadow rounded-lg border-2 bg-slate-50 hover:shadow-lg",
-                                                                    item.name === value ? "border-stora-400/50 bg-slate-300/40" : "border-transparent"
-                                                                )}
-                                                            >
-                                                                <span className="text-xs">{item.name}</span>
-                                                                <button
-                                                                    type="button"
-                                                                    className="absolute inset-0"
-                                                                    onClick={() => {
-                                                                        onChange(item.name)
-                                                                        // set_checkout
-                                                                        setCheckout((prevState) => {
-                                                                            const cekRandCode = afterPrice > 0 || prevState.ongkir > 0
-                                                                            const subTotal = multiplySubTotal(
-                                                                                prevState.qty.toString(),
-                                                                                afterPrice.toString()
-                                                                            )
-                                                                            const totalOngkir = sumTotal(
-                                                                                subTotal.toString(),
-                                                                                prevState.ongkir.toString()
-                                                                            )
-                                                                            const totalRand = sumTotal(
-                                                                                totalOngkir.toString(),
-                                                                                cekRandCode ? prevState.randCode.toString() : "0"
-                                                                            )
-                                                                            const totalCoupon = subtractTotal(
-                                                                                totalRand.toString(),
-                                                                                (couponData?.discount || 0).toString()
-                                                                            )
-                                                                            return {
-                                                                                ...prevState,
-                                                                                subTotal,
-                                                                                afterPrice,
-                                                                                total: totalCoupon,
-                                                                            }
-                                                                        })
-                                                                    }}
-                                                                >&nbsp;</button>
-                                                            </li>
-                                                        )
-                                                    })}
-                                                </ul>
-                                            </>
-                                        )
-                                    }}
-                                />
-                            </>
-                        )}
-
-                        <Controller
-                            control={control}
-                            name="jumlah"
-                            rules={{
-                                required: true,
-                            }}
-                            render={({ field }) => {
-                                const { onChange, ref, value, ...rest } = field
-                                let ongkir = 0
-                                if (currentShipping) {
-                                    if (!product.isFreeOngkir) {
-                                        ongkir = !Number.isNaN(parseInt(currentShipping.price.toString()))
-                                            ? Number(currentShipping.price)
-                                            : 0
-                                    }
-                                }
-
-                                const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-                                    const _val = event.target.value
-                                    let qty = !Number.isNaN(parseInt(_val))
-                                        ? Number(_val)
-                                        : 0
-                                    if (Number.isNaN(qty)) {
-                                        qty = 0
-                                    }
-
-                                    if (qty <= 0) {
-                                        event.target.value = "1"
-                                        qty = 1
-                                    }
-
-                                    if (qty >= 1000) {
-                                        event.target.value = "1000"
-                                        qty = 1000
-                                    }
-
-                                    onChange(event)
-                                    // set_checkout
-                                    setCheckout((prevState) => {
-                                        const cekRandCode = prevState.afterPrice > 0 || prevState.ongkir > 0
-                                        const subtotal = multiplySubTotal(
-                                            qty.toString(),
-                                            prevState.afterPrice.toString()
-                                        )
-                                        const totalOngkir = sumTotal(
-                                            subtotal.toString(),
-                                            ongkir.toString()
-                                        )
-                                        const totalRand = sumTotal(
-                                            totalOngkir.toString(),
-                                            cekRandCode ? prevState.randCode.toString() : "0"
-                                        )
-                                        const totalCoupon = subtractTotal(
-                                            totalRand.toString(),
-                                            (couponData?.discount || 0).toString()
-                                        )
-
-                                        return {
-                                            ...prevState,
-                                            qty: qty,
-                                            subTotal: subtotal,
-                                            total: totalCoupon,
-                                        }
-                                    })
-                                }
-
-                                return (
-                                    <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                                        <label className="text-[13px] leading-none mb-2.5 block" htmlFor="jumlah">
-                                            Jumlah
-                                        </label>
-                                        <input
-                                            {...rest}
-                                            ref={ref}
-                                            value={value}
-                                            onChange={_onChange}
-                                            className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                                            placeholder="Jumlah"
-                                        />
-                                    </fieldset>
-                                )
-                            }}
-                        />
-
-                        <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                            <label className="text-[13px] leading-none mb-2.5 block" htmlFor="nama_lengkap">
-                                Nama Lengkap
-                            </label>
-                            <input
-                                {...(register("nama_lengkap", { required: true }))}
-                                className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                                placeholder="Nama Lengkap"
-                            />
-                        </fieldset>
-
-                        <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                            <label className="text-[13px] leading-none mb-2.5 block" htmlFor="nomor_whatsapp">
-                                Nomor WhatsApp
-                            </label>
-                            <input
-                                {...(register("nomor_whatsapp", { required: true }))}
-                                className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                                placeholder="Nomor WhatsApp"
-                            />
-                        </fieldset>
-
-                        {(Array.isArray(fields) && fields.length > 0) && (
-                            <ul>
-                                {fields.map((item, index) => {
-                                    return (
-                                        <li key={item.id}>
-                                            {Boolean(item.field === "input") && (
-                                                <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                                                    <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor={`custom_fields.${index}.value`}>
-                                                        {item.label}
-                                                    </label>
-                                                    <input
-                                                        {...(register(`custom_fields.${index}.value`, { required: item.required }))}
-                                                        className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                                                        placeholder={item.placeholder}
-                                                    />
-                                                </fieldset>
-                                            )}
-
-                                            {Boolean(item.field === "select") && (
-                                                <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                                                    <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor={`custom_fields.${index}.value`}>
-                                                        {item.label}
-                                                    </label>
-                                                    <select
-                                                        {...(register(`custom_fields.${index}.value`, { required: item.required }))}
-                                                        className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                                                    >
-                                                        {item.options.map((item) => {
+                    {product.typeProduct !== "link" ? (
+                        <div className="px-8 sm:px-12 pb-[175px]">
+                            {(Array.isArray(variations) && variations.length > 0) && (
+                                <>
+                                    <Controller
+                                        name="variasi"
+                                        control={control}
+                                        rules={{
+                                            required: true,
+                                        }}
+                                        render={({ field }) => {
+                                            const { onChange, value } = field
+                                            return (
+                                                <>
+                                                    <h3 className="text-xs leading-none mb-2.5 block">Variasi</h3>
+                                                    <ul className="flex flex-wrap gap-4 mb-4">
+                                                        {variations.map((item) => {
                                                             return (
-                                                                <option value={item.value} key={item.id}>{item.value}</option>
+                                                                <li
+                                                                    key={item.id}
+                                                                    className={clsx(
+                                                                        "relative px-4 py-3 shadow rounded-lg border-2 bg-slate-50 hover:shadow-lg",
+                                                                        value === item.name ? "border-stora-400/50 bg-slate-300/40" : "border-transparent"
+                                                                    )}
+                                                                >
+                                                                    <span className="text-xs">{item.name}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="absolute inset-0"
+                                                                        onClick={() => {
+                                                                            onChange(item.name)
+                                                                        }}
+                                                                    >&nbsp;</button>
+                                                                </li>
                                                             )
                                                         })}
-                                                    </select>
-                                                </fieldset>
-                                            )}
+                                                    </ul>
+                                                </>
+                                            )
+                                        }}
+                                    />
+                                </>
+                            )}
 
-                                            {Boolean(item.field === "textarea") && (
-                                                <fieldset className="mb-[15px] w-full flex flex-col justify-start">
-                                                    <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor={`custom_fields.${index}.value`}>
-                                                        {item.label}
-                                                    </label>
-                                                    <textarea
-                                                        {...(register(`custom_fields.${index}.value`, { required: item.required }))}
-                                                        className="grow shrink-0 rounded-lg p-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[75px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
-                                                        rows={3}
-                                                        placeholder={item.placeholder}
-                                                    ></textarea>
-                                                </fieldset>
-                                            )}
-                                        </li>
+                            {(Array.isArray(sizes) && sizes.length > 0) && (
+                                <>
+                                    <Controller
+                                        name="ukuran"
+                                        control={control}
+                                        rules={{
+                                            required: true,
+                                        }}
+                                        render={({ field }) => {
+                                            const { onChange, value } = field
+                                            return (
+                                                <>
+                                                    <h3 className="text-xs leading-none mb-2.5 block">Ukuran</h3>
+                                                    <ul className="flex flex-wrap gap-4 mb-4">
+                                                        {sizes.map((item) => {
+                                                            const afterPrice = !product.isFree
+                                                                ? Number(item.price)
+                                                                : 0
+                                                            return (
+                                                                <li
+                                                                    key={item.id}
+                                                                    className={clsx(
+                                                                        "relative px-4 py-3 shadow rounded-lg border-2 bg-slate-50 hover:shadow-lg",
+                                                                        item.name === value ? "border-stora-400/50 bg-slate-300/40" : "border-transparent"
+                                                                    )}
+                                                                >
+                                                                    <span className="text-xs">{item.name}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="absolute inset-0"
+                                                                        onClick={() => {
+                                                                            onChange(item.name)
+                                                                            // set_checkout
+                                                                            setCheckout((prevState) => {
+                                                                                const cekRandCode = afterPrice > 0 || prevState.ongkir > 0
+                                                                                const subTotal = multiplySubTotal(
+                                                                                    prevState.qty.toString(),
+                                                                                    afterPrice.toString()
+                                                                                )
+                                                                                const totalOngkir = sumTotal(
+                                                                                    subTotal.toString(),
+                                                                                    prevState.ongkir.toString()
+                                                                                )
+                                                                                const totalRand = sumTotal(
+                                                                                    totalOngkir.toString(),
+                                                                                    cekRandCode ? prevState.randCode.toString() : "0"
+                                                                                )
+                                                                                const totalCoupon = subtractTotal(
+                                                                                    totalRand.toString(),
+                                                                                    (couponData?.discount || 0).toString()
+                                                                                )
+                                                                                return {
+                                                                                    ...prevState,
+                                                                                    subTotal,
+                                                                                    afterPrice,
+                                                                                    total: totalCoupon,
+                                                                                }
+                                                                            })
+                                                                        }}
+                                                                    >&nbsp;</button>
+                                                                </li>
+                                                            )
+                                                        })}
+                                                    </ul>
+                                                </>
+                                            )
+                                        }}
+                                    />
+                                </>
+                            )}
+
+                            <Controller
+                                control={control}
+                                name="jumlah"
+                                rules={{
+                                    required: true,
+                                }}
+                                render={({ field }) => {
+                                    const { onChange, ref, value, ...rest } = field
+                                    let ongkir = 0
+                                    if (currentShipping) {
+                                        if (!product.isFreeOngkir) {
+                                            ongkir = !Number.isNaN(parseInt(currentShipping.price.toString()))
+                                                ? Number(currentShipping.price)
+                                                : 0
+                                        }
+                                    }
+
+                                    const _onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+                                        const _val = event.target.value
+                                        let qty = !Number.isNaN(parseInt(_val))
+                                            ? Number(_val)
+                                            : 0
+                                        if (Number.isNaN(qty)) {
+                                            qty = 0
+                                        }
+
+                                        if (qty <= 0) {
+                                            event.target.value = "1"
+                                            qty = 1
+                                        }
+
+                                        if (qty >= 1000) {
+                                            event.target.value = "1000"
+                                            qty = 1000
+                                        }
+
+                                        onChange(event)
+                                        // set_checkout
+                                        setCheckout((prevState) => {
+                                            const cekRandCode = prevState.afterPrice > 0 || prevState.ongkir > 0
+                                            const subtotal = multiplySubTotal(
+                                                qty.toString(),
+                                                prevState.afterPrice.toString()
+                                            )
+                                            const totalOngkir = sumTotal(
+                                                subtotal.toString(),
+                                                ongkir.toString()
+                                            )
+                                            const totalRand = sumTotal(
+                                                totalOngkir.toString(),
+                                                cekRandCode ? prevState.randCode.toString() : "0"
+                                            )
+                                            const totalCoupon = subtractTotal(
+                                                totalRand.toString(),
+                                                (couponData?.discount || 0).toString()
+                                            )
+
+                                            return {
+                                                ...prevState,
+                                                qty: qty,
+                                                subTotal: subtotal,
+                                                total: totalCoupon,
+                                            }
+                                        })
+                                    }
+
+                                    return (
+                                        <fieldset className="mb-[15px] w-full flex flex-col justify-start">
+                                            <label className="text-[13px] leading-none mb-2.5 block" htmlFor="jumlah">
+                                                Jumlah
+                                            </label>
+                                            <input
+                                                {...rest}
+                                                ref={ref}
+                                                value={value}
+                                                onChange={_onChange}
+                                                className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                                placeholder="Jumlah"
+                                            />
+                                        </fieldset>
                                     )
-                                })}
-                            </ul>
-                        )}
+                                }}
+                            />
 
-                        {Boolean(product.typeProduct === "fisik") && (
-                            <>
-                                <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-xs">Alamat Pengiriman:</div>
-                                        <Dialog.Root
-                                            open={isOpenAddress}
-                                            onOpenChange={onOpenAddressChange}
-                                        >
-                                            <Dialog.Trigger asChild>
-                                                {!!address ? (
-                                                    <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                        <span className="text-[13px] leading-none text-stora-500 block">Ubah Alamat</span>
-                                                        <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                                    </button>
-                                                ) : (
-                                                    <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                        <span className="text-[13px] leading-none text-stora-500 block">Tambah alamat</span>
-                                                        <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                                    </button>
-                                                )}
-                                            </Dialog.Trigger>
-                                            <Dialog.Portal>
-                                                <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                                <Dialog.Content className="overflow-y-scroll z-40 data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                    <div className="py-20">
-                                                        <Dialog.Title className="text-sm font-medium mb-6">
-                                                            Alamat Penerima
-                                                        </Dialog.Title>
-                                                        {/* Address */}
-                                                        <IFormAddressArveoli
-                                                            isFreeOngkir={product.isFreeOngkir}
-                                                            userId={product.userId}
-                                                            weight={product.weight}
-                                                            onSelected={(val) => {
-                                                                onOpenAddressChange(false)
-                                                                let ongkir = 0
-                                                                // if (val.shipping) {
-                                                                //     const price = !Number.isNaN(parseInt(val.shipping.price.toString()))
-                                                                //         ? Number(val.shipping.price)
-                                                                //         : 0
-                                                                //     ongkir = price
-                                                                //     const shipping: ShippingType = {
-                                                                //         service_code: val.shipping.service_code,
-                                                                //         service_name: val.shipping.service_name,
-                                                                //         price: val.shipping.price,
-                                                                //         etd: val.shipping.etd
-                                                                //             ? val.shipping.etd
-                                                                //             : "",
-                                                                //         discount_price: val.shipping.discount_price,
-                                                                //         cashless_discount_price: val.shipping.cashless_discount_price,
-                                                                //         s_name: val.shipping.s_name
-                                                                //             ? val.shipping.s_name
-                                                                //             : "",
-                                                                //     }
-                                                                //     setCurrentShipping((prevState) => {
-                                                                //         return {
-                                                                //             ...(prevState ? prevState : {}),
-                                                                //             ...shipping,
-                                                                //         }
-                                                                //     })
-                                                                // }
-                                                                // set_address
-                                                                setAddress((prevState) => {
-                                                                    return {
-                                                                        ...(prevState ? prevState : {}),
-                                                                        province: val.province,
-                                                                        regency: val.regency,
-                                                                        id_mapping: val.id_mapping,
-                                                                        sub_district: val.sub_district,
-                                                                        urban_village: val.urban_village,
-                                                                        zip_code: val.zip_code,
-                                                                        address: val.address,
-                                                                    }
-                                                                })
-                                                                // set_checkout
-                                                                setCheckout((prevState) => {
-                                                                    const subTotal = multiplySubTotal(
-                                                                        prevState.qty.toString(),
-                                                                        prevState.afterPrice.toString()
-                                                                    )
-                                                                    const totalOngkir = sumTotal(
-                                                                        subTotal.toString(),
-                                                                        (ongkir || 0).toString()
-                                                                    )
-                                                                    const totalRand = sumTotal(
-                                                                        totalOngkir.toString(),
-                                                                        prevState.randCode.toString(),
-                                                                    )
-                                                                    const totalCoupon = subtractTotal(
-                                                                        totalRand.toString(),
-                                                                        (couponData?.discount || 0).toString()
-                                                                    )
+                            <fieldset className="mb-[15px] w-full flex flex-col justify-start">
+                                <label className="text-[13px] leading-none mb-2.5 block" htmlFor="nama_lengkap">
+                                    Nama Lengkap
+                                </label>
+                                <input
+                                    {...(register("nama_lengkap", { required: true }))}
+                                    className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                    placeholder="Nama Lengkap"
+                                />
+                            </fieldset>
 
-                                                                    return {
-                                                                        ...prevState,
-                                                                        ongkir,
-                                                                        total: totalCoupon,
-                                                                    }
-                                                                })
-                                                                setCurrentShipping(null)
-                                                            }}
+                            <fieldset className="mb-[15px] w-full flex flex-col justify-start">
+                                <label className="text-[13px] leading-none mb-2.5 block" htmlFor="nomor_whatsapp">
+                                    Nomor WhatsApp
+                                </label>
+                                <input
+                                    {...(register("nomor_whatsapp", { required: true }))}
+                                    className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                    placeholder="Nomor WhatsApp"
+                                />
+                            </fieldset>
+
+                            {(Array.isArray(fields) && fields.length > 0) && (
+                                <ul>
+                                    {fields.map((item, index) => {
+                                        return (
+                                            <li key={item.id}>
+                                                {Boolean(item.field === "input") && (
+                                                    <fieldset className="mb-[15px] w-full flex flex-col justify-start">
+                                                        <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor={`custom_fields.${index}.value`}>
+                                                            {item.label}
+                                                        </label>
+                                                        <input
+                                                            {...(register(`custom_fields.${index}.value`, { required: item.required }))}
+                                                            className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                                            placeholder={item.placeholder}
                                                         />
-                                                    </div>
-                                                    <Dialog.Close asChild>
-                                                        <button
-                                                            className="text-stora-800 hover:bg-stora-200 focus:shadow-stora-200 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                                                            aria-label="Close"
-                                                        >
-                                                            <Cross2Icon className="w-5 h-5" />
-                                                        </button>
-                                                    </Dialog.Close>
-                                                </Dialog.Content>
-                                            </Dialog.Portal>
-                                        </Dialog.Root>
-                                    </div>
+                                                    </fieldset>
+                                                )}
 
-                                    {!!address && (
-                                        <>
-                                            <div className="my-3">
-                                                <p className="text-xs">
-                                                    {validateAndConvertToString([
-                                                        address.address,
-                                                        address.urban_village,
-                                                        address.sub_district,
-                                                        address.regency,
-                                                        address.province
-                                                    ])}
-                                                </p>
-                                                {address.zip_code ? (
-                                                    <p className="text-xs">
-                                                        {validateAndConvertToString([
-                                                            `Kode Pos: ${address.zip_code}`
-                                                        ])}
-                                                    </p>
-                                                ) : null}
-                                            </div>
-                                            <div className="flex items-center justify-between my-2">
-                                                <div className="text-xs">Informasi Pengiriman:</div>
-                                                <Dialog.Root
-                                                    open={isOpenShipping}
-                                                    onOpenChange={onOpenShippingChange}
-                                                >
-                                                    <Dialog.Trigger asChild>
+                                                {Boolean(item.field === "select") && (
+                                                    <fieldset className="mb-[15px] w-full flex flex-col justify-start">
+                                                        <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor={`custom_fields.${index}.value`}>
+                                                            {item.label}
+                                                        </label>
+                                                        <select
+                                                            {...(register(`custom_fields.${index}.value`, { required: item.required }))}
+                                                            className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                                        >
+                                                            {item.options.map((item) => {
+                                                                return (
+                                                                    <option value={item.value} key={item.id}>{item.value}</option>
+                                                                )
+                                                            })}
+                                                        </select>
+                                                    </fieldset>
+                                                )}
+
+                                                {Boolean(item.field === "textarea") && (
+                                                    <fieldset className="mb-[15px] w-full flex flex-col justify-start">
+                                                        <label className="text-[13px] leading-none mb-2.5 text-violet12 block" htmlFor={`custom_fields.${index}.value`}>
+                                                            {item.label}
+                                                        </label>
+                                                        <textarea
+                                                            {...(register(`custom_fields.${index}.value`, { required: item.required }))}
+                                                            className="grow shrink-0 rounded-lg p-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[75px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                                            rows={3}
+                                                            placeholder={item.placeholder}
+                                                        ></textarea>
+                                                    </fieldset>
+                                                )}
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            )}
+
+                            {Boolean(product.typeProduct === "fisik") && (
+                                <>
+                                    <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-xs">Alamat Pengiriman:</div>
+                                            <Dialog.Root
+                                                open={isOpenAddress}
+                                                onOpenChange={onOpenAddressChange}
+                                            >
+                                                <Dialog.Trigger asChild>
+                                                    {!!address ? (
                                                         <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                            <span className="text-[13px] leading-none text-stora-500 block">Ubah pengiriman</span>
+                                                            <span className="text-[13px] leading-none text-stora-500 block">Ubah Alamat</span>
                                                             <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                         </button>
-                                                    </Dialog.Trigger>
-                                                    <Dialog.Portal>
-                                                        <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                                        <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                            <div className="py-20">
-                                                                <Dialog.Title className="mb-6 text-sm font-medium">
-                                                                    Pengiriman
-                                                                </Dialog.Title>
-                                                                {/* Form shipping data */}
-                                                                {!!shippingArveoli && (
-                                                                    <>
-                                                                        {shippingArveoliMap()}
-                                                                    </>
-                                                                )}
-                                                            </div>
-
-                                                            <Dialog.Close asChild>
-                                                                <button
-                                                                    className="hover:bg-stora-200 focus:shadow-stora-300 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                                                                    aria-label="Close"
-                                                                >
-                                                                    <Cross2Icon className="w-5 h-5" />
-                                                                </button>
-                                                            </Dialog.Close>
-                                                        </Dialog.Content>
-                                                    </Dialog.Portal>
-                                                </Dialog.Root>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {!!currentShipping && (
-                                        <>
-                                            <div>
-                                                <p className="text-xs">
-                                                    <span className="uppercase">{currentShipping.s_name}</span>{", "}
-                                                    {currentShipping.service_name}{" "}
-                                                    {currentShipping.price
-                                                        ? toIDR(currentShipping.price.toString())
-                                                        : toIDR("0")}
-                                                </p>
-                                                {!!currentShipping.etd && (
-                                                    <p className="text-xs italic">{currentShipping.etd}</p>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* Kupon  */}
-                                <div className="flex justify-between my-4">
-                                    <div>
-                                        <label className="text-[13px]">
-                                            Kupon
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <Dialog.Root
-                                            open={isOpenCoupon}
-                                            onOpenChange={setIsOpenCoupon}
-                                        >
-                                            <Dialog.Trigger asChild>
-                                                <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                    <span className="text-[13px] leading-none text-stora-500 block">Pilih</span>
-                                                    <CaretRightIcon className="h-5 w-5 text-stora-500" />
-                                                </button>
-                                            </Dialog.Trigger>
-                                            <Dialog.Portal>
-                                                <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
-                                                <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
-                                                    <div className="py-8">
-                                                        <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
-                                                            Kupon Stora
-                                                        </Dialog.Title>
-                                                        {/* Form kupon stora */}
-                                                        <IFormCoupon
-                                                            product_id={product.productId}
-                                                            permalink={permalink}
-                                                            price={checkout.afterPrice}
-                                                            applyCoupon={(data) => {
-                                                                const discount = data.discount || 0
-                                                                // set_coupon
-                                                                setCouponData({
-                                                                    discount,
-                                                                    coupon: data.coupon,
-                                                                })
-                                                                // set_checkout
-                                                                setCheckout((prevState) => {
-                                                                    const subTotal = multiplySubTotal(
-                                                                        prevState.qty.toString(),
-                                                                        prevState.afterPrice.toString()
-                                                                    )
-                                                                    const totalOngkir = sumTotal(
-                                                                        subTotal.toString(),
-                                                                        prevState.ongkir.toString()
-                                                                    )
-                                                                    const totalRand = sumTotal(
-                                                                        totalOngkir.toString(),
-                                                                        prevState.randCode.toString(),
-                                                                    )
-                                                                    const totalCoupon = subtractTotal(
-                                                                        totalRand.toString(),
-                                                                        discount.toString()
-                                                                    )
-
-                                                                    return {
-                                                                        ...prevState,
-                                                                        total: totalCoupon,
-                                                                    }
-                                                                })
-                                                                // close coupon modal
-                                                                setIsOpenCoupon(false)
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <Dialog.Close asChild>
-                                                        <button
-                                                            className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
-                                                            aria-label="Close"
-                                                        >
-                                                            <Cross2Icon className="w-5 h-5" />
+                                                    ) : (
+                                                        <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                            <span className="text-[13px] leading-none text-stora-500 block">Tambah Alamat</span>
+                                                            <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                         </button>
-                                                    </Dialog.Close>
-                                                </Dialog.Content>
-                                            </Dialog.Portal>
-                                        </Dialog.Root>
-                                    </div>
-                                </div>
-
-                                {!!couponData && (
-                                    <div className="relative mb-3">
-                                        <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
-                                            <div className="flex justify-between">
-                                                <span className="text-xs">
-                                                    {couponData.coupon}
-                                                </span>
-                                                <span className="text-xs mr-6">{toIDR(couponData.discount.toString())}</span>
-                                            </div>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setCouponData(null)
-                                            }}
-                                            className="absolute top-2 right-3 w-5 rounded-full shadow hover:bg-slate-200 flex justify-center items-center"
-                                        >
-                                            <TrashIcon className="w-4 h-5 text-red-500" />
-                                        </button>
-                                    </div>
-                                )}
-
-                                {(!product.isFree || !product.isFreeOngkir) && selectPaymentMethod()}
-                            </>
-                        )}
-
-                        {Boolean(product.typeProduct === "digital") && (
-                            <>
-                                {!product.isFree && selectPaymentMethod()}
-                            </>
-                        )}
-
-                        <div className="bg-slate-50 rounded-lg">
-                            <div className="pt-4 px-4 pb-2 border-b">
-                                <h3 className="text-gray-800 text-[13px] font-medium tracking-wide">Rincian pembayaran:</h3>
-                            </div>
-                            <div className="px-4 py-2">
-                                <div className="flex flex-col mb-2 rounded-lg shadow-sm px-3 py-2">
-                                    <div className="flex mb-1">
-                                        <p>
-                                            <span className="text-gray-800 text-[12px] font-normal tracking-wide">
-                                                {product.productName}
-                                            </span>{" "}
-                                            {(watch("variasi") || watch("ukuran")) && (
-                                                <span className="text-[12px]">
-                                                    {`(${(watch("variasi") || "")} ${(watch("ukuran") || "")})`}
-                                                </span>
-                                            )}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-gray-800 text-[12px] font-normal tracking-wide">
-                                            {toIDR(checkout.afterPrice.toString())}
-                                        </span>
-                                        <span className="text-gray-800 text-[12px] font-normal tracking-wide">
-                                            x{checkout.qty}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col">
-                                    {product.typeProduct === "fisik" ? (
-                                        <>
-                                            {(!product.isFree || !product.isFreeOngkir) && (
-                                                <>
-                                                    {codeUnique && (
-                                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
-                                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                                                {getLastThreeWords(checkout.total.toString())}
-                                                            </span>
-                                                        </div>
                                                     )}
-                                                </>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <>
-                                            {!product.isFree && (
-                                                <>
-                                                    {codeUnique && (
-                                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
-                                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                                                {getLastThreeWords(checkout.total.toString())}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </>
-                                            )}
-                                        </>
-                                    )}
-                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Subtotal</span>
-                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                            {toIDR(checkout.subTotal.toString())}
-                                        </span>
-                                    </div>
-                                    {!product.isFreeOngkir && (
-                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Pengiriman</span>
-                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                                {!!currentShipping
-                                                    ? toIDR(currentShipping.price.toString())
-                                                    : toIDR("0")}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Diskon</span>
-                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                            {couponData
-                                                ? toIDR(couponData.discount.toString())
-                                                : toIDR("0")}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between border-b border-gray-100 mb-1">
-                                        <span className="text-gray-800 text-[13px] font-medium tracking-wide">Total</span>
-                                        <span className="text-gray-800 text-[13px] font-normal tracking-wide">
-                                            {toIDR(checkout.total.toString())}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                                </Dialog.Trigger>
+                                                <Dialog.Portal>
+                                                    <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                                    <Dialog.Content className="overflow-y-scroll z-40 data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                        <div className="py-20">
+                                                            <Dialog.Title className="text-sm font-medium mb-6">
+                                                                Alamat Penerima
+                                                            </Dialog.Title>
+                                                            {/* Address */}
+                                                            <IFormAddressArveoli
+                                                                isFreeOngkir={product.isFreeOngkir}
+                                                                userId={product.userId}
+                                                                weight={product.weight}
+                                                                onSelected={(val) => {
+                                                                    onOpenAddressChange(false)
+                                                                    let ongkir = 0
+                                                                    // if (val.shipping) {
+                                                                    //     const price = !Number.isNaN(parseInt(val.shipping.price.toString()))
+                                                                    //         ? Number(val.shipping.price)
+                                                                    //         : 0
+                                                                    //     ongkir = price
+                                                                    //     const shipping: ShippingType = {
+                                                                    //         service_code: val.shipping.service_code,
+                                                                    //         service_name: val.shipping.service_name,
+                                                                    //         price: val.shipping.price,
+                                                                    //         etd: val.shipping.etd
+                                                                    //             ? val.shipping.etd
+                                                                    //             : "",
+                                                                    //         discount_price: val.shipping.discount_price,
+                                                                    //         cashless_discount_price: val.shipping.cashless_discount_price,
+                                                                    //         s_name: val.shipping.s_name
+                                                                    //             ? val.shipping.s_name
+                                                                    //             : "",
+                                                                    //     }
+                                                                    //     setCurrentShipping((prevState) => {
+                                                                    //         return {
+                                                                    //             ...(prevState ? prevState : {}),
+                                                                    //             ...shipping,
+                                                                    //         }
+                                                                    //     })
+                                                                    // }
+                                                                    // set_address
+                                                                    setAddress((prevState) => {
+                                                                        return {
+                                                                            ...(prevState ? prevState : {}),
+                                                                            province: val.province,
+                                                                            regency: val.regency,
+                                                                            id_mapping: val.id_mapping,
+                                                                            sub_district: val.sub_district,
+                                                                            urban_village: val.urban_village,
+                                                                            zip_code: val.zip_code,
+                                                                            address: val.address,
+                                                                        }
+                                                                    })
+                                                                    // set_checkout
+                                                                    setCheckout((prevState) => {
+                                                                        const subTotal = multiplySubTotal(
+                                                                            prevState.qty.toString(),
+                                                                            prevState.afterPrice.toString()
+                                                                        )
+                                                                        const totalOngkir = sumTotal(
+                                                                            subTotal.toString(),
+                                                                            (ongkir || 0).toString()
+                                                                        )
+                                                                        const totalRand = sumTotal(
+                                                                            totalOngkir.toString(),
+                                                                            prevState.randCode.toString(),
+                                                                        )
+                                                                        const totalCoupon = subtractTotal(
+                                                                            totalRand.toString(),
+                                                                            (couponData?.discount || 0).toString()
+                                                                        )
 
-                    <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
-                        <div className="w-full max-w-lg mx-auto px-8">
-                            <div className="h-12 flex gap-3 items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
-                                <span className="text-sm tracking-wide text-white">
-                                    {toIDR(checkout.total.toString())}
-                                </span>
-                                <div className="flex gap-3">
-                                    {isCart && (
+                                                                        return {
+                                                                            ...prevState,
+                                                                            ongkir,
+                                                                            total: totalCoupon,
+                                                                        }
+                                                                    })
+                                                                    setCurrentShipping(null)
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <Dialog.Close asChild>
+                                                            <button
+                                                                className="text-stora-800 hover:bg-stora-200 focus:shadow-stora-200 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                                aria-label="Close"
+                                                            >
+                                                                <Cross2Icon className="w-5 h-5" />
+                                                            </button>
+                                                        </Dialog.Close>
+                                                    </Dialog.Content>
+                                                </Dialog.Portal>
+                                            </Dialog.Root>
+                                        </div>
+
+                                        {!!address && (
+                                            <>
+                                                <div className="my-3">
+                                                    <p className="text-xs">
+                                                        {validateAndConvertToString([
+                                                            address.address,
+                                                            address.urban_village,
+                                                            address.sub_district,
+                                                            address.regency,
+                                                            address.province
+                                                        ])}
+                                                    </p>
+                                                    {address.zip_code ? (
+                                                        <p className="text-xs">
+                                                            {validateAndConvertToString([
+                                                                `Kode Pos: ${address.zip_code}`
+                                                            ])}
+                                                        </p>
+                                                    ) : null}
+                                                </div>
+                                                <div className="flex items-center justify-between my-2">
+                                                    <div className="text-xs">Informasi Pengiriman:</div>
+                                                    <Dialog.Root
+                                                        open={isOpenShipping}
+                                                        onOpenChange={onOpenShippingChange}
+                                                    >
+                                                        <Dialog.Trigger asChild>
+                                                            <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                                <span className="text-[13px] leading-none text-stora-500 block">Ubah Pengiriman</span>
+                                                                <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                                            </button>
+                                                        </Dialog.Trigger>
+                                                        <Dialog.Portal>
+                                                            <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                                            <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                                <div className="py-20">
+                                                                    <Dialog.Title className="mb-6 text-sm font-medium">
+                                                                        Pengiriman
+                                                                    </Dialog.Title>
+                                                                    {/* Form shipping data */}
+                                                                    {!!shippingArveoli && (
+                                                                        <>
+                                                                            {shippingArveoliMap()}
+                                                                        </>
+                                                                    )}
+                                                                </div>
+
+                                                                <Dialog.Close asChild>
+                                                                    <button
+                                                                        className="hover:bg-stora-200 focus:shadow-stora-300 absolute top-12 right-12 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                                        aria-label="Close"
+                                                                    >
+                                                                        <Cross2Icon className="w-5 h-5" />
+                                                                    </button>
+                                                                </Dialog.Close>
+                                                            </Dialog.Content>
+                                                        </Dialog.Portal>
+                                                    </Dialog.Root>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {!!currentShipping && (
+                                            <>
+                                                <div>
+                                                    <p className="text-xs">
+                                                        <span className="uppercase">{currentShipping.s_name}</span>{", "}
+                                                        {currentShipping.service_name}{" "}
+                                                        {currentShipping.price
+                                                            ? toIDR(currentShipping.price.toString())
+                                                            : toIDR("0")}
+                                                    </p>
+                                                    {!!currentShipping.etd && (
+                                                        <p className="text-xs italic">{currentShipping.etd}</p>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Kupon  */}
+                                    <div className="flex justify-between my-4">
                                         <div>
+                                            <label className="text-[13px]">
+                                                Kupon
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <Dialog.Root
+                                                open={isOpenCoupon}
+                                                onOpenChange={setIsOpenCoupon}
+                                            >
+                                                <Dialog.Trigger asChild>
+                                                    <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
+                                                        <span className="text-[13px] leading-none text-stora-500 block">Pilih</span>
+                                                        <CaretRightIcon className="h-5 w-5 text-stora-500" />
+                                                    </button>
+                                                </Dialog.Trigger>
+                                                <Dialog.Portal>
+                                                    <Dialog.Overlay className="bg-white data-[state=open]:animate-overlayShow fixed inset-0" />
+                                                    <Dialog.Content className="z-40 overflow-y-scroll data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white p-[25px] shadow focus:outline-none">
+                                                        <div className="py-8">
+                                                            <Dialog.Title className="text-mauve12 m-0 text-sm font-medium">
+                                                                Kupon Stora
+                                                            </Dialog.Title>
+                                                            {/* Form kupon stora */}
+                                                            <IFormCoupon
+                                                                product_id={product.productId}
+                                                                permalink={permalink}
+                                                                price={checkout.afterPrice}
+                                                                applyCoupon={(data) => {
+                                                                    const discount = data.discount || 0
+                                                                    // set_coupon
+                                                                    setCouponData({
+                                                                        discount,
+                                                                        coupon: data.coupon,
+                                                                    })
+                                                                    // set_checkout
+                                                                    setCheckout((prevState) => {
+                                                                        const subTotal = multiplySubTotal(
+                                                                            prevState.qty.toString(),
+                                                                            prevState.afterPrice.toString()
+                                                                        )
+                                                                        const totalOngkir = sumTotal(
+                                                                            subTotal.toString(),
+                                                                            prevState.ongkir.toString()
+                                                                        )
+                                                                        const totalRand = sumTotal(
+                                                                            totalOngkir.toString(),
+                                                                            prevState.randCode.toString(),
+                                                                        )
+                                                                        const totalCoupon = subtractTotal(
+                                                                            totalRand.toString(),
+                                                                            discount.toString()
+                                                                        )
+
+                                                                        return {
+                                                                            ...prevState,
+                                                                            total: totalCoupon,
+                                                                        }
+                                                                    })
+                                                                    // close coupon modal
+                                                                    setIsOpenCoupon(false)
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <Dialog.Close asChild>
+                                                            <button
+                                                                className="text-stora-700 hover:bg-stora-100 focus:shadow-stora-100 absolute top-8 right-8 inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
+                                                                aria-label="Close"
+                                                            >
+                                                                <Cross2Icon className="w-5 h-5" />
+                                                            </button>
+                                                        </Dialog.Close>
+                                                    </Dialog.Content>
+                                                </Dialog.Portal>
+                                            </Dialog.Root>
+                                        </div>
+                                    </div>
+
+                                    {!!couponData && (
+                                        <div className="relative mb-3">
+                                            <div className="bg-slate-50 rounded-lg p-4 flex flex-col">
+                                                <div className="flex justify-between">
+                                                    <span className="text-xs">
+                                                        {couponData.coupon}
+                                                    </span>
+                                                    <span className="text-xs mr-6">{toIDR(couponData.discount.toString())}</span>
+                                                </div>
+                                            </div>
                                             <button
                                                 type="button"
-                                                className="flex flex-col items-center justify-center rounded-lg px-2 text-[10px] sm:text-xs leading-none font-medium h-[35px] text-white border border-stora-50 hover:bg-stora-100/25 focus:shadow focus:shadow-gray-300/75 outline-none cursor-default"
-                                                disabled={loadingCreateOrder}
-                                                onClick={(event) => {
-                                                    event.preventDefault()
-                                                    shoppingCarts()
+                                                onClick={() => {
+                                                    setCouponData(null)
                                                 }}
+                                                className="absolute top-2 right-3 w-5 rounded-full shadow hover:bg-slate-200 flex justify-center items-center"
                                             >
-                                                Masukkan Keranjang
+                                                <TrashIcon className="w-4 h-5 text-red-500" />
                                             </button>
                                         </div>
                                     )}
-                                    <button
-                                        type="submit"
-                                        className="inline-flex items-center justify-center rounded-lg px-4 text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default"
-                                        disabled={loadingCreateOrder}
-                                    >
-                                        {product.textBtnOrder}
-                                    </button>
+
+                                    {(!product.isFree || !product.isFreeOngkir) && selectPaymentMethod()}
+                                </>
+                            )}
+
+                            {Boolean(product.typeProduct === "digital") && (
+                                <>
+                                    {!product.isFree && selectPaymentMethod()}
+                                </>
+                            )}
+
+                            <div className="bg-slate-50 rounded-lg">
+                                <div className="pt-4 px-4 pb-2 border-b">
+                                    <h3 className="text-gray-800 text-[13px] font-medium tracking-wide">Rincian pembayaran:</h3>
+                                </div>
+                                <div className="px-4 py-2">
+                                    <div className="flex flex-col mb-2 rounded-lg shadow-sm px-3 py-2">
+                                        <div className="flex mb-1">
+                                            <p>
+                                                <span className="text-gray-800 text-[12px] font-normal tracking-wide">
+                                                    {product.productName}
+                                                </span>{" "}
+                                                {(watch("variasi") || watch("ukuran")) && (
+                                                    <span className="text-[12px]">
+                                                        {`(${(watch("variasi") || "")} ${(watch("ukuran") || "")})`}
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-gray-800 text-[12px] font-normal tracking-wide">
+                                                {toIDR(checkout.afterPrice.toString())}
+                                            </span>
+                                            <span className="text-gray-800 text-[12px] font-normal tracking-wide">
+                                                x{checkout.qty}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col">
+                                        {product.typeProduct === "fisik" ? (
+                                            <>
+                                                {(!product.isFree || !product.isFreeOngkir) && (
+                                                    <>
+                                                        {codeUnique && (
+                                                            <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                                                <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
+                                                                <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                                    {getLastThreeWords(checkout.total.toString())}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                {!product.isFree && (
+                                                    <>
+                                                        {codeUnique && (
+                                                            <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                                                <span className="text-gray-800 text-[13px] font-medium tracking-wide">Kode Unik</span>
+                                                                <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                                    {getLastThreeWords(checkout.total.toString())}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
+                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Subtotal</span>
+                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                {toIDR(checkout.subTotal.toString())}
+                                            </span>
+                                        </div>
+                                        {!product.isFreeOngkir && (
+                                            <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                                <span className="text-gray-800 text-[13px] font-medium tracking-wide">Pengiriman</span>
+                                                <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                    {!!currentShipping
+                                                        ? toIDR(currentShipping.price.toString())
+                                                        : toIDR("0")}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Diskon</span>
+                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                {couponData
+                                                    ? toIDR(couponData.discount.toString())
+                                                    : toIDR("0")}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between border-b border-gray-100 mb-1">
+                                            <span className="text-gray-800 text-[13px] font-medium tracking-wide">Total</span>
+                                            <span className="text-gray-800 text-[13px] font-normal tracking-wide">
+                                                {toIDR(checkout.total.toString())}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    ) : <div className="pb-[250px]"></div>}
+
+                    {product.typeProduct !== "link" ? (
+                        <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
+                            <div className="w-full max-w-lg mx-auto px-8">
+                                <div className="h-12 flex gap-3 items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
+                                    <span className="text-sm tracking-wide text-white">
+                                        {toIDR(checkout.total.toString())}
+                                    </span>
+                                    <div className="flex gap-3">
+                                        {isCart && (
+                                            <div>
+                                                <button
+                                                    type="button"
+                                                    className="flex flex-col items-center justify-center rounded-lg px-2 text-[10px] sm:text-xs leading-none font-medium h-[35px] text-white border border-stora-50 hover:bg-stora-100/25 focus:shadow focus:shadow-gray-300/75 outline-none cursor-default"
+                                                    disabled={loadingCreateOrder}
+                                                    onClick={(event) => {
+                                                        event.preventDefault()
+                                                        shoppingCarts()
+                                                    }}
+                                                >
+                                                    Masukkan Keranjang
+                                                </button>
+                                            </div>
+                                        )}
+                                        <button
+                                            type="submit"
+                                            className="inline-flex items-center justify-center rounded-lg px-4 text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default"
+                                            disabled={loadingCreateOrder}
+                                        >
+                                            {product.textBtnOrder}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="fixed bottom-0 z-40 inset-x-0 pb-8 sm:pb-6">
+                            <div className="w-full max-w-lg mx-auto px-8">
+                                <div className="h-12 flex gap-3 items-center justify-between bg-stora-500 rounded-lg px-3 shadow">
+                                    <span className="text-sm tracking-wide text-white">
+                                        {toIDR(checkout.total.toString())}
+                                    </span>
+                                    <div className="flex gap-3">
+                                        <Link
+                                            target="_blank"
+                                            href={product.link}
+                                            className="inline-flex items-center justify-center rounded-lg px-4 text-xs leading-none font-medium h-[35px] bg-storano-500 text-white hover:bg-storano-500/75 focus:shadow focus:shadow-storano-400 outline-none cursor-default"
+                                        >
+                                            {product.textBtnOrder}
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </form>
             </div>
 

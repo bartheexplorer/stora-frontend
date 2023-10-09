@@ -216,7 +216,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             }
             const id_order_random = generateRandomInt()
             const tglOrder = formatInTimezone()
-            console.log("tglOrder", tglOrder)
+            // console.log("tglOrder", tglOrder)
             // Text order
             let textOrder1: string
             let textOrder2: string
@@ -505,12 +505,12 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
 
             // console.log("_resNotif", _resNotif)
 
-            console.log("cart", {
-                user_id: params.id_user.toString(),
-                order_id: orderId,
-                order_status: _order_status,
-                jenis_produk: _jenis_produk,
-            })
+            // console.log("cart", {
+            //     user_id: params.id_user.toString(),
+            //     order_id: orderId,
+            //     order_status: _order_status,
+            //     jenis_produk: _jenis_produk,
+            // })
 
             return {
                 textOrder: textOrder4,
@@ -526,7 +526,7 @@ export async function createOrderByCart(prisma: PrismaClient, params: CreateOrde
             }
         })
         const _resNotif = await notifOrder(result.queryNotif)
-        console.log("_resNotif", _resNotif)
+        // console.log("_resNotif", _resNotif)
 
         return {
             ...result,

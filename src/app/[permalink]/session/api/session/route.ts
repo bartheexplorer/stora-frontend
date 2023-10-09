@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, ctx: { params: { permalink: string 
         }, {status: 401})
     }
 
-    console.log("user.id_user.toString()", user?.id_user)
+    // console.log("user.id_user.toString()", user?.id_user)
 
     const getSession = async (userId?: string) => {
         if (!userId) return null 

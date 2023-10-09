@@ -137,7 +137,6 @@ export default function IFormCheckout({
         randCode: cunik,
         ongkir: 0,
     })
-    console.log(checkout)
     const [address, setAddress] = useState<AddressType | null>(null)
     const [currentShipping, setCurrentShipping] = useState<ShippingType | null>(null)
     const [selectedShipping, setSelectedShipping] = useState<ShippingType | null>(null)
@@ -999,7 +998,7 @@ export default function IFormCheckout({
                         >
                             <Dialog.Trigger asChild>
                                 <button className="text-violet11 inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                    <span className="text-[13px] leading-none text-stora-500 block">Tampilkan semua</span>
+                                    <span className="text-[13px] leading-none text-stora-500 block">Tampilkan Semua</span>
                                     <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                 </button>
                             </Dialog.Trigger>
@@ -1272,7 +1271,7 @@ export default function IFormCheckout({
                                                 </button>
                                             ) : (
                                                 <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                    <span className="text-[13px] leading-none text-stora-500 block">Tambah alamat</span>
+                                                    <span className="text-[13px] leading-none text-stora-500 block">Tambah Alamat</span>
                                                     <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                 </button>
                                             )}
@@ -1392,7 +1391,7 @@ export default function IFormCheckout({
                                             >
                                                 <Dialog.Trigger asChild>
                                                     <button className="inline-flex items-center justify-center text-xs font-normal leading-none focus:outline-none">
-                                                        <span className="text-[13px] leading-none text-stora-500 block">Ubah pengiriman</span>
+                                                        <span className="text-[13px] leading-none text-stora-500 block">Ubah Pengiriman</span>
                                                         <CaretRightIcon className="h-5 w-5 text-stora-500" />
                                                     </button>
                                                 </Dialog.Trigger>
