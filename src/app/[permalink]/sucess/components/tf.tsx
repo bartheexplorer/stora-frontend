@@ -7,6 +7,7 @@ import { CheckIcon } from "@radix-ui/react-icons"
 interface TfProps {
     bank: string
     total: string
+    name?: string
 }
 
 export default function Tf(props: TfProps) {
@@ -17,6 +18,12 @@ export default function Tf(props: TfProps) {
         <div>
             <div className="mt-8 bg-gray-50/25 my-3 shadow px-12">
                 <p className="text-sm text-gray-800 font-semibold">Transfer Bank</p>
+                <div className="py-2">
+                    <div className="text-xs font-normal">Nama Rekening:</div>
+                    <div className="flex justify-between">
+                        <div className="text-sm text-gray-800 font-semibold">{props.name}</div>
+                    </div>
+                </div>
                 <div className="py-2">
                     <div className="text-xs font-normal">No. Rekening:</div>
                     <div className="flex justify-between">

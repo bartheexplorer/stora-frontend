@@ -7,6 +7,7 @@ import Tf from "./components/tf"
 import Va from "./components/va"
 import Cod from "./components/cod"
 import Qris from "./components/qris"
+import { findBankByNorek } from "@/entry-server/services/bank"
 
 interface SuccessProps {
     params: {
@@ -30,6 +31,14 @@ export default async function Success(props: SuccessProps) {
     const user = await getUser(prisma, _permak_link)
     const order = await findOrderById(prisma, props.searchParams?.id?.toString())
     const multiOrder = await getMultiOrder(prisma, props.searchParams?.id?.toString())
+    const _paymentIsBank = order?.payment === "bank"
+    const _rek = _paymentIsBank
+        ? order.bank.split("- ").at(1)
+        : ""
+    const _bank = await findBankByNorek(prisma, {
+        rekening: _rek ? _rek.trimStart() : "-",
+        id_user: order?.id_user || 0,
+    })
 
     return (
         <div className="min-h-screen">
@@ -70,6 +79,7 @@ export default async function Success(props: SuccessProps) {
                         <Tf
                             bank={order.bank}
                             total={order.totalbayar.toString()}
+                            name={_bank?.pemilik}
                         />
                     )}
 

@@ -108,7 +108,6 @@ export async function findFeatureUser(prisma: PrismaClient, params: { userId: st
     }
 }
 
-
 export async function findSettingFeature(
     prisma: PrismaClient,
     params: { id: t_setting_fitur['id_setting_fitur'] }
