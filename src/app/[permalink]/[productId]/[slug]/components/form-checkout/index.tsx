@@ -177,8 +177,6 @@ export default function IFormCheckout({
 
     const _kurir = kurir?.data
 
-    console.log("_kurir", _kurir)
-
     let total = 0
     let ranCodeUnique = 0
     const cunik = codeUnique ? RAND_CODE : 0
@@ -598,8 +596,8 @@ export default function IFormCheckout({
                                                                         return {
                                                                             ...(prevState ? prevState : {}),
                                                                             s_name,
-                                                                            service_code: item.service_code.toString(),
-                                                                            service_name: item.service_name,
+                                                                            service_code: item.service_code?.toString() || "",
+                                                                            service_name: item.service_name || "",
                                                                             price: ongkir,
                                                                             etd: item.etd
                                                                                 ? item.etd

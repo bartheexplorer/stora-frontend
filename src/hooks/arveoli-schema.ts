@@ -69,8 +69,8 @@ export function validateResponseUrbanVillageArveoli(input: unknown) {
 
 // Shipping
 const Data = z.object({
-    service_code: z.string(), // "JTR23",
-    service_name: z.string(), // "JTR",
+    service_code: z.string().nullable(), // "JTR23",
+    service_name: z.string().nullable(), // "JTR",
     price: z.string()
         .or(z.number()), // "13500000",
     etd: z.string().nullable().optional(), // "30 - null hari",

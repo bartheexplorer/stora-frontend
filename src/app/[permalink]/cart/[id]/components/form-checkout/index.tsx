@@ -1103,8 +1103,8 @@ export default function IFormCheckout({
                                                                         return {
                                                                             ...(prevState ? prevState : {}),
                                                                             s_name,
-                                                                            service_code: item.service_code.toString(),
-                                                                            service_name: item.service_name,
+                                                                            service_code: item.service_code?.toString() || "",
+                                                                            service_name: item.service_name || "",
                                                                             price: ongkir,
                                                                             etd: item.etd
                                                                                 ? item.etd
