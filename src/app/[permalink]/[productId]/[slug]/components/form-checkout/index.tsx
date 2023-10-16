@@ -23,6 +23,7 @@ import { validateAndConvertToString } from "@/utils/to-string-converter"
 import BankLogo from "./bank-logo"
 import * as RadioGroup from "@radix-ui/react-radio-group"
 import Link from "next/link"
+import { useKurir } from "./use-kurir"
 
 const RAND_CODE = getRandomThreeDigitNumber()
 
@@ -169,6 +170,14 @@ export default function IFormCheckout({
         discount: number
         coupon?: string | null
     } | null>(null)
+
+    const {
+        data: kurir,
+    } = useKurir(product.userId)
+
+    const _kurir = kurir?.data
+
+    console.log("_kurir", _kurir)
 
     let total = 0
     let ranCodeUnique = 0
@@ -622,6 +631,64 @@ export default function IFormCheckout({
                                 </li>
                             )
                         })}
+
+                        {!!_kurir && (
+                            <>
+                                <li className="mt-5">
+                                    <h4 className="uppercase text-xs font-semibold tracking-wide mb-2">Kurir Lokal</h4>
+                                    <ul className="flex flex-wrap gap-3">
+                                        <li
+                                            className={clsx(
+                                                "relative py-2 px-3 bg-gray-100 rounded-lg shadow border-2 hover:shadow-lg",
+                                                _kurir.key === serviceCode
+                                                    ? "border-stora-500 bg-slate-200"
+                                                    : "border-transparent"
+                                            )}
+                                        >
+                                            <p className="text-xs text-gray-800 mb-1.5">Lokal</p>
+                                            {!!_kurir.ongkir && (
+                                                <p className="text-xs text-gray-800 mb-1.5">{toIDR(_kurir.ongkir.toString())}</p>
+                                            )}
+                                            {/* <p className="text-xs text-gray-800">Lokal</p> */}
+                                            <button
+                                                type="button"
+                                                className="absolute inset-0"
+                                                onClick={(event) => {
+                                                    const ongkir = !Number.isNaN(parseInt(_kurir.ongkir.toString()))
+                                                        ? Number(_kurir.ongkir)
+                                                        : 0
+                                                    // set_selected_address
+                                                    setSelectedShipping((prevState) => {
+                                                        return {
+                                                            ...(prevState ? prevState : {}),
+                                                            s_name: _kurir.key,
+                                                            service_code: _kurir.key,
+                                                            service_name: _kurir.key,
+                                                            price: ongkir,
+                                                            etd: "",
+                                                            discount_price: !Number.isNaN(parseInt(_kurir.ongkir.toString()))
+                                                                ? Number(_kurir.ongkir)
+                                                                : 0,
+                                                            cashless_discount_price: !Number.isNaN(parseInt(_kurir.ongkir.toString()))
+                                                                ? Number(_kurir.ongkir)
+                                                                : 0,
+                                                        }
+                                                    })
+                                                    if (event) {
+                                                        if (typeof event.preventDefault === "function") {
+                                                            event.preventDefault()
+                                                        }
+                                                        if (typeof event.stopPropagation === "function") {
+                                                            event.stopPropagation()
+                                                        }
+                                                    }
+                                                }}
+                                            >&nbsp;</button>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </>
+                        )}
                     </ul>
 
                     <div className="px-12 py-6 flex flex-col">
