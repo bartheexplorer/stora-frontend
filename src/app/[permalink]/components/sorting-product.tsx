@@ -53,6 +53,7 @@ export default function SortingProduct() {
             onValueChange={(value) => {
                 router.push(pathname + '?' + createQueryString('sort', value.toString()))
             }}
+            defaultValue="terbaru"
         >
             <Select.Trigger
                 className="inline-flex items-center justify-center rounded-lg px-[15px] text-[13px] leading-none h-[35px] gap-[5px] bg-white text-gray-800 shadow-[0_2px_10px] shadow-black/10 hover:bg-gray-50 focus-none data-[placeholder]:text-gray-900 outline-none"

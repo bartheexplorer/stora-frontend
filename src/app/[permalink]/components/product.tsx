@@ -52,7 +52,7 @@ export default function Product({
                                     setIsList((prevState) => !prevState)
                                 }}
                             >
-                                {isList ? (
+                                {!isList ? (
                                     <ListBulletIcon className="w-5 h-5" />
                                 ) : (
                                     <DashboardIcon className="w-5 h-5" />

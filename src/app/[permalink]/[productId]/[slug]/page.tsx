@@ -96,7 +96,7 @@ const _slugToTitle = (slug: string): string => {
 }
 
 export async function generateMetadata(
-    { params, searchParams }: SlugProps,
+    { params }: SlugProps,
     parent: ResolvingMetadata
 ): Promise<Metadata> {
     const permalink = params.permalink

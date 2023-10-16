@@ -140,12 +140,13 @@ export default async function Permalink({ params, searchParams }: PermalinkProps
         : null
     // Service
     const user = await getUser(prisma, _permak_link)
+    const _query = searchParams?.sort?.toString()
     const products = await getProductWithPaginate(prisma, {
         permalink: _permak_link,
         page: !Number.isNaN(Number(searchParams?.page))
             ? Number(searchParams.page)
             : 0,
-        sort: searchParams?.sort?.toString(),
+        sort: _query || "terbaru",
         search: searchParams?.q?.toString(),
         ...(categoryProductId ? { categoryProductId } : {})
     })

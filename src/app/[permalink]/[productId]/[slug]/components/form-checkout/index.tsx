@@ -1741,7 +1741,7 @@ export default function IFormCheckout({
 
                                                                         return {
                                                                             ...prevState,
-                                                                            total: totalCoupon,
+                                                                            total: totalCoupon > 0 ? totalCoupon : 0,
                                                                         }
                                                                     })
                                                                     // close coupon modal
