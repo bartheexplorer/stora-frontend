@@ -42,6 +42,16 @@ export default function Category({
                         slidesOffsetBefore={25}
                         style={{ paddingBottom: "15px", paddingTop: "15px" }}
                     >
+                        <SwiperSlide>
+                            <div className="relative shadow rounded-xl hover:bg-stora-500/25 h-12 px-4 py-3">
+                                <h3 className="text-xs truncate text-gray-800">Semua kategori</h3>
+                                <Link
+                                    href={`/${permalink}?categories=all`}
+                                    className="absolute inset-0"
+                                >&nbsp;</Link>
+                            </div>
+                        </SwiperSlide>
+
                         {categories.map((item) => (
                             <SwiperSlide key={item.id_kategori_produk}>
                                 <div className="relative shadow rounded-xl hover:bg-stora-500/25 h-12 px-4 py-3">
@@ -53,15 +63,6 @@ export default function Category({
                                 </div>
                             </SwiperSlide>
                         ))}
-                        <SwiperSlide>
-                            <div className="relative shadow rounded-xl hover:bg-stora-500/25 h-12 px-4 py-3">
-                                <h3 className="text-xs truncate text-gray-800">Semua kategori</h3>
-                                <Link
-                                    href={`/${permalink}?categories=all`}
-                                    className="absolute inset-0"
-                                >&nbsp;</Link>
-                            </div>
-                        </SwiperSlide>
                     </Swiper>
                 </div>
             </>
