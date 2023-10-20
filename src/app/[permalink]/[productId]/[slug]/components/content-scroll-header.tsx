@@ -15,11 +15,96 @@ interface ContentHeaderProps {
     userId: string
 }
 
+// if (video.contains("youtube.com") && video.contains("watch")){
+//     if (video.contains("m.")){
+//         video = video.replace("https://m.youtube.com/watch?v=", "https://www.youtube.com/embed/");
+//     } else {
+//         video = video.replace("https://www.youtube.com/watch?v=", "https://www.youtube.com/embed/");
+//     }
+//     new Tambah().simpan(video);
+// } else if (video.contains("youtube.com") && video.contains("embed")){
+//     new Tambah().simpan(video);
+// } else if (video.contains("youtu.be")){
+//     video = video.replace("https://youtu.be/", "https://www.youtube.com/embed/");
+//     new Tambah().simpan(video);
+// } else {
+//     Toast.makeText(TambahProdukActivity.this, "Link video tidak valid", Toast.LENGTH_SHORT).show();
+// }
+
 export default function ContentScrollHeader({
     images,
     video,
     userId,
 }: ContentHeaderProps) {
+    const _linkVideo = () => {
+        const _video = video
+
+        if (!_video) {
+            return null
+        }
+        // console.log("_video", _video)
+
+        // const youtubeCopyLink: string = "https://www.youtube.com/watch?v=Phj2LnkmXbg"
+        // const ytCopyMobile: string = `https://m.youtube.com/watch?v=1mDkixgzxhw`
+        // const youtubeOriginEmbeded: string = "https://youtu.be/Phj2LnkmXbg?si=XbJj-UtuGqbwg5Qc"
+        // const youtubeOriginEmbeded1: string = "https://youtu.be/Phj2LnkmXbg/asdasdasd?si=XbJj-UtuGqbwg5Qc"
+
+        // const youtubeCopyFrame: string = `<iframe width="560" height="315" src="https://www.youtube.com/embed/Phj2LnkmXbg?si=ZABVUCaLMU4dTbaW" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
+
+        try {
+            const _link = new URL(_video)
+            const _host = _link.host
+
+            if (_host === "www.youtube.com") {
+                const ss = _link.searchParams.get("v")
+                if (ss) {
+                    return "https://www.youtube.com/embed/" + _link.searchParams.get("v")
+                }
+                return _video
+            }
+
+            if (_host === "m.youtube.com") {
+                return "https://www.youtube.com/embed/" + _link.searchParams.get("v")
+            }
+
+            if (_host === "youtu.be") {
+                const searchPath = _link.pathname.trimStart()
+                const pathSplit = searchPath.split("/")
+                const _se = pathSplit.at(1)
+                if (_se) {
+                    return "https://www.youtube.com/embed/" + pathSplit.at(1)
+                }
+                return null
+            }
+
+            return null
+        } catch (error) {
+            return null
+        }
+    }
+
+    const createMarkup = () => {
+        const _video = video
+
+        if (!_video) {
+            return null
+        }
+
+        try {
+            new URL(_video)
+            return null
+        } catch (error) {
+            const _r = _video.includes("src")
+            if (_r) {
+                return { __html: _video }
+            }
+            return null
+        }
+    }
+
+    const _link = _linkVideo()
+    const _linkS = createMarkup()
+
     return (
         <>
             <Swiper
@@ -30,7 +115,7 @@ export default function ContentScrollHeader({
                 pagination={{
                     type: "fraction",
                     formatFractionTotal: (vl) => {
-                        return vl - 1
+                        return vl
                     },
                     renderFraction: (currentClass, totalClass) => {
                         return `<div style="color: #94a3b8; padding: 5px; font-size: 0.75rem; line-height: 1rem; display: flex;">
@@ -44,25 +129,31 @@ export default function ContentScrollHeader({
                 // slidesOffsetBefore={8}
                 modules={[Scrollbar, Pagination]}
                 className="mySwiper"
-                // style={{
-                //     paddingLeft: "18px",
-                //     paddingRight: "18px",
-                // }}
+            // style={{
+            //     paddingLeft: "18px",
+            //     paddingRight: "18px",
+            // }}
             >
-                {!!video && (
+                {!!_link && (
                     <SwiperSlide>
                         <div className="relative flex items-center h-full">
                             <div className="aspect-h-1 aspect-w-2 w-full overflow-hidden bg-gray-200 lg:aspect-none group-hover:opacity-75 h-96">
                                 <iframe
-                                    src={video}
+                                    src={_link}
                                     title="YouTube video player"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                     className="h-full w-full object-cover object-center lg:h-full lg:w-full"
                                 ></iframe>
                             </div>
-                            <Link href={video} target="_blank" className="absolute inset-0 z-40">&nbsp;</Link>
+                            <Link href={_link} target="_blank" className="absolute inset-0 z-40">&nbsp;</Link>
                         </div>
+                    </SwiperSlide>
+                )}
+
+                {_linkS && (
+                    <SwiperSlide>
+                        <div dangerouslySetInnerHTML={_linkS} />
                     </SwiperSlide>
                 )}
 
