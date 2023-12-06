@@ -220,6 +220,7 @@ export default function IFormCheckout({
     const [selectedShipping, setSelectedShipping] = useState<ShippingType | null>(null)
     const [openAlert, setAlertOpen] = useState(false)
     const eventAlertRef = useRef<string | null>(null)
+    const [errorPengiriman, setErrorPengiriman] = useState<string | null>(null)
     const timerRef = useRef(0)
     const {
         register,
@@ -228,6 +229,7 @@ export default function IFormCheckout({
         watch,
         reset,
         getValues,
+        formState: { errors },
     } = useForm<IFormValueCheckout>({
         resolver: zodResolver(IFormValueCheckoutSchema),
         defaultValues: {
@@ -316,6 +318,7 @@ export default function IFormCheckout({
     }
 
     const submitAction = handleSubmit(async (data) => {
+        setErrorPengiriman(null)
         setAlertOpen(false)
         if ((Array.isArray(variations) && variations.length > 0)) {
             if (!data.variasi || typeof data.variasi !== "string") {
@@ -342,6 +345,7 @@ export default function IFormCheckout({
         let alamat: string = ""
         if (product.typeProduct === "fisik") {
             if (!address) {
+                setErrorPengiriman("Belum mengisi alamat")
                 window.clearTimeout(timerRef.current);
                 timerRef.current = window.setTimeout(() => {
                     eventAlertRef.current = "Belum mengisi alamat"
@@ -361,6 +365,7 @@ export default function IFormCheckout({
 
             if (!product.isFree) {
                 if (!currentShipping) {
+                    setErrorPengiriman("Belum memilih ongkos kirim")
                     window.clearTimeout(timerRef.current);
                     timerRef.current = window.setTimeout(() => {
                         eventAlertRef.current = "Belum memilih ongkos kirim"
@@ -399,6 +404,7 @@ export default function IFormCheckout({
                 }
 
                 if (!currentShipping) {
+                    setErrorPengiriman("Belum memilih ongkos kirim")
                     window.clearTimeout(timerRef.current);
                     timerRef.current = window.setTimeout(() => {
                         eventAlertRef.current = "Belum memilih ongkos kirim"
@@ -1480,9 +1486,13 @@ export default function IFormCheckout({
                                 </label>
                                 <input
                                     {...(register("nama_lengkap", { required: true }))}
-                                    className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                    className={clsx(
+                                        "grow shrink-0 rounded-lg px-3 text-[13px] leading-none h-[40px] outline-none",
+                                        errors.nama_lengkap?.message ? "shadow-[0_0_0_2px] shadow-red-300" : "shadow-stora-200 shadow-[0_0_0_1px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300",
+                                    )}
                                     placeholder="Nama Lengkap"
                                 />
+                                {errors.nama_lengkap?.message && <p className="text-xs pl-1 text-red-500 mt-1">Nama tidak boleh kosong.</p>}
                             </fieldset>
 
                             <fieldset className="mb-[15px] w-full flex flex-col justify-start">
@@ -1491,9 +1501,13 @@ export default function IFormCheckout({
                                 </label>
                                 <input
                                     {...(register("nomor_whatsapp", { required: true }))}
-                                    className="grow shrink-0 rounded-lg px-3 text-[13px] leading-none shadow-[0_0_0_1px] shadow-stora-200 h-[40px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300 outline-none"
+                                    className={clsx(
+                                        "grow shrink-0 rounded-lg px-3 text-[13px] leading-none h-[40px] outline-none",
+                                        errors.nomor_whatsapp?.message ? "shadow-[0_0_0_2px] shadow-red-300" : "shadow-stora-200 shadow-[0_0_0_1px] focus:shadow-[0_0_0_2px] focus:shadow-stora-300"
+                                    )}
                                     placeholder="Nomor WhatsApp"
                                 />
+                                {errors.nomor_whatsapp?.message && <p className="text-xs pl-1 text-red-500 mt-1">Nomor WhatsApp tidak boleh kosong.</p>}
                             </fieldset>
 
                             {(Array.isArray(fields) && fields.length > 0) && (
@@ -1553,7 +1567,10 @@ export default function IFormCheckout({
 
                             {Boolean(product.typeProduct === "fisik") && (
                                 <>
-                                    <div className="w-full min-h-[75px] bg-slate-50 rounded-lg p-6">
+                                    <div className={clsx(
+                                        "w-full min-h-[75px] bg-slate-50 rounded-lg p-6",
+                                        errorPengiriman ? "border border-red-500" : ""
+                                    )}>
                                         <div className="flex items-center justify-between">
                                             <div className="text-xs">Alamat Pengiriman:</div>
                                             <Dialog.Root

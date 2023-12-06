@@ -15,22 +15,6 @@ interface ContentHeaderProps {
     userId: string
 }
 
-// if (video.contains("youtube.com") && video.contains("watch")){
-//     if (video.contains("m.")){
-//         video = video.replace("https://m.youtube.com/watch?v=", "https://www.youtube.com/embed/");
-//     } else {
-//         video = video.replace("https://www.youtube.com/watch?v=", "https://www.youtube.com/embed/");
-//     }
-//     new Tambah().simpan(video);
-// } else if (video.contains("youtube.com") && video.contains("embed")){
-//     new Tambah().simpan(video);
-// } else if (video.contains("youtu.be")){
-//     video = video.replace("https://youtu.be/", "https://www.youtube.com/embed/");
-//     new Tambah().simpan(video);
-// } else {
-//     Toast.makeText(TambahProdukActivity.this, "Link video tidak valid", Toast.LENGTH_SHORT).show();
-// }
-
 export default function ContentScrollHeader({
     images,
     video,

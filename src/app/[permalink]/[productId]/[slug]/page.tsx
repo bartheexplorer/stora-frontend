@@ -113,6 +113,7 @@ export async function generateMetadata(
     const descriptionStr = productService?.deskripsi || description
 
     return {
+        metadataBase: new URL('https://stora.id'),
         title,
         description: descriptionStr,
         openGraph: {
